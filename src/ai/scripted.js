@@ -4,7 +4,7 @@ import { registerLLMProvider } from './providers.js';
 
 const scripted = {
   id: 'scripted',
-  label: 'Scripted lines (no AI, works everywhere)',
+  label: 'Scripted lines only (no AI: doesn\'t read what you type)',
   local: true,
   async isAvailable() { return { ok: true }; },
   async init(_cfg, onProgress) { onProgress?.({ text: 'Ready', progress: 1 }); },

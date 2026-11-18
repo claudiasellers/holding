@@ -20,3 +20,24 @@ export async function voiceFor(providerId, archetype) {
   const best = pickVoice(voices, { gender: v.gender === 'n' ? undefined : v.gender, hints: v.hints || [], lang: 'en' });
   return best ? (best.voiceURI || best.name) : undefined;
 }
+
+/** Providers whose voices are Kokoro voice ids (stored on archetype.voice.kokoro). */
+export function usesKokoroIds(providerId) { return providerId === 'kokoro' || providerId === 'openai-speech'; }
+
+/** The voice the user picked for this archetype on this provider ('' = automatic). */
+export function chosenVoice(providerId, archetype) {
+  const v = archetype?.voice || {};
+  return usesKokoroIds(providerId) ? (v.kokoro || '') : (v.voiceName || '');
+}
+
+/** Return a new voice object with the pick applied for this provider. */
+export function withVoice(providerId, archetype, voiceId) {
+  const v = { ...(archetype?.voice || {}) };
+  if (usesKokoroIds(providerId)) {
+    v.kokoro = voiceId || (v.gender === 'm' ? 'am_michael' : 'af_heart');
+  } else {
+    v.voiceName = voiceId || '';
+    v.hints = voiceId ? [voiceId, ...(v.hints || []).filter((x) => x !== voiceId)] : (v.hints || []);
+  }
+  return v;
+}

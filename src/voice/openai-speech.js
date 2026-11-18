@@ -1,6 +1,7 @@
 // TTS from an OpenAI-compatible /v1/audio/speech endpoint on the user's own
 // machine (the local-AI companion server, Kokoro-FastAPI, etc.). Never a paid API by default.
 import { registerTTSProvider } from './providers.js';
+import { KOKORO_VOICES } from './kokoro.js';
 
 let cfgSaved = { baseUrl: 'http://127.0.0.1:8787/v1', model: 'kokoro', token: '' };
 let ctx = null, current = null;
@@ -17,8 +18,21 @@ const provider = {
     } catch (e) { return { ok: false, reason: `Can't reach ${c.baseUrl}. Is the local server running?` }; }
   },
   async init(cfg = {}) { cfgSaved = { ...cfgSaved, ...cfg }; },
-  async listVoices() {
-    return ['af_heart', 'af_nicole', 'af_sarah', 'am_michael', 'am_adam', 'bf_emma', 'bm_george'].map((id) => ({ id, label: id, gender: id[1] === 'f' ? 'f' : 'm' }));
+  // The Holding Local server runs the same Kokoro voices; ask it which it has,
+  // and fall back to the standard English set.
+  async listVoices(cfg = {}) {
+    const c = { ...cfgSaved, ...cfg };
+    let names = null;
+    try {
+      const r = await fetch(`${c.baseUrl.replace(/\/$/, '')}/voices`, { signal: AbortSignal.timeout(2500), headers: c.token ? { Authorization: `Bearer ${c.token}`, 'X-Pair-Token': c.token } : {} });
+      if (r.ok) { const j = await r.json(); names = (Array.isArray(j) ? j : j.voices || []).map((v) => (typeof v === 'string' ? v : v?.id || v?.name)).filter(Boolean); }
+    } catch { /* server older or offline */ }
+    const known = KOKORO_VOICES.map((v) => ({ ...v }));
+    if (!names?.length) return known;
+    const set = new Set(names);
+    const list = known.filter((v) => set.has(v.id));
+    for (const n of names) if (/^[ab][fm]_/.test(n) && !list.some((v) => v.id === n)) list.push({ id: n, label: n, gender: n[1] === 'f' ? 'f' : 'm' });
+    return list.length ? list : known;
   },
   async speak(text, opts = {}) {
     const c = cfgSaved;

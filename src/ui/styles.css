@@ -141,3 +141,12 @@ details summary { cursor: pointer; min-height: 40px; display: flex; align-items:
 .stage { grid-template-columns: minmax(0, 1fr); }
 .stage > div { min-width: 0; }
 .stage .face-box { max-width: 100%; }
+
+/* what writes the parent's words (session) */
+.brain-row { display: flex; justify-content: center; margin-top: 4px; }
+.brain-chip { border: 1px solid var(--line); background: transparent; color: var(--ink2); border-radius: 999px; padding: 4px 12px; font-size: .8rem; min-height: 30px; max-width: 100%; }
+.brain-chip.scripted, .brain-chip.error { border-color: var(--danger); color: var(--ink); background: var(--card); }
+.brain-chip.ready::before { content: "● "; color: #4b9a64; }
+.brain-chip.loading::before { content: "● "; color: #c9a227; }
+.home-brain { text-align: center; font-size: .88rem; color: var(--ink2); margin: 0; }
+.home-brain button { background: none; border: 0; padding: 0; color: inherit; text-decoration: underline; font: inherit; cursor: pointer; }
