@@ -5,13 +5,14 @@ name: Android APK
 on:
   push:
     branches: [main]
+  pull_request:
   workflow_dispatch:
 
 permissions:
   contents: write
 
 concurrency:
-  group: android-apk
+  group: android-apk-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -31,6 +32,9 @@ jobs:
           java-version: 21
 
       - uses: android-actions/setup-android@v3
+        with:
+          # The default list still asks for the retired 'tools' package, which now fails.
+          packages: 'platform-tools'
 
       - run: npm ci
       # Pre-render scripted lines with Kokoro (runs on CPU; only changed lines are re-rendered).
@@ -90,6 +94,7 @@ jobs:
           path: ${{ runner.temp }}/holding.apk
 
       - name: Publish to the "latest" release
+        if: github.event_name != 'pull_request'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
