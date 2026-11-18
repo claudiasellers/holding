@@ -80,6 +80,13 @@ export function renderSession(root, nav, { mode = 'hold' } = {}) {
       if (p.error) setTimeout(() => (status.textContent = ''), 6000);
     },
     onWordsBack() { openSheet(wordsBackSheet()); },
+    // Repair (§7.5): the check is always answerable with one tap, even in Be-with.
+    onRepair(r) {
+      if (r.phase === 'check') openSheet(repairSheet(r));
+      else if (r.phase === 'listen') { closeSheet(); if (mode === 'hold' || r.tier === 'bewith') tilesEl.style.display = ''; ta.focus({ preventScroll: true }); }
+      else if (sheet.dataset.kind === 'repair') closeSheet();
+    },
+    onLead(on) { leadBtn.classList.toggle('on', on); leadBtn.setAttribute('aria-pressed', on ? 'true' : 'false'); },
     onSafety(on) { if (on) openSheet(safetySheet()); else closeSheet(); },
     onTier(t) { if (t !== 'bewith') leadBtn.classList.remove('on'); },
     onEnd(info) { setTimeout(() => openSheet(endSheet(info)), 400); },
@@ -177,8 +184,19 @@ export function renderSession(root, nav, { mode = 'hold' } = {}) {
   }
 
   // sheets
-  function openSheet(content) { clear(sheet).append(h('div', { class: 'grab' }), content); sheet.classList.add('open'); }
-  function closeSheet() { sheet.classList.remove('open'); }
+  function openSheet(content, kind = '') { clear(sheet).append(h('div', { class: 'grab' }), content); sheet.dataset.kind = kind || content.dataset?.kind || ''; sheet.classList.add('open'); }
+  function closeSheet() { sheet.classList.remove('open'); sheet.dataset.kind = ''; }
+  function repairSheet({ line }) {
+    // The sheet sits over the caption, so it carries the spoken line itself.
+    const el = h('div', { class: 'stack repair-check' },
+      h('p', { style: { margin: 0, fontSize: '1.05rem' } }, line),
+      h('div', { class: 'row wrap' },
+        h('button', { class: 'btn primary', onclick: () => { closeSheet(); session.checkAnswer('yes'); } }, 'That\'s it'),
+        h('button', { class: 'btn', onclick: () => { closeSheet(); session.checkAnswer('else'); } }, 'Something else'),
+        h('button', { class: 'btn ghost', onclick: () => { closeSheet(); session.checkAnswer('stay'); } }, 'Just stay with me')));
+    el.dataset.kind = 'repair';
+    return el;
+  }
   function wordsBackSheet() {
     return h('div', { class: 'stack' },
       h('h3', {}, 'Words are coming back.'),
