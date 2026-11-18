@@ -5,6 +5,7 @@ import './ai/openai-local.js';
 import './ai/holding-rag.js';
 import './voice/webspeech.js';
 import './voice/kokoro.js';
+import './voice/chatterbox.js';
 import './voice/openai-speech.js';
 import { unlockSpeech } from './voice/webspeech.js';
 import { unlockAudio } from './voice/kokoro.js';

@@ -1,4 +1,5 @@
 import { h, clear, toast } from './dom.js';
+import { createSuggestions } from './suggestions.js';
 import { mountFace } from './faceview.js';
 import { createSession } from '../engine/dialogue.js';
 import { store } from '../store.js';
@@ -107,6 +108,13 @@ export function renderSession(root, nav, { mode = 'hold' } = {}) {
       if (p.error) setTimeout(() => (status.textContent = ''), 6000);
     },
     onWordsBack() { openSheet(wordsBackSheet()); },
+    // Repair (§7.5): the check is always answerable with one tap, even in Be-with.
+    onRepair(r) {
+      if (r.phase === 'check') openSheet(repairSheet(r));
+      else if (r.phase === 'listen') { closeSheet(); if (mode === 'hold' || r.tier === 'bewith') tilesEl.style.display = ''; ta.focus({ preventScroll: true }); }
+      else if (sheet.dataset.kind === 'repair') closeSheet();
+    },
+    onLead(on) { leadBtn.classList.toggle('on', on); leadBtn.setAttribute('aria-pressed', on ? 'true' : 'false'); },
     onSafety(on) { if (on) openSheet(safetySheet()); else closeSheet(); },
     onTier(t) { if (t !== 'bewith') leadBtn.classList.remove('on'); },
     onEnd(info) {
@@ -182,6 +190,20 @@ export function renderSession(root, nav, { mode = 'hold' } = {}) {
   ta.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } });
   ta.addEventListener('input', () => { ta.style.height = ''; ta.style.height = Math.min(140, ta.scrollHeight) + 'px'; });
 
+  // Three suggested replies above the input; tap to say one. They follow the
+  // conversation once the user starts typing (src/ui/suggestions.js). Hooked in
+  // by wrapping the session's callbacks so the engine doesn't need to know.
+  const suggest = createSuggestions({ session, input: ta, parentName: first, onSend: (t) => { ta.value = t; send(); } });
+  inputBar.prepend(suggest.el);
+  suggest.attach(ui);
+  for (const k of ['onText', 'onTile']) {
+    const orig = session[k];
+    session[k] = (...args) => { suggest.cancel(); const r = orig(...args); suggest.refresh(); return r; };
+  }
+  const destroySession = session.destroy;
+  session.destroy = () => { suggest.destroy(); destroySession(); };
+  suggest.refresh();
+
   // dictation: browser speech recognition (may use the browser vendor's servers) or the local server
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if ((!SR && s.stt.provider !== 'server') || s.stt.provider === 'off') micBtn.style.display = 'none';
@@ -212,8 +234,19 @@ export function renderSession(root, nav, { mode = 'hold' } = {}) {
   }
 
   // sheets
-  function openSheet(content) { clear(sheet).append(h('div', { class: 'grab' }), content); sheet.classList.add('open'); }
-  function closeSheet() { sheet.classList.remove('open'); }
+  function openSheet(content, kind = '') { clear(sheet).append(h('div', { class: 'grab' }), content); sheet.dataset.kind = kind || content.dataset?.kind || ''; sheet.classList.add('open'); }
+  function closeSheet() { sheet.classList.remove('open'); sheet.dataset.kind = ''; }
+  function repairSheet({ line }) {
+    // The sheet sits over the caption, so it carries the spoken line itself.
+    const el = h('div', { class: 'stack repair-check' },
+      h('p', { style: { margin: 0, fontSize: '1.05rem' } }, line),
+      h('div', { class: 'row wrap' },
+        h('button', { class: 'btn primary', onclick: () => { closeSheet(); session.checkAnswer('yes'); } }, 'That\'s it'),
+        h('button', { class: 'btn', onclick: () => { closeSheet(); session.checkAnswer('else'); } }, 'Something else'),
+        h('button', { class: 'btn ghost', onclick: () => { closeSheet(); session.checkAnswer('stay'); } }, 'Just stay with me')));
+    el.dataset.kind = 'repair';
+    return el;
+  }
   function wordsBackSheet() {
     return h('div', { class: 'stack' },
       h('h3', {}, 'Words are coming back.'),

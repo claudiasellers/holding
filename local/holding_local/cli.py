@@ -1,4 +1,4 @@
-"""holding-local: setup | start [--lan|--tailscale] | status | model TAG | pair"""
+"""holding-local: setup | start [--lan|--tailscale] | status | model TAG | voice [list|download|use|delete] | pair"""
 import argparse
 import json
 import sys
@@ -52,7 +52,9 @@ def cmd_start(a):
 
     local = f"http://127.0.0.1:{port}"
     print(f"\nHolding Local is running at {local}")
-    print(f"  Chat model: {cfg.get('llm_model')}   Voice: Kokoro   API: {local}/v1")
+    from . import voice_models
+    voice = voice_models.MODELS[voice_models.selected(cfg)]["name"]
+    print(f"  Chat model: {cfg.get('llm_model')}   Voice: {voice}   API: {local}/v1")
     if app.state.app_dir is None:
         print("  (App files not found; serving the API only. Use --app-dir PATH.)")
     if urls:
@@ -95,6 +97,47 @@ def cmd_model(a):
     print(f"Chat model set to {a.tag}. Restart Holding Local to use it.")
 
 
+def cmd_voice(a):
+    from . import voice_models
+    cfg = state.load()
+    fmt = lambda n: f"{n / 1e9:.2f} GB" if n >= 1e9 else f"{n / 1e6:.0f} MB"
+    if a.action == "list":
+        data = voice_models.listing(cfg)
+        for m in data["models"]:
+            mark = "*" if m["id"] == data["selected"] else " "
+            state_ = f"downloaded, {fmt(m['bytes'])}" if m["downloaded"] else (
+                f"partly downloaded, {fmt(m['bytes'])}" if m["bytes"] else f"not downloaded ({m['size_note']})")
+            print(f" {mark} {m['id']:<11} {state_}")
+        if data["disk"]["free_bytes"] is not None:
+            print(f"   {fmt(data['disk']['free_bytes'])} free on this disk. * = the voice in use.")
+        return
+    if a.id not in voice_models.MODELS:
+        sys.exit(f"Unknown voice model '{a.id}'. Choices: {', '.join(voice_models.MODELS)}")
+    if a.action == "download":
+        job = voice_models.download(a.id, cfg)
+        while job.get("running"):
+            if job.get("total"):
+                from .setup import _bar
+                _bar(job["done"], job["total"], a.id)
+            time.sleep(0.3)
+        print()
+        if job.get("error"):
+            sys.exit(f"Download failed: {job['error']}. Run the same command to resume.")
+        print(f"{a.id} downloaded. Use it with: holding-local voice use {a.id}")
+    elif a.action == "use":
+        try:
+            voice_models.select(a.id, cfg)
+        except FileNotFoundError as e:
+            sys.exit(f"{e} Run: holding-local voice download {a.id}")
+        print(f"Voice set to {a.id}. Phones and browsers using 'Voice from my computer' get it right away.")
+    elif a.action == "delete":
+        try:
+            freed = voice_models.delete(a.id, cfg)
+        except PermissionError as e:
+            sys.exit(str(e))
+        print(f"Deleted {a.id}; {fmt(freed)} freed.")
+
+
 def cmd_catalog(a):
     print(json.dumps({"llm_tiers": catalog.LLM_TIERS, "webllm": catalog.WEBLLM,
                       "archetype_voices": catalog.ARCHETYPE_VOICES}, indent=2))
@@ -125,6 +168,10 @@ def main(argv=None):
     m.add_argument("tag")
     m.set_defaults(fn=cmd_model)
     sub.add_parser("catalog", help="print the recommended models and voices").set_defaults(fn=cmd_catalog)
+    v = sub.add_parser("voice", help="voice models: list | download ID | use ID | delete ID")
+    v.add_argument("action", choices=["list", "download", "use", "delete"])
+    v.add_argument("id", nargs="?", default="chatterbox")
+    v.set_defaults(fn=cmd_voice)
 
     a = p.parse_args(argv)
     if not a.cmd:

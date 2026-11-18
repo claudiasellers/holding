@@ -1,0 +1,78 @@
+# Voice models: unit tests for Holding Local, then the real Chatterbox model end to end,
+# both the Holding Local engine (Python, ONNX Runtime) and the in-browser engine
+# (Transformers.js, run in Node). Saves the spoken samples as an artifact to listen to.
+name: Voice models
+
+on:
+  pull_request:
+    paths:
+      - 'src/voice/**'
+      - 'src/ui/voice-models.js'
+      - 'local/**'
+      - 'test/voice/**'
+      - '.github/workflows/voice.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: voice-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  holding-local:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      HOLDING_LOCAL_HOME: ${{ github.workspace }}/.holding-local
+    defaults:
+      run:
+        working-directory: local
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: '3.12'
+      - name: Unit tests
+        run: uv run --with pytest pytest -q
+      - name: Restore voice models
+        uses: actions/cache@v4
+        with:
+          path: .holding-local/models
+          key: holding-local-voices-v1-${{ hashFiles('local/holding_local/chatterbox.py', 'local/holding_local/catalog.py') }}
+          restore-keys: holding-local-voices-v1-
+      - name: Real Chatterbox (downloads ~1.6 GB the first time)
+        env:
+          HOLDING_REAL_CHATTERBOX: '1'
+          HOLDING_SAMPLES_DIR: ${{ github.workspace }}/samples
+        run: uv run --with pytest pytest -q -s -k real
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: voice-samples-holding-local
+          path: samples
+          if-no-files-found: ignore
+
+  browser-engine:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Install the Transformers.js release the browser loads
+        run: npm i --no-save "@huggingface/transformers@$(node -p "require('fs').readFileSync('src/voice/chatterbox-version.js','utf8').match(/'([^']+)'/)[1]")"
+      - name: Restore model cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules/@huggingface/transformers/.cache
+          key: chatterbox-js-v1
+      - name: Real Chatterbox in Transformers.js (CPU)
+        run: node test/voice/chatterbox.smoke.mjs --out samples
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: voice-samples-browser-engine
+          path: samples
+          if-no-files-found: ignore
