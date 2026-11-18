@@ -53,6 +53,7 @@ A suggestion is something the user would say, so it has its own guard (`suggesti
 - Nothing about self-harm or dying. This uses the same `RISK` pattern the engine uses to open the safety flow, plus a broader word list.
 - No self-annihilating verdicts ("I'm too much", "everyone leaves"). The app works to never agree with these, and it shouldn't propose them either.
 - No caretaking the parent ("are you okay?"), no anger at the coach, no inner-critic lines, no clinical labels.
+- Nothing about crying or tears until the user has said they're crying (typed it, or tapped Crying). `state.crying` and `mentionsTears()` come from `src/engine/crying.js`. A sad face on the camera doesn't count. Hand-written chips are filtered, the model is told the rule, and model chips that break it are dropped.
 - At most 9 words, no markup, no emoji.
 
 All of the hand-written lines are tested against this guard and against the engine's intent detectors. Suggestions are hidden while the safety sheet is open and after the session ends.

@@ -10,6 +10,7 @@
 //     prompt: the gist plus the last four turns. Every model line passes
 //     suggestionGuard(); anything missing is filled from the rules.
 import { RISK, readText } from './affect.js';
+import { mentionsTears } from './crying.js';
 
 export const MAX_WORDS = 9;          // a chip is a tap, not a paragraph
 export const RECENT_TURNS = 4;       // last 2 exchanges go to the model
@@ -66,6 +67,9 @@ export function gist(state = {}) {
     sent: userTexts.map((t) => norm(t)),
     recent,
     safety: !!state.safety,
+    // Only true once the user has said they're crying (crying.js). Until then
+    // no chip, scripted or generated, mentions crying or tears.
+    crying: !!state.crying,
     ended: !!state.ended,
   };
 }
@@ -76,7 +80,7 @@ const BANK = {
   start: ['Just stay with me.', 'I don\'t know what I feel.', 'Something happened.'],
   affect: {
     overwhelmed: ['It\'s all too much.', 'I can\'t think straight.', 'Just stay with me.'],
-    sad: ['I can\'t stop crying.', 'It hurts so much.', 'Just stay with me.'],
+    sad: ['It hurts so much.', 'I feel so heavy.', 'Just stay with me.'],
     scared: ['My heart is racing.', 'I\'m so scared.', 'Stay close.'],
     angry: ['I\'m so angry.', 'It wasn\'t fair.', 'I just need to be mad.'],
     ashamed: ['I feel so ashamed.', 'I want to hide.', 'Please don\'t look away.'],
@@ -107,10 +111,18 @@ const BANK = {
   topic: (t) => [`It's about ${t}.`, `I keep thinking about ${t}.`, `Can I tell you about ${t}?`],
 };
 
-/** Three rule-based suggestions for this gist. Deterministic for a given gist. */
+/**
+ * Three rule-based suggestions for this gist. Deterministic for a given gist.
+ * No chip mentions crying or tears unless the user has said they're crying.
+ */
 export function ruleSuggestions(g) {
+  return pickRules(g, g.crying ? undefined : (t) => !mentionsTears(t));
+}
+
+function pickRules(g, ok = () => true) {
+  const keep = (list) => list.filter(ok);
   // The repair's check gets exactly its three answers, in order (§7.5).
-  if (g.lastKind === 'repair') return [...BANK.repair];
+  if (g.lastKind === 'repair') return keep(BANK.repair);
   const pools = [];
   if (g.lastKind === 'wordsBack') pools.push(BANK.wordsBack);
   if (g.lastKind === 'bodyBudget') pools.push(BANK.bodyBudget);
@@ -121,10 +133,10 @@ export function ruleSuggestions(g) {
     // A question is the whole moment: its answers lead (all three for a check
     // on a guess, which has exactly three honest answers; two otherwise).
     const seen0 = new Set(g.sent || []);
-    const lead = answers.filter((x) => !seen0.has(norm(x))).slice(0, g.question === 'check' ? 3 : 2);
-    return fillFrom(lead, g, restPools(g));
+    const lead = keep(answers).filter((x) => !seen0.has(norm(x))).slice(0, g.question === 'check' ? 3 : 2);
+    return fillFrom(lead, g, restPools(g), ok);
   }
-  return fillFrom([], g, [...pools, ...restPools(g)]);
+  return fillFrom([], g, [...pools, ...restPools(g)], ok);
 }
 
 /** The situation's pools: topic, tier, feeling, then gentle fallbacks that fit the tier. */
@@ -146,7 +158,7 @@ function restPools(g) {
 
 // Round-robin across pools so one situation can't take all three slots,
 // rotating within each pool by turn count so the chips move as the talk does.
-function fillFrom(lead, g, pools) {
+function fillFrom(lead, g, pools, ok = () => true) {
   const out = [...lead];
   const seen = new Set([...(g.sent || []), ...lead.map(norm)]);
   const turn = g.userTurns || 0;
@@ -155,7 +167,7 @@ function fillFrom(lead, g, pools) {
       if (out.length >= 3) break;
       const line = pool[(round + turn) % pool.length];
       const k = norm(line);
-      if (seen.has(k)) continue;
+      if (seen.has(k) || !ok(line)) continue;
       seen.add(k); out.push(line);
     }
   }
@@ -234,7 +246,8 @@ export function buildSuggestPrompt(g, { parentName = 'the parent' } = {}) {
     `You write three things the USER might say next to ${parentName}, a steady, kind parent figure in a comfort app.`,
     `Rules: exactly 3 lines, one reply per line, no numbering, no quotes. First person, the user's own voice, under ${MAX_WORDS} words each. Make them different from each other and specific to what the user has said. Gentle and easy to tap.`,
     'Never mention self-harm or dying. Never have the user call themselves too much, broken or a burden. Never ask how the parent is.',
-  ].join('\n');
+    g.crying ? '' : 'Never mention crying or tears: the user has not said they are crying.',
+  ].filter(Boolean).join('\n');
   const lines = [];
   const feel = g.affect ? `${g.affect}${g.intensity > .75 ? ' (strongly)' : ''}` : 'unclear';
   lines.push(`Feeling: ${feel}. Stage: ${TIER_NOTE[g.tier] || TIER_NOTE.bewith}.`);
@@ -251,7 +264,7 @@ export function parseModelSuggestions(text, g = {}) {
   const out = [];
   for (const raw of String(text || '').replace(/<think>[\s\S]*?<\/think>/gi, '').split(/\n+/)) {
     const t = suggestionGuard(raw);
-    if (!t) continue;
+    if (!t || (!g.crying && mentionsTears(t))) continue;
     const k = norm(t);
     if (seen.has(k)) continue;
     seen.add(k); out.push(t);

@@ -146,3 +146,31 @@ test('every question-answer chip is safe to say', () => {
   for (const content of lines) for (const tier of ['name', 'makesense', 'ordinary'])
     for (const t of ruleSuggestions(gist(st({ tier, history: [{ role: 'assistant', content }] })))) assert.equal(suggestionGuard(t), t, t);
 });
+
+test('no chip mentions crying or tears until the user says they are crying', async () => {
+  const { mentionsTears } = await import('../src/engine/crying.js');
+  const tiers = ['bewith', 'name', 'makesense', 'ordinary'];
+  const affects = [null, 'overwhelmed', 'sad', 'scared', 'angry', 'ashamed', 'lonely', 'numb', 'calm', 'hopeful', 'glad'];
+  const kinds = ['', 'repair', 'wordsBack', 'bodyBudget'];
+  const lines = ['', "How's today treating you?", 'Is that close?', 'What was it like to have me stay?', 'Anything hard today?'];
+  for (const tier of tiers) for (const affect of affects) for (const lastReplyKind of kinds) for (const content of lines) for (let turns = 0; turns < 3; turns++) {
+    const history = [...Array.from({ length: turns }, () => ({ role: 'user', content: 'it hurts' })), ...(content ? [{ role: 'assistant', content }] : [])];
+    for (const t of ruleSuggestions(gist(st({ tier, affect, lastReplyKind, history })))) assert.ok(!mentionsTears(t), `${tier}/${affect}/${lastReplyKind}: ${t}`);
+  }
+  // a sad face from the camera (affect sad, nothing said) is not crying
+  assert.ok(!ruleSuggestions(gist(st({ affect: 'sad' }))).some(mentionsTears));
+});
+
+test('model chips about tears are dropped unless the user said they are crying', () => {
+  const raw = 'Let the tears come.\nI keep crying.\nIt hurts so much.\nI need a minute.';
+  const notCrying = gist(st({ affect: 'sad', history: [{ role: 'user', content: 'it hurts' }] }));
+  assert.deepEqual(parseModelSuggestions(raw, notCrying), ['It hurts so much.', 'I need a minute.']);
+  const crying = gist(st({ affect: 'sad', crying: true, history: [{ role: 'user', content: "I can't stop crying" }] }));
+  assert.deepEqual(parseModelSuggestions(raw, crying), ['Let the tears come.', 'I keep crying.', 'It hurts so much.']);
+});
+
+test('the model is told not to mention tears until the user has', () => {
+  const rule = /Never mention crying or tears/;
+  assert.match(buildSuggestPrompt(gist(st({ affect: 'sad', history: [{ role: 'user', content: 'x' }] }))).system, rule);
+  assert.doesNotMatch(buildSuggestPrompt(gist(st({ affect: 'sad', crying: true, history: [{ role: 'user', content: 'x' }] }))).system, rule);
+});
