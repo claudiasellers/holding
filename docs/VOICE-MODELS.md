@@ -9,7 +9,7 @@ None of them is required. Download only the ones you want, try them, and delete 
 | Device voices | Everywhere | built in | n/a | none | instant |
 | Kokoro-82M (Apache-2.0) | Any browser, including phones, and Holding Local | 92 MB (326 MB on WebGPU) | yes (it *is* the voice) | none (flat but clear) | far faster than real time |
 | **Chatterbox** (Resemble AI, MIT) | Desktop browsers with WebGPU, and Holding Local on any computer | about 1.5 GB | yes, copied | **feeling dial** | slower than real time on a CPU: 0.17 to 0.27× on a 4-core CI runner |
-| **Chatterbox Turbo** (Resemble AI, MIT) | Desktop browsers with WebGPU, and Holding Local on any computer | about 960 MB | yes, copied | no dial; reads `[sigh]`, `[chuckle]` | several times faster than Chatterbox (see CI) |
+| **Chatterbox Turbo** (Resemble AI, MIT) | Desktop browsers with WebGPU, and Holding Local on any computer | about 960 MB | yes, copied | no dial; reads `[sigh]`, `[chuckle]` | 0.37 to 0.39x real time on the same CI runner, about twice Chatterbox |
 | **Qwen3-TTS 1.7B** (Alibaba, Apache-2.0) | Holding Local on a Mac with Apple silicon | about 3.1 GB | no: its own voices (Serena, Ryan) | **feeling dial**, sent as a spoken instruction | see CI |
 | **Qwen3-TTS 0.6B** | Mac | about 2 GB | no | **feeling dial** | faster than 1.7B |
 | **Chatterbox on the Mac's GPU** | Mac | about 1.4 GB | yes, copied | **feeling dial** | GPU, several times faster than on CPU |

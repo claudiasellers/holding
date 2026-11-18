@@ -134,9 +134,9 @@ test('turbo loop: positions, cache, silence padding (stand-in sessions)', async 
   const e = createTurbo({ ort, tokenizer: { encode: () => [11, 12, 13, 14, 15] }, createSession });
   await e.load();
   const cond = await e.voice('v', async () => new Float32Array(24000));
-  const a = await e.synthesize('I am here.', cond);
+  const a = await e.synthesize('Hi', cond);
   assert.deepEqual(seen.dec, [7, 8, 100, 200, SILENCE_TOKEN, SILENCE_TOKEN, SILENCE_TOKEN]);
-  assert.deepEqual(seen.lm[0], { pos: [0, 1, 2, 3, 4, 5, 6, 7], past: 0, mask: 8 });
+  assert.deepEqual(seen.lm[0], { pos: [0, 1, 2, 3, 4, 5, 6, 7], past: 0, mask: 8 }); // 3 voice + 5 text
   assert.deepEqual(seen.lm[1], { pos: [8], past: 8, mask: 9 });
   assert.deepEqual(seen.lm[2], { pos: [9], past: 9, mask: 10 });
   assert.equal(seen.lm.length, 3);

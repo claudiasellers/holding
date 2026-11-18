@@ -68,6 +68,7 @@ for (const exaggeration of [0.35, 0.8]) {
   let peak = 0; for (const x of a) peak = Math.max(peak, Math.abs(x));
   console.log(`[voice] feeling ${exaggeration}: ${secs.toFixed(2)}s of audio in ${took.toFixed(1)}s (${(secs / took).toFixed(2)}x real time), peak ${peak.toFixed(2)}`);
   assert.ok(secs > 1.5 && secs < 15, `odd length ${secs}s`);
+  assert.ok(secs > 0.045 * text.length, `${secs.toFixed(2)}s for ${text.length} characters: cut short`);
   assert.ok(peak > 0.05, 'silent output');
   if (out) { await mkdir(out, { recursive: true }); await writeFile(join(out, `browser-chatterbox-feeling-${exaggeration}.wav`), toWav(a, CHATTERBOX_SR)); }
 }

@@ -94,6 +94,12 @@ def token_budget(text: str) -> int:
     return min(1000, 80 + 3 * len(text))
 
 
+def min_tokens(text: str) -> int:
+    """No stop before this many speech tokens: 25 a second, so one per character allows up to
+    25 characters a second, faster than anyone talks. Greedy decoding can otherwise stop mid-line."""
+    return len(" ".join(str(text).split()))
+
+
 def split_long(text: str, limit: int = 280) -> list[str]:
     """Chatterbox is best on a sentence or two at a time."""
     text = text.strip()
@@ -181,6 +187,7 @@ class Chatterbox:
         tokens = np.array([[START_SPEECH_TOKEN]], dtype=np.int64)
         past, mask, pos = None, None, None
         with self._lock:
+            floor = min(min_tokens(text), token_budget(text) - 1)
             for i in range(token_budget(text)):
                 embeds = self.embed_tokens.run(None, embed_in)[0]
                 if i == 0:
@@ -197,6 +204,8 @@ class Chatterbox:
                 # Penalising only the last one let greedy decoding fall into a loop of near-silence
                 # that never reached the stop token (a 4 s line came out as 0.9 s after trimming).
                 scores = apply_repetition_penalty(logits[:, -1, :], np.unique(tokens)[np.newaxis, :])
+                if i < floor:
+                    scores[:, STOP_SPEECH_TOKEN] = -np.inf
                 nxt = np.argmax(scores, axis=-1, keepdims=True).astype(np.int64)
                 tokens = np.concatenate((tokens, nxt), axis=-1)
                 if (nxt.flatten() == STOP_SPEECH_TOKEN).all():

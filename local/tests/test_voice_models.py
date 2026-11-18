@@ -160,7 +160,7 @@ def test_generation_loop_feeds_the_decoder():
     e, seen = fake_engine([100, 200, 300])
     cond = (np.zeros((1, 3, 4), np.float32), np.array([[7, 8]], np.int64), np.zeros((1, 192), np.float32),
             np.zeros((1, 10, 80), np.float32))
-    wav = e.generate("I'm here.", cond, exaggeration=0.7)
+    wav = e.generate("Hi", cond, exaggeration=0.7)
     assert seen["speech"] == [[7, 8, 100, 200, 300]]  # prompt tokens + generated, no start/stop
     assert seen["exaggeration"] == pytest.approx(0.7)
     assert seen["steps"] == 4 and wav.dtype == np.float32 and len(wav) > 0
@@ -170,7 +170,7 @@ def test_turbo_loop_pads_silence_and_tracks_positions():
     e, seen = fake_engine([100, 200], mid="chatterbox-turbo", layers=24)
     cond = (np.zeros((1, 3, 4), np.float32), np.array([[7, 8]], np.int64), np.zeros((1, 192), np.float32),
             np.zeros((1, 10, 80), np.float32))
-    e.generate("I'm here.", cond)
+    e.generate("Hi", cond)
     s = chatterbox.SILENCE_TOKEN
     assert seen["speech"] == [[7, 8, 100, 200, s, s, s]]
     assert seen["exaggeration"] is None  # Turbo has no dial
@@ -212,6 +212,8 @@ def test_real_chatterbox_speaks(mid):
             print(f"{mid} {arch} feeling {ex}: {secs:.2f}s of audio in {took:.2f}s ({secs / took:.2f}x real time)")
             assert sr == chatterbox.SR
             assert 1.5 < secs < 20.0, secs  # a real sentence, not silence or a runaway
+            # Nobody says it faster than about 22 characters a second: shorter means the line was cut.
+            assert secs > 0.045 * len(text), f"{secs:.2f}s for {len(text)} characters"
             assert np.abs(wav).max() > 0.05
             if dest:
                 os.makedirs(dest, exist_ok=True)
@@ -406,3 +408,11 @@ def test_penalty_covers_every_token_so_far():
             np.zeros((1, 10, 80), np.float32))
     e.generate("Hi.", cond)
     assert seen["speech"] == [[7, 100, 100, 100]]  # a strong preference still wins over the penalty
+
+
+def test_no_stop_before_the_text_could_have_been_said():
+    e, seen = fake_engine([100])  # wants to stop after one token
+    cond = (np.zeros((1, 3, 4), np.float32), np.array([[7]], np.int64), np.zeros((1, 192), np.float32),
+            np.zeros((1, 10, 80), np.float32))
+    e.generate("Hello", cond)  # 5 characters: no stop before 5 speech tokens
+    assert len(seen["speech"][0]) - 1 == 5 and seen["steps"] == 6

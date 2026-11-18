@@ -53,7 +53,7 @@ MODELS = {
     "chatterbox-turbo": {
         "name": "Chatterbox Turbo",
         "blurb": "Chatterbox's faster sibling: keeps each parent's own voice and understands [sigh] and [chuckle], "
-                 "but has no feeling dial. Several times quicker than Chatterbox.",
+                 "but has no feeling dial. About twice as fast as Chatterbox on a computer's processor.",
         "size_note": "about 960 MB",
         "feeling": False, "deletable": True, "kind": "files", "group": "any", "keep_reason": "",
         "files": _onnx_files("chatterbox-turbo"),

@@ -45,7 +45,7 @@ export const VOICE_MODELS = Object.freeze([
     sizeMB: 960,
     sizeNote: 'about 960 MB',
     feeling: false,
-    blurb: 'Chatterbox\'s faster sibling. Keeps each parent\'s own voice and understands [sigh] and [chuckle], but has no feeling dial.',
+    blurb: 'Chatterbox\'s faster sibling. Keeps each parent\'s own voice and understands [sigh] and [chuckle], but has no feeling dial. About twice as fast.',
     needs: 'webgpu',
   },
 ]);

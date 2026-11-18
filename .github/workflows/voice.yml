@@ -95,6 +95,10 @@ jobs:
   mac-voices:
     # Apple silicon runner: install mlx-audio the way Settings does, then download each
     # Mac voice, speak two lines, and delete it to keep the disk free.
+    # GitHub cancels macOS jobs on this account before they start (no runner is assigned),
+    # so this runs only by hand (Actions → Voice models → Run workflow) or once the
+    # repository variable MAC_RUNNERS is set to true.
+    if: github.event_name == 'workflow_dispatch' || vars.MAC_RUNNERS == 'true'
     runs-on: macos-14
     timeout-minutes: 120
     env:

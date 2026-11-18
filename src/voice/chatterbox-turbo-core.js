@@ -37,6 +37,11 @@ export function tokenBudget(text) {
   return Math.min(1000, 80 + Math.ceil(String(text).length * 3));
 }
 
+/** No stop before this many speech tokens (one per character: faster than anyone talks). */
+export function minTokens(text) {
+  return String(text).split(/\s+/).filter(Boolean).join(' ').length;
+}
+
 /** Penalise tokens already spoken (in place), then pick the most likely: greedy, like the card. */
 export function pickNext(logits, seen, penalty = REPETITION_PENALTY) {
   for (const id of seen) {
@@ -98,6 +103,7 @@ export function createTurbo({ ort, tokenizer, createSession }) {
     let inputIds = i64(ort, ids, [1, ids.length]);
     let total = 0; let pos = 0;
     const budget = tokenBudget(text);
+    const floor = Math.min(minTokens(text), budget - 1);
     try {
       for (let i = 0; i < budget; i++) {
         let embeds = (await s.embed_tokens.run({ input_ids: inputIds }))[embedOut];
@@ -112,6 +118,7 @@ export function createTurbo({ ort, tokenizer, createSession }) {
         const all = await dataOf(logitsT);
         const vocab = logitsT.dims[2];
         const last = Float32Array.from(all.subarray((logitsT.dims[1] - 1) * vocab, logitsT.dims[1] * vocab));
+        if (i < floor) last[STOP_SPEECH_TOKEN] = -Infinity;
         const next = pickNext(last, seen);
         generated.push(next); seen.add(next);
         const fresh = {};
