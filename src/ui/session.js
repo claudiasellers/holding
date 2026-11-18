@@ -432,7 +432,22 @@ export function renderSession(root, nav, { mode = 'hold' } = {}) {
       .catch((e) => { status.textContent = 'Camera mirroring unavailable: ' + (e.message || e); });
   }
 
+  // Once the conversation is over, putting the app in the background (home
+  // button, switching apps, locking the phone) silences the goodbye too. The
+  // goodbye was cut short, so the keepsake card (if due) is waiting on return.
+  const onHidden = (e) => {
+    if (!(e.type === 'pagehide' || document.visibilityState === 'hidden') || !session.state.ended || session.state.destroyed) return;
+    session.destroy();
+    ui.onEndSpoken({ said: [...new Set(session.state.said)] });
+  };
+  document.addEventListener('visibilitychange', onHidden);
+  window.addEventListener('pagehide', onHidden);
+
   renderBrain();
   session.start();
-  return () => { session.destroy(); presence.destroy(); stopCam?.(); rec?.stop?.(); };
+  return () => {
+    document.removeEventListener('visibilitychange', onHidden);
+    window.removeEventListener('pagehide', onHidden);
+    session.destroy(); presence.destroy(); stopCam?.(); rec?.stop?.();
+  };
 }
