@@ -1,0 +1,57 @@
+# Publishes the installable web app to GitHub Pages on every push to main.
+name: Web app (GitHub Pages)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # Pre-render scripted lines with Kokoro (runs on CPU; only changed lines are re-rendered).
+      - name: Restore pre-rendered voice
+        uses: actions/cache@v4
+        with:
+          path: |
+            public/audio
+            ~/.cache/huggingface
+            node_modules/@huggingface/transformers/.cache
+          key: voice-${{ hashFiles('src/content/scripted-lines.json', 'scripts/prerender-voice.mjs') }}
+          restore-keys: voice-
+      - name: Pre-render scripted lines
+        run: |
+          if [ -f scripts/export-lines.mjs ]; then node scripts/export-lines.mjs; fi
+          if [ -f src/content/scripted-lines.json ]; then node scripts/prerender-voice.mjs; else echo "No scripted lines file; skipping."; fi
+      - run: npm run build
+      # Pages serves 404.html for unknown paths; make it the app so deep links still open it.
+      - run: cp dist/index.html dist/404.html && touch dist/.nojekyll
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

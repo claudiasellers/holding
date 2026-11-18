@@ -1,0 +1,60 @@
+import './ui/styles.css';
+import './ai/scripted.js';
+import './ai/webllm.js';
+import './ai/openai-local.js';
+import './ai/holding-rag.js';
+import './voice/webspeech.js';
+import './voice/kokoro.js';
+import './voice/openai-speech.js';
+import { unlockSpeech } from './voice/webspeech.js';
+import { unlockAudio } from './voice/kokoro.js';
+import { store } from './store.js';
+import { PRESETS } from './data/archetypes.js';
+import { normalizeArchetype } from './data/schema.js';
+import { clear } from './ui/dom.js';
+import { renderHome } from './ui/home.js';
+import { renderBuilder } from './ui/builder.js';
+import { renderSession } from './ui/session.js';
+import { renderMemory } from './ui/memory.js';
+import { renderSettings } from './ui/settings.js';
+
+// Optional mobile layer (PWA, install, pairing, prerecorded voice). Present when built from the full repo.
+const mobile = import.meta.glob('./mobile/register.js');
+for (const load of Object.values(mobile)) load().catch((e) => console.info('[holding] mobile layer not loaded', e));
+// Optional extra providers dropped in by other modules (e.g. prerecorded voice).
+const extras = import.meta.glob(['./voice/extra/*.js', './ai/extra/*.js']);
+for (const load of Object.values(extras)) load().catch(() => {});
+
+const app = document.getElementById('app');
+let teardown = null;
+const SCREENS = { home: renderHome, builder: renderBuilder, session: renderSession, memory: renderMemory, settings: renderSettings };
+
+function nav(name, params = {}) {
+  teardown?.();
+  teardown = null;
+  clear(app);
+  if (!store.data.archetype && name !== 'builder' && name !== 'settings') name = 'builder';
+  document.body.dataset.screen = name;
+  if (name === 'session') document.body.setAttribute('data-session-active', 'true');
+  else document.body.removeAttribute('data-session-active');
+  teardown = SCREENS[name](app, nav, params) || null;
+  window.scrollTo(0, 0);
+  if (name !== 'session') history.replaceState(null, '', location.pathname + location.hash);
+}
+
+// iOS and most mobile browsers only allow audio after a user gesture.
+let unlocked = false;
+document.addEventListener('pointerdown', () => { if (unlocked && window.HoldingMobile?.isUnlocked?.() !== false) return; unlocked = true; try { window.HoldingMobile?.unlockAudio?.(); unlockSpeech(); unlockAudio(); } catch {} }, { capture: true });
+
+// keep a saved archetype fresh with any new schema defaults
+if (store.data.archetype) store.setData({ archetype: normalizeArchetype(store.data.archetype) });
+
+const q = new URLSearchParams(location.search);
+const wanted = q.get('mode');
+if (wanted === 'hold' || wanted === 'talk' || wanted === 'makesense') {
+  // Home-screen "Hold me" shortcut: go straight in. If no figure was chosen yet, use the first preset.
+  if (!store.data.archetype) store.setData({ archetype: PRESETS[0] });
+  nav('session', { mode: wanted });
+} else nav(store.data.archetype ? 'home' : 'builder');
+
+window.Holding = { nav, store };

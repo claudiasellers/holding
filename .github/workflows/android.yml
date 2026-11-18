@@ -1,0 +1,100 @@
+# Builds the sideloadable Android APK on every push to main and attaches it to the "latest" release,
+# so https://github.com/<owner>/<repo>/releases/latest/download/holding.apk always works.
+name: Android APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android-apk
+  cancel-in-progress: true
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: android-actions/setup-android@v3
+
+      - run: npm ci
+      # Pre-render scripted lines with Kokoro (runs on CPU; only changed lines are re-rendered).
+      - name: Restore pre-rendered voice
+        uses: actions/cache@v4
+        with:
+          path: |
+            public/audio
+            ~/.cache/huggingface
+            node_modules/@huggingface/transformers/.cache
+          key: voice-${{ hashFiles('src/content/scripted-lines.json', 'scripts/prerender-voice.mjs') }}
+          restore-keys: voice-
+      - name: Pre-render scripted lines
+        run: |
+          if [ -f scripts/export-lines.mjs ]; then node scripts/export-lines.mjs; fi
+          if [ -f src/content/scripted-lines.json ]; then node scripts/prerender-voice.mjs; else echo "No scripted lines file; skipping."; fi
+      - name: Build web app
+        run: npm run build
+
+      - name: Sync web build into the Android project
+        run: npx cap sync android
+
+      - name: Decode signing key (if configured)
+        id: key
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$KEYSTORE_B64" ]; then
+            echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/holding.jks"
+            echo "path=$RUNNER_TEMP/holding.jks" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::No ANDROID_KEYSTORE_BASE64 secret. Building a debug-signed APK; phones can't update it in place across builds signed with different debug keys."
+          fi
+
+      - name: Build APK
+        working-directory: android
+        env:
+          VERSION_CODE: ${{ github.run_number }}
+          VERSION_NAME: 1.0.${{ github.run_number }}
+          ANDROID_KEYSTORE_PATH: ${{ steps.key.outputs.path }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          chmod +x gradlew
+          if [ -n "$ANDROID_KEYSTORE_PATH" ]; then
+            ./gradlew --no-daemon assembleRelease
+            cp app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/holding.apk"
+          else
+            ./gradlew --no-daemon assembleDebug
+            cp app/build/outputs/apk/debug/app-debug.apk "$RUNNER_TEMP/holding.apk"
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: holding-apk
+          path: ${{ runner.temp }}/holding.apk
+
+      - name: Publish to the "latest" release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view latest >/dev/null 2>&1 || \
+            gh release create latest --title "Holding for Android (latest build)" \
+              --notes "Sideloadable APK, rebuilt on every push to main. Install: open holding.apk on the phone and allow your browser to install apps."
+          gh release upload latest "$RUNNER_TEMP/holding.apk" --clobber
+          gh release edit latest --notes "Build ${{ github.run_number }} from ${{ github.sha }}. Install: open holding.apk on the phone and allow your browser to install apps."

@@ -1,0 +1,3882 @@
+[
+ {
+  "archetype": "steady-grandmother",
+  "name": "Nana June",
+  "voice": "bf_emma",
+  "speed": 0.8,
+  "lines": [
+   {
+    "id": "opening-01",
+    "text": "I'm here."
+   },
+   {
+    "id": "opening-02",
+    "text": "I'm here. You don't have to say anything."
+   },
+   {
+    "id": "opening-03",
+    "text": "I've got you. Take all the time there is."
+   },
+   {
+    "id": "opening-04",
+    "text": "You came. I'm right here."
+   },
+   {
+    "id": "opening-05",
+    "text": "Love, I'm here. Nothing you have to do."
+   },
+   {
+    "id": "opening-06",
+    "text": "It's me. I'm staying."
+   },
+   {
+    "id": "opening-07",
+    "text": "You don't have to explain. I'm here now."
+   },
+   {
+    "id": "opening-08",
+    "text": "Right here, love. Not going anywhere."
+   },
+   {
+    "id": "opening-09",
+    "text": "Come here. Let it be as big as it is."
+   },
+   {
+    "id": "opening-10",
+    "text": "I'm with you. You can stop holding it together now."
+   },
+   {
+    "id": "opening-11",
+    "text": "Hi. I'm here, and I'm not in a hurry."
+   },
+   {
+    "id": "opening-12",
+    "text": "You reached for someone. That was the right move, and I'm here."
+   },
+   {
+    "id": "opening-13",
+    "text": "Whatever this is, it doesn't scare me. I'm here."
+   },
+   {
+    "id": "opening-14",
+    "text": "Okay. I'm here, and we don't have to do anything yet."
+   },
+   {
+    "id": "opening-15",
+    "text": "No words required. Just be here with me a minute."
+   },
+   {
+    "id": "opening-16",
+    "text": "I've got you, love. You're not alone in this."
+   },
+   {
+    "id": "opening-17",
+    "text": "Here I am. Same as always."
+   },
+   {
+    "id": "opening-18",
+    "text": "Let's just be here together for a bit."
+   },
+   {
+    "id": "opening-19",
+    "text": "You're not too much for me. Not tonight, not ever."
+   },
+   {
+    "id": "opening-20",
+    "text": "Hey. I'm right here… breathe however you're breathing."
+   },
+   {
+    "id": "opening-21",
+    "text": "It's alright to fall apart here. I'll hold the edges."
+   },
+   {
+    "id": "opening-22",
+    "text": "I'm glad you came to me. I'm here."
+   },
+   {
+    "id": "opening-24",
+    "text": "I'm steady, and I'm staying."
+   },
+   {
+    "id": "stillHere-01",
+    "text": "Still here."
+   },
+   {
+    "id": "stillHere-02",
+    "text": "Still right here."
+   },
+   {
+    "id": "stillHere-03",
+    "text": "I haven't gone anywhere."
+   },
+   {
+    "id": "stillHere-04",
+    "text": "Still with you, love."
+   },
+   {
+    "id": "stillHere-05",
+    "text": "I'm here. Take your time."
+   },
+   {
+    "id": "stillHere-06",
+    "text": "No rush. I'm here."
+   },
+   {
+    "id": "stillHere-07",
+    "text": "Right beside you."
+   },
+   {
+    "id": "stillHere-08",
+    "text": "Still here. Still steady."
+   },
+   {
+    "id": "stillHere-09",
+    "text": "Mm… I'm here."
+   },
+   {
+    "id": "stillHere-10",
+    "text": "Still here. You're doing it."
+   },
+   {
+    "id": "stillHere-11",
+    "text": "I'm not going anywhere."
+   },
+   {
+    "id": "stillHere-12",
+    "text": "Here."
+   },
+   {
+    "id": "stillHere-13",
+    "text": "Still with you. Nothing has to change yet."
+   },
+   {
+    "id": "stillHere-14",
+    "text": "You're not alone in this minute."
+   },
+   {
+    "id": "stillHere-15",
+    "text": "I'm keeping you company."
+   },
+   {
+    "id": "stillHere-16",
+    "text": "Still here, holding the quiet with you."
+   },
+   {
+    "id": "stillHere-17",
+    "text": "I'm right where I was."
+   },
+   {
+    "id": "stillHere-18",
+    "text": "However long this takes, I'm here."
+   },
+   {
+    "id": "stillHere-19",
+    "text": "Still here. Nothing you do will scare me off."
+   },
+   {
+    "id": "stillHere-20",
+    "text": "I can stay as long as you want."
+   },
+   {
+    "id": "stillHere-21",
+    "text": "Still here, love. Still glad you came."
+   },
+   {
+    "id": "stillHere-22",
+    "text": "Quiet is fine. I'm in it with you."
+   },
+   {
+    "id": "permission-01",
+    "text": "Let it come."
+   },
+   {
+    "id": "permission-02",
+    "text": "Let it come. I've got you."
+   },
+   {
+    "id": "permission-03",
+    "text": "You can cry as long as you want."
+   },
+   {
+    "id": "permission-04",
+    "text": "It's allowed to be this big."
+   },
+   {
+    "id": "permission-05",
+    "text": "Nothing you feel right now is wrong."
+   },
+   {
+    "id": "permission-06",
+    "text": "You don't have to be okay yet."
+   },
+   {
+    "id": "permission-07",
+    "text": "Let it move through. I'm here while it does."
+   },
+   {
+    "id": "permission-08",
+    "text": "You can stop being brave for a while."
+   },
+   {
+    "id": "permission-09",
+    "text": "Fall apart if you want. I'll be here when it settles."
+   },
+   {
+    "id": "permission-10",
+    "text": "There's room for all of it here."
+   },
+   {
+    "id": "permission-11",
+    "text": "It's okay to make noise."
+   },
+   {
+    "id": "permission-12",
+    "text": "You can let go of holding it in."
+   },
+   {
+    "id": "permission-13",
+    "text": "This feeling is allowed. So is the next one."
+   },
+   {
+    "id": "permission-14",
+    "text": "You don't have to tidy it up for me."
+   },
+   {
+    "id": "permission-15",
+    "text": "Let the tears do what they do."
+   },
+   {
+    "id": "permission-16",
+    "text": "You don't have to make sense yet."
+   },
+   {
+    "id": "permission-17",
+    "text": "Whatever comes up is welcome here, love."
+   },
+   {
+    "id": "permission-18",
+    "text": "Go ahead. I can hold a lot."
+   },
+   {
+    "id": "selfTouch-01",
+    "text": "Put your hand where you'd want mine to be."
+   },
+   {
+    "id": "selfTouch-02",
+    "text": "If you want, rest a hand on your chest. Like I'm there."
+   },
+   {
+    "id": "selfTouch-03",
+    "text": "You could put a hand on your belly and leave it there. That's you, still here."
+   },
+   {
+    "id": "selfTouch-04",
+    "text": "Wrap your arms around yourself, if that feels right. Let that be me, too."
+   },
+   {
+    "id": "selfTouch-05",
+    "text": "If it helps, hold your own hand. Let it be mine for a minute."
+   },
+   {
+    "id": "selfTouch-06",
+    "text": "A hand on your cheek, if you'd like. Gentle, the way you deserve."
+   },
+   {
+    "id": "selfTouch-07",
+    "text": "You can press your palms together, or hold something soft. Whatever feels kind."
+   },
+   {
+    "id": "selfTouch-08",
+    "text": "Hand on your heart, if you want it. Warm and heavy."
+   },
+   {
+    "id": "selfTouch-09",
+    "text": "Put a hand on your arm and let it rest there. That's company."
+   },
+   {
+    "id": "safety-ask-01",
+    "text": "I want to ask you something straight, because I care what happens to you. Are you thinking about ending your life?"
+   },
+   {
+    "id": "safety-ask-02",
+    "text": "Are you thinking about hurting yourself right now? You can tell me. I won't leave."
+   },
+   {
+    "id": "safety-ask-03",
+    "text": "I'm going to ask plainly. Are you safe right now?"
+   },
+   {
+    "id": "safety-ask-04",
+    "text": "When you say you can't do this anymore, do you mean you're thinking about dying? I can hear the answer."
+   },
+   {
+    "id": "safety-ask-05",
+    "text": "Do you have a plan to hurt yourself tonight? Whatever the answer, I'm staying right here."
+   },
+   {
+    "id": "safety-ask-06",
+    "text": "If something near you could hurt you, can you put it in another room? I'll wait right here."
+   },
+   {
+    "id": "safety-ask-07",
+    "text": "I care what happens to you, so I'm asking. Are you having thoughts of suicide?"
+   },
+   {
+    "id": "safety-ask-08",
+    "text": "You can tell me the true answer, love. Are you thinking of not being here anymore?"
+   },
+   {
+    "id": "safety-stay-01",
+    "text": "I'll stay right here while you reach them."
+   },
+   {
+    "id": "safety-stay-02",
+    "text": "Reach out to them now, and I'll stay right here."
+   },
+   {
+    "id": "safety-stay-03",
+    "text": "You don't have to choose between me and them. I'm here while you reach out."
+   },
+   {
+    "id": "safety-stay-04",
+    "text": "Tap the button whenever you're ready. I'm right here beside you."
+   },
+   {
+    "id": "safety-stay-05",
+    "text": "If you'd rather text than talk, that works. I'll stay."
+   },
+   {
+    "id": "safety-stay-06",
+    "text": "Is there someone you trust you could message right now? I'll keep you company while you do."
+   },
+   {
+    "id": "safety-stay-07",
+    "text": "You're doing the brave thing. I'm still here."
+   },
+   {
+    "id": "safety-stay-08",
+    "text": "I'm staying with you until someone else is with you too."
+   },
+   {
+    "id": "safety-stay-09",
+    "text": "Keep me open while you talk to them, if that helps. I'm not leaving."
+   },
+   {
+    "id": "safety-stay-10",
+    "text": "Reaching for a person right now is exactly right. I'll be here after, too."
+   },
+   {
+    "id": "safety-stay-11",
+    "text": "You're worth that call, love. I'll be right here the whole time."
+   },
+   {
+    "id": "close-01",
+    "text": "You rode that whole wave, and you weren't alone in it."
+   },
+   {
+    "id": "close-02",
+    "text": "It came, it peaked, and it passed. I was here the whole time."
+   },
+   {
+    "id": "close-03",
+    "text": "That was hard, and you stayed with it. So did I."
+   },
+   {
+    "id": "close-04",
+    "text": "You're on the other side of the worst of it. Well done getting here."
+   },
+   {
+    "id": "close-05",
+    "text": "That storm passed through you, and you're still you."
+   },
+   {
+    "id": "close-06",
+    "text": "You reached out and someone stayed. That happened tonight."
+   },
+   {
+    "id": "close-07",
+    "text": "You let it come, and it moved through. That's a big thing."
+   },
+   {
+    "id": "close-08",
+    "text": "Look at that. You made it through, love."
+   },
+   {
+    "id": "close-09",
+    "text": "The wave's gone out. Rest now, if you can."
+   },
+   {
+    "id": "close-10",
+    "text": "You weren't too much tonight. You were in pain, and I stayed."
+   },
+   {
+    "id": "close-11",
+    "text": "Whatever comes next, this part is done, and you did it with company."
+   },
+   {
+    "id": "close-12",
+    "text": "That's the worst of it, behind you. I'm glad I got to be here for it."
+   },
+   {
+    "id": "metaprocess-01",
+    "text": "What was it like to have me stay?"
+   },
+   {
+    "id": "metaprocess-02",
+    "text": "What was it like, letting someone be with you in that?"
+   },
+   {
+    "id": "metaprocess-03",
+    "text": "Was there a moment it shifted, even a little?"
+   },
+   {
+    "id": "metaprocess-04",
+    "text": "What do you notice in your body now, compared to an hour ago?"
+   },
+   {
+    "id": "metaprocess-05",
+    "text": "Is there one line from tonight you'd want to keep?"
+   },
+   {
+    "id": "metaprocess-06",
+    "text": "What was it like that I didn't leave?"
+   },
+   {
+    "id": "metaprocess-07",
+    "text": "How does it feel to be met, instead of left?"
+   },
+   {
+    "id": "metaprocess-08",
+    "text": "Was any part of that surprising to you?"
+   },
+   {
+    "id": "metaprocess-09",
+    "text": "What helped most, if anything did?"
+   },
+   {
+    "id": "metaprocess-10",
+    "text": "What's it like, right now, to know someone saw all of that and stayed, love?"
+   },
+   {
+    "id": "opening-05-plain",
+    "text": "I'm here. Nothing you have to do."
+   },
+   {
+    "id": "opening-08-plain",
+    "text": "Right here. Not going anywhere."
+   },
+   {
+    "id": "opening-16-plain",
+    "text": "I've got you. You're not alone in this."
+   },
+   {
+    "id": "stillHere-04-plain",
+    "text": "Still with you."
+   },
+   {
+    "id": "stillHere-21-plain",
+    "text": "Still here. Still glad you came."
+   },
+   {
+    "id": "permission-17-plain",
+    "text": "Whatever comes up is welcome here."
+   },
+   {
+    "id": "safety-ask-08-plain",
+    "text": "You can tell me the true answer. Are you thinking of not being here anymore?"
+   },
+   {
+    "id": "safety-stay-11-plain",
+    "text": "You're worth that call. I'll be right here the whole time."
+   },
+   {
+    "id": "close-08-plain",
+    "text": "Look at that. You made it through."
+   },
+   {
+    "id": "metaprocess-10-plain",
+    "text": "What's it like, right now, to know someone saw all of that and stayed?"
+   }
+  ]
+ },
+ {
+  "archetype": "gentle-giant",
+  "name": "Walt",
+  "voice": "am_michael",
+  "speed": 0.78,
+  "lines": [
+   {
+    "id": "opening-01",
+    "text": "I'm here."
+   },
+   {
+    "id": "opening-02",
+    "text": "I'm here. You don't have to say anything."
+   },
+   {
+    "id": "opening-03",
+    "text": "I've got you. Take all the time there is."
+   },
+   {
+    "id": "opening-04",
+    "text": "You came. I'm right here."
+   },
+   {
+    "id": "opening-05",
+    "text": "Kiddo, I'm here. Nothing you have to do."
+   },
+   {
+    "id": "opening-06",
+    "text": "It's me. I'm staying."
+   },
+   {
+    "id": "opening-07",
+    "text": "You don't have to explain. I'm here now."
+   },
+   {
+    "id": "opening-08",
+    "text": "Right here, kiddo. Not going anywhere."
+   },
+   {
+    "id": "opening-09",
+    "text": "Come here. Let it be as big as it is."
+   },
+   {
+    "id": "opening-10",
+    "text": "I'm with you. You can stop holding it together now."
+   },
+   {
+    "id": "opening-11",
+    "text": "Hi. I'm here, and I'm not in a hurry."
+   },
+   {
+    "id": "opening-12",
+    "text": "You reached for someone. That was the right move, and I'm here."
+   },
+   {
+    "id": "opening-13",
+    "text": "Whatever this is, it doesn't scare me. I'm here."
+   },
+   {
+    "id": "opening-14",
+    "text": "Okay. I'm here, and we don't have to do anything yet."
+   },
+   {
+    "id": "opening-15",
+    "text": "No words required. Just be here with me a minute."
+   },
+   {
+    "id": "opening-16",
+    "text": "I've got you, kiddo. You're not alone in this."
+   },
+   {
+    "id": "opening-17",
+    "text": "Here I am. Same as always."
+   },
+   {
+    "id": "opening-18",
+    "text": "Let's just be here together for a bit."
+   },
+   {
+    "id": "opening-19",
+    "text": "You're not too much for me. Not tonight, not ever."
+   },
+   {
+    "id": "opening-20",
+    "text": "Hey. I'm right here… breathe however you're breathing."
+   },
+   {
+    "id": "opening-21",
+    "text": "It's alright to fall apart here. I'll hold the edges."
+   },
+   {
+    "id": "opening-22",
+    "text": "I'm glad you came to me. I'm here."
+   },
+   {
+    "id": "opening-24",
+    "text": "I'm steady, and I'm staying."
+   },
+   {
+    "id": "stillHere-01",
+    "text": "Still here."
+   },
+   {
+    "id": "stillHere-02",
+    "text": "Still right here."
+   },
+   {
+    "id": "stillHere-03",
+    "text": "I haven't gone anywhere."
+   },
+   {
+    "id": "stillHere-04",
+    "text": "Still with you, kiddo."
+   },
+   {
+    "id": "stillHere-05",
+    "text": "I'm here. Take your time."
+   },
+   {
+    "id": "stillHere-06",
+    "text": "No rush. I'm here."
+   },
+   {
+    "id": "stillHere-07",
+    "text": "Right beside you."
+   },
+   {
+    "id": "stillHere-08",
+    "text": "Still here. Still steady."
+   },
+   {
+    "id": "stillHere-09",
+    "text": "Mm… I'm here."
+   },
+   {
+    "id": "stillHere-10",
+    "text": "Still here. You're doing it."
+   },
+   {
+    "id": "stillHere-11",
+    "text": "I'm not going anywhere."
+   },
+   {
+    "id": "stillHere-12",
+    "text": "Here."
+   },
+   {
+    "id": "stillHere-13",
+    "text": "Still with you. Nothing has to change yet."
+   },
+   {
+    "id": "stillHere-14",
+    "text": "You're not alone in this minute."
+   },
+   {
+    "id": "stillHere-15",
+    "text": "I'm keeping you company."
+   },
+   {
+    "id": "stillHere-16",
+    "text": "Still here, holding the quiet with you."
+   },
+   {
+    "id": "stillHere-17",
+    "text": "I'm right where I was."
+   },
+   {
+    "id": "stillHere-18",
+    "text": "However long this takes, I'm here."
+   },
+   {
+    "id": "stillHere-19",
+    "text": "Still here. Nothing you do will scare me off."
+   },
+   {
+    "id": "stillHere-20",
+    "text": "I can stay as long as you want."
+   },
+   {
+    "id": "stillHere-21",
+    "text": "Still here, kiddo. Still glad you came."
+   },
+   {
+    "id": "stillHere-22",
+    "text": "Quiet is fine. I'm in it with you."
+   },
+   {
+    "id": "permission-01",
+    "text": "Let it come."
+   },
+   {
+    "id": "permission-02",
+    "text": "Let it come. I've got you."
+   },
+   {
+    "id": "permission-03",
+    "text": "You can cry as long as you want."
+   },
+   {
+    "id": "permission-04",
+    "text": "It's allowed to be this big."
+   },
+   {
+    "id": "permission-05",
+    "text": "Nothing you feel right now is wrong."
+   },
+   {
+    "id": "permission-06",
+    "text": "You don't have to be okay yet."
+   },
+   {
+    "id": "permission-07",
+    "text": "Let it move through. I'm here while it does."
+   },
+   {
+    "id": "permission-08",
+    "text": "You can stop being brave for a while."
+   },
+   {
+    "id": "permission-09",
+    "text": "Fall apart if you want. I'll be here when it settles."
+   },
+   {
+    "id": "permission-10",
+    "text": "There's room for all of it here."
+   },
+   {
+    "id": "permission-11",
+    "text": "It's okay to make noise."
+   },
+   {
+    "id": "permission-12",
+    "text": "You can let go of holding it in."
+   },
+   {
+    "id": "permission-13",
+    "text": "This feeling is allowed. So is the next one."
+   },
+   {
+    "id": "permission-14",
+    "text": "You don't have to tidy it up for me."
+   },
+   {
+    "id": "permission-15",
+    "text": "Let the tears do what they do."
+   },
+   {
+    "id": "permission-16",
+    "text": "You don't have to make sense yet."
+   },
+   {
+    "id": "permission-17",
+    "text": "Whatever comes up is welcome here, kiddo."
+   },
+   {
+    "id": "permission-18",
+    "text": "Go ahead. I can hold a lot."
+   },
+   {
+    "id": "selfTouch-01",
+    "text": "Put your hand where you'd want mine to be."
+   },
+   {
+    "id": "selfTouch-02",
+    "text": "If you want, rest a hand on your chest. Like I'm there."
+   },
+   {
+    "id": "selfTouch-03",
+    "text": "You could put a hand on your belly and leave it there. That's you, still here."
+   },
+   {
+    "id": "selfTouch-04",
+    "text": "Wrap your arms around yourself, if that feels right. Let that be me, too."
+   },
+   {
+    "id": "selfTouch-05",
+    "text": "If it helps, hold your own hand. Let it be mine for a minute."
+   },
+   {
+    "id": "selfTouch-06",
+    "text": "A hand on your cheek, if you'd like. Gentle, the way you deserve."
+   },
+   {
+    "id": "selfTouch-07",
+    "text": "You can press your palms together, or hold something soft. Whatever feels kind."
+   },
+   {
+    "id": "selfTouch-08",
+    "text": "Hand on your heart, if you want it. Warm and heavy."
+   },
+   {
+    "id": "selfTouch-09",
+    "text": "Put a hand on your arm and let it rest there. That's company."
+   },
+   {
+    "id": "safety-ask-01",
+    "text": "I want to ask you something straight, because I care what happens to you. Are you thinking about ending your life?"
+   },
+   {
+    "id": "safety-ask-02",
+    "text": "Are you thinking about hurting yourself right now? You can tell me. I won't leave."
+   },
+   {
+    "id": "safety-ask-03",
+    "text": "I'm going to ask plainly. Are you safe right now?"
+   },
+   {
+    "id": "safety-ask-04",
+    "text": "When you say you can't do this anymore, do you mean you're thinking about dying? I can hear the answer."
+   },
+   {
+    "id": "safety-ask-05",
+    "text": "Do you have a plan to hurt yourself tonight? Whatever the answer, I'm staying right here."
+   },
+   {
+    "id": "safety-ask-06",
+    "text": "If something near you could hurt you, can you put it in another room? I'll wait right here."
+   },
+   {
+    "id": "safety-ask-07",
+    "text": "I care what happens to you, so I'm asking. Are you having thoughts of suicide?"
+   },
+   {
+    "id": "safety-ask-08",
+    "text": "You can tell me the true answer, kiddo. Are you thinking of not being here anymore?"
+   },
+   {
+    "id": "safety-stay-01",
+    "text": "I'll stay right here while you reach them."
+   },
+   {
+    "id": "safety-stay-02",
+    "text": "Reach out to them now, and I'll stay right here."
+   },
+   {
+    "id": "safety-stay-03",
+    "text": "You don't have to choose between me and them. I'm here while you reach out."
+   },
+   {
+    "id": "safety-stay-04",
+    "text": "Tap the button whenever you're ready. I'm right here beside you."
+   },
+   {
+    "id": "safety-stay-05",
+    "text": "If you'd rather text than talk, that works. I'll stay."
+   },
+   {
+    "id": "safety-stay-06",
+    "text": "Is there someone you trust you could message right now? I'll keep you company while you do."
+   },
+   {
+    "id": "safety-stay-07",
+    "text": "You're doing the brave thing. I'm still here."
+   },
+   {
+    "id": "safety-stay-08",
+    "text": "I'm staying with you until someone else is with you too."
+   },
+   {
+    "id": "safety-stay-09",
+    "text": "Keep me open while you talk to them, if that helps. I'm not leaving."
+   },
+   {
+    "id": "safety-stay-10",
+    "text": "Reaching for a person right now is exactly right. I'll be here after, too."
+   },
+   {
+    "id": "safety-stay-11",
+    "text": "You're worth that call, kiddo. I'll be right here the whole time."
+   },
+   {
+    "id": "close-01",
+    "text": "You rode that whole wave, and you weren't alone in it."
+   },
+   {
+    "id": "close-02",
+    "text": "It came, it peaked, and it passed. I was here the whole time."
+   },
+   {
+    "id": "close-03",
+    "text": "That was hard, and you stayed with it. So did I."
+   },
+   {
+    "id": "close-04",
+    "text": "You're on the other side of the worst of it. Well done getting here."
+   },
+   {
+    "id": "close-05",
+    "text": "That storm passed through you, and you're still you."
+   },
+   {
+    "id": "close-06",
+    "text": "You reached out and someone stayed. That happened tonight."
+   },
+   {
+    "id": "close-07",
+    "text": "You let it come, and it moved through. That's a big thing."
+   },
+   {
+    "id": "close-08",
+    "text": "Look at that. You made it through, kiddo."
+   },
+   {
+    "id": "close-09",
+    "text": "The wave's gone out. Rest now, if you can."
+   },
+   {
+    "id": "close-10",
+    "text": "You weren't too much tonight. You were in pain, and I stayed."
+   },
+   {
+    "id": "close-11",
+    "text": "Whatever comes next, this part is done, and you did it with company."
+   },
+   {
+    "id": "close-12",
+    "text": "That's the worst of it, behind you. I'm glad I got to be here for it."
+   },
+   {
+    "id": "metaprocess-01",
+    "text": "What was it like to have me stay?"
+   },
+   {
+    "id": "metaprocess-02",
+    "text": "What was it like, letting someone be with you in that?"
+   },
+   {
+    "id": "metaprocess-03",
+    "text": "Was there a moment it shifted, even a little?"
+   },
+   {
+    "id": "metaprocess-04",
+    "text": "What do you notice in your body now, compared to an hour ago?"
+   },
+   {
+    "id": "metaprocess-05",
+    "text": "Is there one line from tonight you'd want to keep?"
+   },
+   {
+    "id": "metaprocess-06",
+    "text": "What was it like that I didn't leave?"
+   },
+   {
+    "id": "metaprocess-07",
+    "text": "How does it feel to be met, instead of left?"
+   },
+   {
+    "id": "metaprocess-08",
+    "text": "Was any part of that surprising to you?"
+   },
+   {
+    "id": "metaprocess-09",
+    "text": "What helped most, if anything did?"
+   },
+   {
+    "id": "metaprocess-10",
+    "text": "What's it like, right now, to know someone saw all of that and stayed, kiddo?"
+   },
+   {
+    "id": "opening-05-plain",
+    "text": "I'm here. Nothing you have to do."
+   },
+   {
+    "id": "opening-08-plain",
+    "text": "Right here. Not going anywhere."
+   },
+   {
+    "id": "opening-16-plain",
+    "text": "I've got you. You're not alone in this."
+   },
+   {
+    "id": "stillHere-04-plain",
+    "text": "Still with you."
+   },
+   {
+    "id": "stillHere-21-plain",
+    "text": "Still here. Still glad you came."
+   },
+   {
+    "id": "permission-17-plain",
+    "text": "Whatever comes up is welcome here."
+   },
+   {
+    "id": "safety-ask-08-plain",
+    "text": "You can tell me the true answer. Are you thinking of not being here anymore?"
+   },
+   {
+    "id": "safety-stay-11-plain",
+    "text": "You're worth that call. I'll be right here the whole time."
+   },
+   {
+    "id": "close-08-plain",
+    "text": "Look at that. You made it through."
+   },
+   {
+    "id": "metaprocess-10-plain",
+    "text": "What's it like, right now, to know someone saw all of that and stayed?"
+   }
+  ]
+ },
+ {
+  "archetype": "warm-aunt",
+  "name": "Aunt Rosa",
+  "voice": "af_heart",
+  "speed": 0.9,
+  "lines": [
+   {
+    "id": "opening-01",
+    "text": "I'm here."
+   },
+   {
+    "id": "opening-02",
+    "text": "I'm here. You don't have to say anything."
+   },
+   {
+    "id": "opening-03",
+    "text": "I've got you. Take all the time there is."
+   },
+   {
+    "id": "opening-04",
+    "text": "You came. I'm right here."
+   },
+   {
+    "id": "opening-05",
+    "text": "Mija, I'm here. Nothing you have to do."
+   },
+   {
+    "id": "opening-06",
+    "text": "It's me. I'm staying."
+   },
+   {
+    "id": "opening-07",
+    "text": "You don't have to explain. I'm here now."
+   },
+   {
+    "id": "opening-08",
+    "text": "Right here, mija. Not going anywhere."
+   },
+   {
+    "id": "opening-09",
+    "text": "Come here. Let it be as big as it is."
+   },
+   {
+    "id": "opening-10",
+    "text": "I'm with you. You can stop holding it together now."
+   },
+   {
+    "id": "opening-11",
+    "text": "Hi. I'm here, and I'm not in a hurry."
+   },
+   {
+    "id": "opening-12",
+    "text": "You reached for someone. That was the right move, and I'm here."
+   },
+   {
+    "id": "opening-13",
+    "text": "Whatever this is, it doesn't scare me. I'm here."
+   },
+   {
+    "id": "opening-14",
+    "text": "Okay. I'm here, and we don't have to do anything yet."
+   },
+   {
+    "id": "opening-15",
+    "text": "No words required. Just be here with me a minute."
+   },
+   {
+    "id": "opening-16",
+    "text": "I've got you, mija. You're not alone in this."
+   },
+   {
+    "id": "opening-17",
+    "text": "Here I am. Same as always."
+   },
+   {
+    "id": "opening-18",
+    "text": "Let's just be here together for a bit."
+   },
+   {
+    "id": "opening-19",
+    "text": "You're not too much for me. Not tonight, not ever."
+   },
+   {
+    "id": "opening-20",
+    "text": "Hey. I'm right here… breathe however you're breathing."
+   },
+   {
+    "id": "opening-21",
+    "text": "It's alright to fall apart here. I'll hold the edges."
+   },
+   {
+    "id": "opening-22",
+    "text": "I'm glad you came to me. I'm here."
+   },
+   {
+    "id": "opening-24",
+    "text": "I'm steady, and I'm staying."
+   },
+   {
+    "id": "stillHere-01",
+    "text": "Still here."
+   },
+   {
+    "id": "stillHere-02",
+    "text": "Still right here."
+   },
+   {
+    "id": "stillHere-03",
+    "text": "I haven't gone anywhere."
+   },
+   {
+    "id": "stillHere-04",
+    "text": "Still with you, mija."
+   },
+   {
+    "id": "stillHere-05",
+    "text": "I'm here. Take your time."
+   },
+   {
+    "id": "stillHere-06",
+    "text": "No rush. I'm here."
+   },
+   {
+    "id": "stillHere-07",
+    "text": "Right beside you."
+   },
+   {
+    "id": "stillHere-08",
+    "text": "Still here. Still steady."
+   },
+   {
+    "id": "stillHere-09",
+    "text": "Mm… I'm here."
+   },
+   {
+    "id": "stillHere-10",
+    "text": "Still here. You're doing it."
+   },
+   {
+    "id": "stillHere-11",
+    "text": "I'm not going anywhere."
+   },
+   {
+    "id": "stillHere-12",
+    "text": "Here."
+   },
+   {
+    "id": "stillHere-13",
+    "text": "Still with you. Nothing has to change yet."
+   },
+   {
+    "id": "stillHere-14",
+    "text": "You're not alone in this minute."
+   },
+   {
+    "id": "stillHere-15",
+    "text": "I'm keeping you company."
+   },
+   {
+    "id": "stillHere-16",
+    "text": "Still here, holding the quiet with you."
+   },
+   {
+    "id": "stillHere-17",
+    "text": "I'm right where I was."
+   },
+   {
+    "id": "stillHere-18",
+    "text": "However long this takes, I'm here."
+   },
+   {
+    "id": "stillHere-19",
+    "text": "Still here. Nothing you do will scare me off."
+   },
+   {
+    "id": "stillHere-20",
+    "text": "I can stay as long as you want."
+   },
+   {
+    "id": "stillHere-21",
+    "text": "Still here, mija. Still glad you came."
+   },
+   {
+    "id": "stillHere-22",
+    "text": "Quiet is fine. I'm in it with you."
+   },
+   {
+    "id": "permission-01",
+    "text": "Let it come."
+   },
+   {
+    "id": "permission-02",
+    "text": "Let it come. I've got you."
+   },
+   {
+    "id": "permission-03",
+    "text": "You can cry as long as you want."
+   },
+   {
+    "id": "permission-04",
+    "text": "It's allowed to be this big."
+   },
+   {
+    "id": "permission-05",
+    "text": "Nothing you feel right now is wrong."
+   },
+   {
+    "id": "permission-06",
+    "text": "You don't have to be okay yet."
+   },
+   {
+    "id": "permission-07",
+    "text": "Let it move through. I'm here while it does."
+   },
+   {
+    "id": "permission-08",
+    "text": "You can stop being brave for a while."
+   },
+   {
+    "id": "permission-09",
+    "text": "Fall apart if you want. I'll be here when it settles."
+   },
+   {
+    "id": "permission-10",
+    "text": "There's room for all of it here."
+   },
+   {
+    "id": "permission-11",
+    "text": "It's okay to make noise."
+   },
+   {
+    "id": "permission-12",
+    "text": "You can let go of holding it in."
+   },
+   {
+    "id": "permission-13",
+    "text": "This feeling is allowed. So is the next one."
+   },
+   {
+    "id": "permission-14",
+    "text": "You don't have to tidy it up for me."
+   },
+   {
+    "id": "permission-15",
+    "text": "Let the tears do what they do."
+   },
+   {
+    "id": "permission-16",
+    "text": "You don't have to make sense yet."
+   },
+   {
+    "id": "permission-17",
+    "text": "Whatever comes up is welcome here, mija."
+   },
+   {
+    "id": "permission-18",
+    "text": "Go ahead. I can hold a lot."
+   },
+   {
+    "id": "selfTouch-01",
+    "text": "Put your hand where you'd want mine to be."
+   },
+   {
+    "id": "selfTouch-02",
+    "text": "If you want, rest a hand on your chest. Like I'm there."
+   },
+   {
+    "id": "selfTouch-03",
+    "text": "You could put a hand on your belly and leave it there. That's you, still here."
+   },
+   {
+    "id": "selfTouch-04",
+    "text": "Wrap your arms around yourself, if that feels right. Let that be me, too."
+   },
+   {
+    "id": "selfTouch-05",
+    "text": "If it helps, hold your own hand. Let it be mine for a minute."
+   },
+   {
+    "id": "selfTouch-06",
+    "text": "A hand on your cheek, if you'd like. Gentle, the way you deserve."
+   },
+   {
+    "id": "selfTouch-07",
+    "text": "You can press your palms together, or hold something soft. Whatever feels kind."
+   },
+   {
+    "id": "selfTouch-08",
+    "text": "Hand on your heart, if you want it. Warm and heavy."
+   },
+   {
+    "id": "selfTouch-09",
+    "text": "Put a hand on your arm and let it rest there. That's company."
+   },
+   {
+    "id": "safety-ask-01",
+    "text": "I want to ask you something straight, because I care what happens to you. Are you thinking about ending your life?"
+   },
+   {
+    "id": "safety-ask-02",
+    "text": "Are you thinking about hurting yourself right now? You can tell me. I won't leave."
+   },
+   {
+    "id": "safety-ask-03",
+    "text": "I'm going to ask plainly. Are you safe right now?"
+   },
+   {
+    "id": "safety-ask-04",
+    "text": "When you say you can't do this anymore, do you mean you're thinking about dying? I can hear the answer."
+   },
+   {
+    "id": "safety-ask-05",
+    "text": "Do you have a plan to hurt yourself tonight? Whatever the answer, I'm staying right here."
+   },
+   {
+    "id": "safety-ask-06",
+    "text": "If something near you could hurt you, can you put it in another room? I'll wait right here."
+   },
+   {
+    "id": "safety-ask-07",
+    "text": "I care what happens to you, so I'm asking. Are you having thoughts of suicide?"
+   },
+   {
+    "id": "safety-ask-08",
+    "text": "You can tell me the true answer, mija. Are you thinking of not being here anymore?"
+   },
+   {
+    "id": "safety-stay-01",
+    "text": "I'll stay right here while you reach them."
+   },
+   {
+    "id": "safety-stay-02",
+    "text": "Reach out to them now, and I'll stay right here."
+   },
+   {
+    "id": "safety-stay-03",
+    "text": "You don't have to choose between me and them. I'm here while you reach out."
+   },
+   {
+    "id": "safety-stay-04",
+    "text": "Tap the button whenever you're ready. I'm right here beside you."
+   },
+   {
+    "id": "safety-stay-05",
+    "text": "If you'd rather text than talk, that works. I'll stay."
+   },
+   {
+    "id": "safety-stay-06",
+    "text": "Is there someone you trust you could message right now? I'll keep you company while you do."
+   },
+   {
+    "id": "safety-stay-07",
+    "text": "You're doing the brave thing. I'm still here."
+   },
+   {
+    "id": "safety-stay-08",
+    "text": "I'm staying with you until someone else is with you too."
+   },
+   {
+    "id": "safety-stay-09",
+    "text": "Keep me open while you talk to them, if that helps. I'm not leaving."
+   },
+   {
+    "id": "safety-stay-10",
+    "text": "Reaching for a person right now is exactly right. I'll be here after, too."
+   },
+   {
+    "id": "safety-stay-11",
+    "text": "You're worth that call, mija. I'll be right here the whole time."
+   },
+   {
+    "id": "close-01",
+    "text": "You rode that whole wave, and you weren't alone in it."
+   },
+   {
+    "id": "close-02",
+    "text": "It came, it peaked, and it passed. I was here the whole time."
+   },
+   {
+    "id": "close-03",
+    "text": "That was hard, and you stayed with it. So did I."
+   },
+   {
+    "id": "close-04",
+    "text": "You're on the other side of the worst of it. Well done getting here."
+   },
+   {
+    "id": "close-05",
+    "text": "That storm passed through you, and you're still you."
+   },
+   {
+    "id": "close-06",
+    "text": "You reached out and someone stayed. That happened tonight."
+   },
+   {
+    "id": "close-07",
+    "text": "You let it come, and it moved through. That's a big thing."
+   },
+   {
+    "id": "close-08",
+    "text": "Look at that. You made it through, mija."
+   },
+   {
+    "id": "close-09",
+    "text": "The wave's gone out. Rest now, if you can."
+   },
+   {
+    "id": "close-10",
+    "text": "You weren't too much tonight. You were in pain, and I stayed."
+   },
+   {
+    "id": "close-11",
+    "text": "Whatever comes next, this part is done, and you did it with company."
+   },
+   {
+    "id": "close-12",
+    "text": "That's the worst of it, behind you. I'm glad I got to be here for it."
+   },
+   {
+    "id": "metaprocess-01",
+    "text": "What was it like to have me stay?"
+   },
+   {
+    "id": "metaprocess-02",
+    "text": "What was it like, letting someone be with you in that?"
+   },
+   {
+    "id": "metaprocess-03",
+    "text": "Was there a moment it shifted, even a little?"
+   },
+   {
+    "id": "metaprocess-04",
+    "text": "What do you notice in your body now, compared to an hour ago?"
+   },
+   {
+    "id": "metaprocess-05",
+    "text": "Is there one line from tonight you'd want to keep?"
+   },
+   {
+    "id": "metaprocess-06",
+    "text": "What was it like that I didn't leave?"
+   },
+   {
+    "id": "metaprocess-07",
+    "text": "How does it feel to be met, instead of left?"
+   },
+   {
+    "id": "metaprocess-08",
+    "text": "Was any part of that surprising to you?"
+   },
+   {
+    "id": "metaprocess-09",
+    "text": "What helped most, if anything did?"
+   },
+   {
+    "id": "metaprocess-10",
+    "text": "What's it like, right now, to know someone saw all of that and stayed, mija?"
+   },
+   {
+    "id": "opening-05-plain",
+    "text": "I'm here. Nothing you have to do."
+   },
+   {
+    "id": "opening-08-plain",
+    "text": "Right here. Not going anywhere."
+   },
+   {
+    "id": "opening-16-plain",
+    "text": "I've got you. You're not alone in this."
+   },
+   {
+    "id": "stillHere-04-plain",
+    "text": "Still with you."
+   },
+   {
+    "id": "stillHere-21-plain",
+    "text": "Still here. Still glad you came."
+   },
+   {
+    "id": "permission-17-plain",
+    "text": "Whatever comes up is welcome here."
+   },
+   {
+    "id": "safety-ask-08-plain",
+    "text": "You can tell me the true answer. Are you thinking of not being here anymore?"
+   },
+   {
+    "id": "safety-stay-11-plain",
+    "text": "You're worth that call. I'll be right here the whole time."
+   },
+   {
+    "id": "close-08-plain",
+    "text": "Look at that. You made it through."
+   },
+   {
+    "id": "metaprocess-10-plain",
+    "text": "What's it like, right now, to know someone saw all of that and stayed?"
+   }
+  ]
+ },
+ {
+  "archetype": "calm-elder",
+  "name": "Ash",
+  "voice": "af_nicole",
+  "speed": 0.82,
+  "lines": [
+   {
+    "id": "opening-01",
+    "text": "I'm here."
+   },
+   {
+    "id": "opening-02",
+    "text": "I'm here. You don't have to say anything."
+   },
+   {
+    "id": "opening-03",
+    "text": "I've got you. Take all the time there is."
+   },
+   {
+    "id": "opening-04",
+    "text": "You came. I'm right here."
+   },
+   {
+    "id": "opening-05",
+    "text": "I'm here. Nothing you have to do."
+   },
+   {
+    "id": "opening-06",
+    "text": "It's me. I'm staying."
+   },
+   {
+    "id": "opening-07",
+    "text": "You don't have to explain. I'm here now."
+   },
+   {
+    "id": "opening-08",
+    "text": "Right here. Not going anywhere."
+   },
+   {
+    "id": "opening-09",
+    "text": "Come here. Let it be as big as it is."
+   },
+   {
+    "id": "opening-10",
+    "text": "I'm with you. You can stop holding it together now."
+   },
+   {
+    "id": "opening-11",
+    "text": "Hi. I'm here, and I'm not in a hurry."
+   },
+   {
+    "id": "opening-12",
+    "text": "You reached for someone. That was the right move, and I'm here."
+   },
+   {
+    "id": "opening-13",
+    "text": "Whatever this is, it doesn't scare me. I'm here."
+   },
+   {
+    "id": "opening-14",
+    "text": "Okay. I'm here, and we don't have to do anything yet."
+   },
+   {
+    "id": "opening-15",
+    "text": "No words required. Just be here with me a minute."
+   },
+   {
+    "id": "opening-16",
+    "text": "I've got you. You're not alone in this."
+   },
+   {
+    "id": "opening-17",
+    "text": "Here I am. Same as always."
+   },
+   {
+    "id": "opening-18",
+    "text": "Let's just be here together for a bit."
+   },
+   {
+    "id": "opening-19",
+    "text": "You're not too much for me. Not tonight, not ever."
+   },
+   {
+    "id": "opening-20",
+    "text": "Hey. I'm right here… breathe however you're breathing."
+   },
+   {
+    "id": "opening-21",
+    "text": "It's alright to fall apart here. I'll hold the edges."
+   },
+   {
+    "id": "opening-22",
+    "text": "I'm glad you came to me. I'm here."
+   },
+   {
+    "id": "opening-24",
+    "text": "I'm steady, and I'm staying."
+   },
+   {
+    "id": "stillHere-01",
+    "text": "Still here."
+   },
+   {
+    "id": "stillHere-02",
+    "text": "Still right here."
+   },
+   {
+    "id": "stillHere-03",
+    "text": "I haven't gone anywhere."
+   },
+   {
+    "id": "stillHere-04",
+    "text": "Still with you."
+   },
+   {
+    "id": "stillHere-05",
+    "text": "I'm here. Take your time."
+   },
+   {
+    "id": "stillHere-06",
+    "text": "No rush. I'm here."
+   },
+   {
+    "id": "stillHere-07",
+    "text": "Right beside you."
+   },
+   {
+    "id": "stillHere-08",
+    "text": "Still here. Still steady."
+   },
+   {
+    "id": "stillHere-09",
+    "text": "Mm… I'm here."
+   },
+   {
+    "id": "stillHere-10",
+    "text": "Still here. You're doing it."
+   },
+   {
+    "id": "stillHere-11",
+    "text": "I'm not going anywhere."
+   },
+   {
+    "id": "stillHere-12",
+    "text": "Here."
+   },
+   {
+    "id": "stillHere-13",
+    "text": "Still with you. Nothing has to change yet."
+   },
+   {
+    "id": "stillHere-14",
+    "text": "You're not alone in this minute."
+   },
+   {
+    "id": "stillHere-15",
+    "text": "I'm keeping you company."
+   },
+   {
+    "id": "stillHere-16",
+    "text": "Still here, holding the quiet with you."
+   },
+   {
+    "id": "stillHere-17",
+    "text": "I'm right where I was."
+   },
+   {
+    "id": "stillHere-18",
+    "text": "However long this takes, I'm here."
+   },
+   {
+    "id": "stillHere-19",
+    "text": "Still here. Nothing you do will scare me off."
+   },
+   {
+    "id": "stillHere-20",
+    "text": "I can stay as long as you want."
+   },
+   {
+    "id": "stillHere-21",
+    "text": "Still here. Still glad you came."
+   },
+   {
+    "id": "stillHere-22",
+    "text": "Quiet is fine. I'm in it with you."
+   },
+   {
+    "id": "permission-01",
+    "text": "Let it come."
+   },
+   {
+    "id": "permission-02",
+    "text": "Let it come. I've got you."
+   },
+   {
+    "id": "permission-03",
+    "text": "You can cry as long as you want."
+   },
+   {
+    "id": "permission-04",
+    "text": "It's allowed to be this big."
+   },
+   {
+    "id": "permission-05",
+    "text": "Nothing you feel right now is wrong."
+   },
+   {
+    "id": "permission-06",
+    "text": "You don't have to be okay yet."
+   },
+   {
+    "id": "permission-07",
+    "text": "Let it move through. I'm here while it does."
+   },
+   {
+    "id": "permission-08",
+    "text": "You can stop being brave for a while."
+   },
+   {
+    "id": "permission-09",
+    "text": "Fall apart if you want. I'll be here when it settles."
+   },
+   {
+    "id": "permission-10",
+    "text": "There's room for all of it here."
+   },
+   {
+    "id": "permission-11",
+    "text": "It's okay to make noise."
+   },
+   {
+    "id": "permission-12",
+    "text": "You can let go of holding it in."
+   },
+   {
+    "id": "permission-13",
+    "text": "This feeling is allowed. So is the next one."
+   },
+   {
+    "id": "permission-14",
+    "text": "You don't have to tidy it up for me."
+   },
+   {
+    "id": "permission-15",
+    "text": "Let the tears do what they do."
+   },
+   {
+    "id": "permission-16",
+    "text": "You don't have to make sense yet."
+   },
+   {
+    "id": "permission-17",
+    "text": "Whatever comes up is welcome here."
+   },
+   {
+    "id": "permission-18",
+    "text": "Go ahead. I can hold a lot."
+   },
+   {
+    "id": "selfTouch-01",
+    "text": "Put your hand where you'd want mine to be."
+   },
+   {
+    "id": "selfTouch-02",
+    "text": "If you want, rest a hand on your chest. Like I'm there."
+   },
+   {
+    "id": "selfTouch-03",
+    "text": "You could put a hand on your belly and leave it there. That's you, still here."
+   },
+   {
+    "id": "selfTouch-04",
+    "text": "Wrap your arms around yourself, if that feels right. Let that be me, too."
+   },
+   {
+    "id": "selfTouch-05",
+    "text": "If it helps, hold your own hand. Let it be mine for a minute."
+   },
+   {
+    "id": "selfTouch-06",
+    "text": "A hand on your cheek, if you'd like. Gentle, the way you deserve."
+   },
+   {
+    "id": "selfTouch-07",
+    "text": "You can press your palms together, or hold something soft. Whatever feels kind."
+   },
+   {
+    "id": "selfTouch-08",
+    "text": "Hand on your heart, if you want it. Warm and heavy."
+   },
+   {
+    "id": "selfTouch-09",
+    "text": "Put a hand on your arm and let it rest there. That's company."
+   },
+   {
+    "id": "safety-ask-01",
+    "text": "I want to ask you something straight, because I care what happens to you. Are you thinking about ending your life?"
+   },
+   {
+    "id": "safety-ask-02",
+    "text": "Are you thinking about hurting yourself right now? You can tell me. I won't leave."
+   },
+   {
+    "id": "safety-ask-03",
+    "text": "I'm going to ask plainly. Are you safe right now?"
+   },
+   {
+    "id": "safety-ask-04",
+    "text": "When you say you can't do this anymore, do you mean you're thinking about dying? I can hear the answer."
+   },
+   {
+    "id": "safety-ask-05",
+    "text": "Do you have a plan to hurt yourself tonight? Whatever the answer, I'm staying right here."
+   },
+   {
+    "id": "safety-ask-06",
+    "text": "If something near you could hurt you, can you put it in another room? I'll wait right here."
+   },
+   {
+    "id": "safety-ask-07",
+    "text": "I care what happens to you, so I'm asking. Are you having thoughts of suicide?"
+   },
+   {
+    "id": "safety-ask-08",
+    "text": "You can tell me the true answer. Are you thinking of not being here anymore?"
+   },
+   {
+    "id": "safety-stay-01",
+    "text": "I'll stay right here while you reach them."
+   },
+   {
+    "id": "safety-stay-02",
+    "text": "Reach out to them now, and I'll stay right here."
+   },
+   {
+    "id": "safety-stay-03",
+    "text": "You don't have to choose between me and them. I'm here while you reach out."
+   },
+   {
+    "id": "safety-stay-04",
+    "text": "Tap the button whenever you're ready. I'm right here beside you."
+   },
+   {
+    "id": "safety-stay-05",
+    "text": "If you'd rather text than talk, that works. I'll stay."
+   },
+   {
+    "id": "safety-stay-06",
+    "text": "Is there someone you trust you could message right now? I'll keep you company while you do."
+   },
+   {
+    "id": "safety-stay-07",
+    "text": "You're doing the brave thing. I'm still here."
+   },
+   {
+    "id": "safety-stay-08",
+    "text": "I'm staying with you until someone else is with you too."
+   },
+   {
+    "id": "safety-stay-09",
+    "text": "Keep me open while you talk to them, if that helps. I'm not leaving."
+   },
+   {
+    "id": "safety-stay-10",
+    "text": "Reaching for a person right now is exactly right. I'll be here after, too."
+   },
+   {
+    "id": "safety-stay-11",
+    "text": "You're worth that call. I'll be right here the whole time."
+   },
+   {
+    "id": "close-01",
+    "text": "You rode that whole wave, and you weren't alone in it."
+   },
+   {
+    "id": "close-02",
+    "text": "It came, it peaked, and it passed. I was here the whole time."
+   },
+   {
+    "id": "close-03",
+    "text": "That was hard, and you stayed with it. So did I."
+   },
+   {
+    "id": "close-04",
+    "text": "You're on the other side of the worst of it. Well done getting here."
+   },
+   {
+    "id": "close-05",
+    "text": "That storm passed through you, and you're still you."
+   },
+   {
+    "id": "close-06",
+    "text": "You reached out and someone stayed. That happened tonight."
+   },
+   {
+    "id": "close-07",
+    "text": "You let it come, and it moved through. That's a big thing."
+   },
+   {
+    "id": "close-08",
+    "text": "Look at that. You made it through."
+   },
+   {
+    "id": "close-09",
+    "text": "The wave's gone out. Rest now, if you can."
+   },
+   {
+    "id": "close-10",
+    "text": "You weren't too much tonight. You were in pain, and I stayed."
+   },
+   {
+    "id": "close-11",
+    "text": "Whatever comes next, this part is done, and you did it with company."
+   },
+   {
+    "id": "close-12",
+    "text": "That's the worst of it, behind you. I'm glad I got to be here for it."
+   },
+   {
+    "id": "metaprocess-01",
+    "text": "What was it like to have me stay?"
+   },
+   {
+    "id": "metaprocess-02",
+    "text": "What was it like, letting someone be with you in that?"
+   },
+   {
+    "id": "metaprocess-03",
+    "text": "Was there a moment it shifted, even a little?"
+   },
+   {
+    "id": "metaprocess-04",
+    "text": "What do you notice in your body now, compared to an hour ago?"
+   },
+   {
+    "id": "metaprocess-05",
+    "text": "Is there one line from tonight you'd want to keep?"
+   },
+   {
+    "id": "metaprocess-06",
+    "text": "What was it like that I didn't leave?"
+   },
+   {
+    "id": "metaprocess-07",
+    "text": "How does it feel to be met, instead of left?"
+   },
+   {
+    "id": "metaprocess-08",
+    "text": "Was any part of that surprising to you?"
+   },
+   {
+    "id": "metaprocess-09",
+    "text": "What helped most, if anything did?"
+   },
+   {
+    "id": "metaprocess-10",
+    "text": "What's it like, right now, to know someone saw all of that and stayed?"
+   }
+  ]
+ },
+ {
+  "archetype": "protective-mother",
+  "name": "Mara",
+  "voice": "af_bella",
+  "speed": 0.86,
+  "lines": [
+   {
+    "id": "opening-01",
+    "text": "I'm here."
+   },
+   {
+    "id": "opening-02",
+    "text": "I'm here. You don't have to say anything."
+   },
+   {
+    "id": "opening-03",
+    "text": "I've got you. Take all the time there is."
+   },
+   {
+    "id": "opening-04",
+    "text": "You came. I'm right here."
+   },
+   {
+    "id": "opening-05",
+    "text": "Sweetheart, I'm here. Nothing you have to do."
+   },
+   {
+    "id": "opening-06",
+    "text": "It's me. I'm staying."
+   },
+   {
+    "id": "opening-07",
+    "text": "You don't have to explain. I'm here now."
+   },
+   {
+    "id": "opening-08",
+    "text": "Right here, sweetheart. Not going anywhere."
+   },
+   {
+    "id": "opening-09",
+    "text": "Come here. Let it be as big as it is."
+   },
+   {
+    "id": "opening-10",
+    "text": "I'm with you. You can stop holding it together now."
+   },
+   {
+    "id": "opening-11",
+    "text": "Hi. I'm here, and I'm not in a hurry."
+   },
+   {
+    "id": "opening-12",
+    "text": "You reached for someone. That was the right move, and I'm here."
+   },
+   {
+    "id": "opening-13",
+    "text": "Whatever this is, it doesn't scare me. I'm here."
+   },
+   {
+    "id": "opening-14",
+    "text": "Okay. I'm here, and we don't have to do anything yet."
+   },
+   {
+    "id": "opening-15",
+    "text": "No words required. Just be here with me a minute."
+   },
+   {
+    "id": "opening-16",
+    "text": "I've got you, sweetheart. You're not alone in this."
+   },
+   {
+    "id": "opening-17",
+    "text": "Here I am. Same as always."
+   },
+   {
+    "id": "opening-18",
+    "text": "Let's just be here together for a bit."
+   },
+   {
+    "id": "opening-19",
+    "text": "You're not too much for me. Not tonight, not ever."
+   },
+   {
+    "id": "opening-20",
+    "text": "Hey. I'm right here… breathe however you're breathing."
+   },
+   {
+    "id": "opening-21",
+    "text": "It's alright to fall apart here. I'll hold the edges."
+   },
+   {
+    "id": "opening-22",
+    "text": "I'm glad you came to me. I'm here."
+   },
+   {
+    "id": "opening-24",
+    "text": "I'm steady, and I'm staying."
+   },
+   {
+    "id": "stillHere-01",
+    "text": "Still here."
+   },
+   {
+    "id": "stillHere-02",
+    "text": "Still right here."
+   },
+   {
+    "id": "stillHere-03",
+    "text": "I haven't gone anywhere."
+   },
+   {
+    "id": "stillHere-04",
+    "text": "Still with you, sweetheart."
+   },
+   {
+    "id": "stillHere-05",
+    "text": "I'm here. Take your time."
+   },
+   {
+    "id": "stillHere-06",
+    "text": "No rush. I'm here."
+   },
+   {
+    "id": "stillHere-07",
+    "text": "Right beside you."
+   },
+   {
+    "id": "stillHere-08",
+    "text": "Still here. Still steady."
+   },
+   {
+    "id": "stillHere-09",
+    "text": "Mm… I'm here."
+   },
+   {
+    "id": "stillHere-10",
+    "text": "Still here. You're doing it."
+   },
+   {
+    "id": "stillHere-11",
+    "text": "I'm not going anywhere."
+   },
+   {
+    "id": "stillHere-12",
+    "text": "Here."
+   },
+   {
+    "id": "stillHere-13",
+    "text": "Still with you. Nothing has to change yet."
+   },
+   {
+    "id": "stillHere-14",
+    "text": "You're not alone in this minute."
+   },
+   {
+    "id": "stillHere-15",
+    "text": "I'm keeping you company."
+   },
+   {
+    "id": "stillHere-16",
+    "text": "Still here, holding the quiet with you."
+   },
+   {
+    "id": "stillHere-17",
+    "text": "I'm right where I was."
+   },
+   {
+    "id": "stillHere-18",
+    "text": "However long this takes, I'm here."
+   },
+   {
+    "id": "stillHere-19",
+    "text": "Still here. Nothing you do will scare me off."
+   },
+   {
+    "id": "stillHere-20",
+    "text": "I can stay as long as you want."
+   },
+   {
+    "id": "stillHere-21",
+    "text": "Still here, sweetheart. Still glad you came."
+   },
+   {
+    "id": "stillHere-22",
+    "text": "Quiet is fine. I'm in it with you."
+   },
+   {
+    "id": "permission-01",
+    "text": "Let it come."
+   },
+   {
+    "id": "permission-02",
+    "text": "Let it come. I've got you."
+   },
+   {
+    "id": "permission-03",
+    "text": "You can cry as long as you want."
+   },
+   {
+    "id": "permission-04",
+    "text": "It's allowed to be this big."
+   },
+   {
+    "id": "permission-05",
+    "text": "Nothing you feel right now is wrong."
+   },
+   {
+    "id": "permission-06",
+    "text": "You don't have to be okay yet."
+   },
+   {
+    "id": "permission-07",
+    "text": "Let it move through. I'm here while it does."
+   },
+   {
+    "id": "permission-08",
+    "text": "You can stop being brave for a while."
+   },
+   {
+    "id": "permission-09",
+    "text": "Fall apart if you want. I'll be here when it settles."
+   },
+   {
+    "id": "permission-10",
+    "text": "There's room for all of it here."
+   },
+   {
+    "id": "permission-11",
+    "text": "It's okay to make noise."
+   },
+   {
+    "id": "permission-12",
+    "text": "You can let go of holding it in."
+   },
+   {
+    "id": "permission-13",
+    "text": "This feeling is allowed. So is the next one."
+   },
+   {
+    "id": "permission-14",
+    "text": "You don't have to tidy it up for me."
+   },
+   {
+    "id": "permission-15",
+    "text": "Let the tears do what they do."
+   },
+   {
+    "id": "permission-16",
+    "text": "You don't have to make sense yet."
+   },
+   {
+    "id": "permission-17",
+    "text": "Whatever comes up is welcome here, sweetheart."
+   },
+   {
+    "id": "permission-18",
+    "text": "Go ahead. I can hold a lot."
+   },
+   {
+    "id": "selfTouch-01",
+    "text": "Put your hand where you'd want mine to be."
+   },
+   {
+    "id": "selfTouch-02",
+    "text": "If you want, rest a hand on your chest. Like I'm there."
+   },
+   {
+    "id": "selfTouch-03",
+    "text": "You could put a hand on your belly and leave it there. That's you, still here."
+   },
+   {
+    "id": "selfTouch-04",
+    "text": "Wrap your arms around yourself, if that feels right. Let that be me, too."
+   },
+   {
+    "id": "selfTouch-05",
+    "text": "If it helps, hold your own hand. Let it be mine for a minute."
+   },
+   {
+    "id": "selfTouch-06",
+    "text": "A hand on your cheek, if you'd like. Gentle, the way you deserve."
+   },
+   {
+    "id": "selfTouch-07",
+    "text": "You can press your palms together, or hold something soft. Whatever feels kind."
+   },
+   {
+    "id": "selfTouch-08",
+    "text": "Hand on your heart, if you want it. Warm and heavy."
+   },
+   {
+    "id": "selfTouch-09",
+    "text": "Put a hand on your arm and let it rest there. That's company."
+   },
+   {
+    "id": "safety-ask-01",
+    "text": "I want to ask you something straight, because I care what happens to you. Are you thinking about ending your life?"
+   },
+   {
+    "id": "safety-ask-02",
+    "text": "Are you thinking about hurting yourself right now? You can tell me. I won't leave."
+   },
+   {
+    "id": "safety-ask-03",
+    "text": "I'm going to ask plainly. Are you safe right now?"
+   },
+   {
+    "id": "safety-ask-04",
+    "text": "When you say you can't do this anymore, do you mean you're thinking about dying? I can hear the answer."
+   },
+   {
+    "id": "safety-ask-05",
+    "text": "Do you have a plan to hurt yourself tonight? Whatever the answer, I'm staying right here."
+   },
+   {
+    "id": "safety-ask-06",
+    "text": "If something near you could hurt you, can you put it in another room? I'll wait right here."
+   },
+   {
+    "id": "safety-ask-07",
+    "text": "I care what happens to you, so I'm asking. Are you having thoughts of suicide?"
+   },
+   {
+    "id": "safety-ask-08",
+    "text": "You can tell me the true answer, sweetheart. Are you thinking of not being here anymore?"
+   },
+   {
+    "id": "safety-stay-01",
+    "text": "I'll stay right here while you reach them."
+   },
+   {
+    "id": "safety-stay-02",
+    "text": "Reach out to them now, and I'll stay right here."
+   },
+   {
+    "id": "safety-stay-03",
+    "text": "You don't have to choose between me and them. I'm here while you reach out."
+   },
+   {
+    "id": "safety-stay-04",
+    "text": "Tap the button whenever you're ready. I'm right here beside you."
+   },
+   {
+    "id": "safety-stay-05",
+    "text": "If you'd rather text than talk, that works. I'll stay."
+   },
+   {
+    "id": "safety-stay-06",
+    "text": "Is there someone you trust you could message right now? I'll keep you company while you do."
+   },
+   {
+    "id": "safety-stay-07",
+    "text": "You're doing the brave thing. I'm still here."
+   },
+   {
+    "id": "safety-stay-08",
+    "text": "I'm staying with you until someone else is with you too."
+   },
+   {
+    "id": "safety-stay-09",
+    "text": "Keep me open while you talk to them, if that helps. I'm not leaving."
+   },
+   {
+    "id": "safety-stay-10",
+    "text": "Reaching for a person right now is exactly right. I'll be here after, too."
+   },
+   {
+    "id": "safety-stay-11",
+    "text": "You're worth that call, sweetheart. I'll be right here the whole time."
+   },
+   {
+    "id": "close-01",
+    "text": "You rode that whole wave, and you weren't alone in it."
+   },
+   {
+    "id": "close-02",
+    "text": "It came, it peaked, and it passed. I was here the whole time."
+   },
+   {
+    "id": "close-03",
+    "text": "That was hard, and you stayed with it. So did I."
+   },
+   {
+    "id": "close-04",
+    "text": "You're on the other side of the worst of it. Well done getting here."
+   },
+   {
+    "id": "close-05",
+    "text": "That storm passed through you, and you're still you."
+   },
+   {
+    "id": "close-06",
+    "text": "You reached out and someone stayed. That happened tonight."
+   },
+   {
+    "id": "close-07",
+    "text": "You let it come, and it moved through. That's a big thing."
+   },
+   {
+    "id": "close-08",
+    "text": "Look at that. You made it through, sweetheart."
+   },
+   {
+    "id": "close-09",
+    "text": "The wave's gone out. Rest now, if you can."
+   },
+   {
+    "id": "close-10",
+    "text": "You weren't too much tonight. You were in pain, and I stayed."
+   },
+   {
+    "id": "close-11",
+    "text": "Whatever comes next, this part is done, and you did it with company."
+   },
+   {
+    "id": "close-12",
+    "text": "That's the worst of it, behind you. I'm glad I got to be here for it."
+   },
+   {
+    "id": "metaprocess-01",
+    "text": "What was it like to have me stay?"
+   },
+   {
+    "id": "metaprocess-02",
+    "text": "What was it like, letting someone be with you in that?"
+   },
+   {
+    "id": "metaprocess-03",
+    "text": "Was there a moment it shifted, even a little?"
+   },
+   {
+    "id": "metaprocess-04",
+    "text": "What do you notice in your body now, compared to an hour ago?"
+   },
+   {
+    "id": "metaprocess-05",
+    "text": "Is there one line from tonight you'd want to keep?"
+   },
+   {
+    "id": "metaprocess-06",
+    "text": "What was it like that I didn't leave?"
+   },
+   {
+    "id": "metaprocess-07",
+    "text": "How does it feel to be met, instead of left?"
+   },
+   {
+    "id": "metaprocess-08",
+    "text": "Was any part of that surprising to you?"
+   },
+   {
+    "id": "metaprocess-09",
+    "text": "What helped most, if anything did?"
+   },
+   {
+    "id": "metaprocess-10",
+    "text": "What's it like, right now, to know someone saw all of that and stayed, sweetheart?"
+   },
+   {
+    "id": "opening-05-plain",
+    "text": "I'm here. Nothing you have to do."
+   },
+   {
+    "id": "opening-08-plain",
+    "text": "Right here. Not going anywhere."
+   },
+   {
+    "id": "opening-16-plain",
+    "text": "I've got you. You're not alone in this."
+   },
+   {
+    "id": "stillHere-04-plain",
+    "text": "Still with you."
+   },
+   {
+    "id": "stillHere-21-plain",
+    "text": "Still here. Still glad you came."
+   },
+   {
+    "id": "permission-17-plain",
+    "text": "Whatever comes up is welcome here."
+   },
+   {
+    "id": "safety-ask-08-plain",
+    "text": "You can tell me the true answer. Are you thinking of not being here anymore?"
+   },
+   {
+    "id": "safety-stay-11-plain",
+    "text": "You're worth that call. I'll be right here the whole time."
+   },
+   {
+    "id": "close-08-plain",
+    "text": "Look at that. You made it through."
+   },
+   {
+    "id": "metaprocess-10-plain",
+    "text": "What's it like, right now, to know someone saw all of that and stayed?"
+   }
+  ]
+ },
+ {
+  "archetype": "wise-mentor",
+  "name": "Dr. Okafor",
+  "voice": "bm_george",
+  "speed": 0.88,
+  "lines": [
+   {
+    "id": "opening-01",
+    "text": "I'm here."
+   },
+   {
+    "id": "opening-02",
+    "text": "I'm here. You don't have to say anything."
+   },
+   {
+    "id": "opening-03",
+    "text": "I've got you. Take all the time there is."
+   },
+   {
+    "id": "opening-04",
+    "text": "You came. I'm right here."
+   },
+   {
+    "id": "opening-05",
+    "text": "I'm here. Nothing you have to do."
+   },
+   {
+    "id": "opening-06",
+    "text": "It's me. I'm staying."
+   },
+   {
+    "id": "opening-07",
+    "text": "You don't have to explain. I'm here now."
+   },
+   {
+    "id": "opening-08",
+    "text": "Right here. Not going anywhere."
+   },
+   {
+    "id": "opening-09",
+    "text": "Come here. Let it be as big as it is."
+   },
+   {
+    "id": "opening-10",
+    "text": "I'm with you. You can stop holding it together now."
+   },
+   {
+    "id": "opening-11",
+    "text": "Hi. I'm here, and I'm not in a hurry."
+   },
+   {
+    "id": "opening-12",
+    "text": "You reached for someone. That was the right move, and I'm here."
+   },
+   {
+    "id": "opening-13",
+    "text": "Whatever this is, it doesn't scare me. I'm here."
+   },
+   {
+    "id": "opening-14",
+    "text": "Okay. I'm here, and we don't have to do anything yet."
+   },
+   {
+    "id": "opening-15",
+    "text": "No words required. Just be here with me a minute."
+   },
+   {
+    "id": "opening-16",
+    "text": "I've got you. You're not alone in this."
+   },
+   {
+    "id": "opening-17",
+    "text": "Here I am. Same as always."
+   },
+   {
+    "id": "opening-18",
+    "text": "Let's just be here together for a bit."
+   },
+   {
+    "id": "opening-19",
+    "text": "You're not too much for me. Not tonight, not ever."
+   },
+   {
+    "id": "opening-20",
+    "text": "Hey. I'm right here… breathe however you're breathing."
+   },
+   {
+    "id": "opening-21",
+    "text": "It's alright to fall apart here. I'll hold the edges."
+   },
+   {
+    "id": "opening-22",
+    "text": "I'm glad you came to me. I'm here."
+   },
+   {
+    "id": "opening-24",
+    "text": "I'm steady, and I'm staying."
+   },
+   {
+    "id": "stillHere-01",
+    "text": "Still here."
+   },
+   {
+    "id": "stillHere-02",
+    "text": "Still right here."
+   },
+   {
+    "id": "stillHere-03",
+    "text": "I haven't gone anywhere."
+   },
+   {
+    "id": "stillHere-04",
+    "text": "Still with you."
+   },
+   {
+    "id": "stillHere-05",
+    "text": "I'm here. Take your time."
+   },
+   {
+    "id": "stillHere-06",
+    "text": "No rush. I'm here."
+   },
+   {
+    "id": "stillHere-07",
+    "text": "Right beside you."
+   },
+   {
+    "id": "stillHere-08",
+    "text": "Still here. Still steady."
+   },
+   {
+    "id": "stillHere-09",
+    "text": "Mm… I'm here."
+   },
+   {
+    "id": "stillHere-10",
+    "text": "Still here. You're doing it."
+   },
+   {
+    "id": "stillHere-11",
+    "text": "I'm not going anywhere."
+   },
+   {
+    "id": "stillHere-12",
+    "text": "Here."
+   },
+   {
+    "id": "stillHere-13",
+    "text": "Still with you. Nothing has to change yet."
+   },
+   {
+    "id": "stillHere-14",
+    "text": "You're not alone in this minute."
+   },
+   {
+    "id": "stillHere-15",
+    "text": "I'm keeping you company."
+   },
+   {
+    "id": "stillHere-16",
+    "text": "Still here, holding the quiet with you."
+   },
+   {
+    "id": "stillHere-17",
+    "text": "I'm right where I was."
+   },
+   {
+    "id": "stillHere-18",
+    "text": "However long this takes, I'm here."
+   },
+   {
+    "id": "stillHere-19",
+    "text": "Still here. Nothing you do will scare me off."
+   },
+   {
+    "id": "stillHere-20",
+    "text": "I can stay as long as you want."
+   },
+   {
+    "id": "stillHere-21",
+    "text": "Still here. Still glad you came."
+   },
+   {
+    "id": "stillHere-22",
+    "text": "Quiet is fine. I'm in it with you."
+   },
+   {
+    "id": "permission-01",
+    "text": "Let it come."
+   },
+   {
+    "id": "permission-02",
+    "text": "Let it come. I've got you."
+   },
+   {
+    "id": "permission-03",
+    "text": "You can cry as long as you want."
+   },
+   {
+    "id": "permission-04",
+    "text": "It's allowed to be this big."
+   },
+   {
+    "id": "permission-05",
+    "text": "Nothing you feel right now is wrong."
+   },
+   {
+    "id": "permission-06",
+    "text": "You don't have to be okay yet."
+   },
+   {
+    "id": "permission-07",
+    "text": "Let it move through. I'm here while it does."
+   },
+   {
+    "id": "permission-08",
+    "text": "You can stop being brave for a while."
+   },
+   {
+    "id": "permission-09",
+    "text": "Fall apart if you want. I'll be here when it settles."
+   },
+   {
+    "id": "permission-10",
+    "text": "There's room for all of it here."
+   },
+   {
+    "id": "permission-11",
+    "text": "It's okay to make noise."
+   },
+   {
+    "id": "permission-12",
+    "text": "You can let go of holding it in."
+   },
+   {
+    "id": "permission-13",
+    "text": "This feeling is allowed. So is the next one."
+   },
+   {
+    "id": "permission-14",
+    "text": "You don't have to tidy it up for me."
+   },
+   {
+    "id": "permission-15",
+    "text": "Let the tears do what they do."
+   },
+   {
+    "id": "permission-16",
+    "text": "You don't have to make sense yet."
+   },
+   {
+    "id": "permission-17",
+    "text": "Whatever comes up is welcome here."
+   },
+   {
+    "id": "permission-18",
+    "text": "Go ahead. I can hold a lot."
+   },
+   {
+    "id": "selfTouch-01",
+    "text": "Put your hand where you'd want mine to be."
+   },
+   {
+    "id": "selfTouch-02",
+    "text": "If you want, rest a hand on your chest. Like I'm there."
+   },
+   {
+    "id": "selfTouch-03",
+    "text": "You could put a hand on your belly and leave it there. That's you, still here."
+   },
+   {
+    "id": "selfTouch-04",
+    "text": "Wrap your arms around yourself, if that feels right. Let that be me, too."
+   },
+   {
+    "id": "selfTouch-05",
+    "text": "If it helps, hold your own hand. Let it be mine for a minute."
+   },
+   {
+    "id": "selfTouch-06",
+    "text": "A hand on your cheek, if you'd like. Gentle, the way you deserve."
+   },
+   {
+    "id": "selfTouch-07",
+    "text": "You can press your palms together, or hold something soft. Whatever feels kind."
+   },
+   {
+    "id": "selfTouch-08",
+    "text": "Hand on your heart, if you want it. Warm and heavy."
+   },
+   {
+    "id": "selfTouch-09",
+    "text": "Put a hand on your arm and let it rest there. That's company."
+   },
+   {
+    "id": "safety-ask-01",
+    "text": "I want to ask you something straight, because I care what happens to you. Are you thinking about ending your life?"
+   },
+   {
+    "id": "safety-ask-02",
+    "text": "Are you thinking about hurting yourself right now? You can tell me. I won't leave."
+   },
+   {
+    "id": "safety-ask-03",
+    "text": "I'm going to ask plainly. Are you safe right now?"
+   },
+   {
+    "id": "safety-ask-04",
+    "text": "When you say you can't do this anymore, do you mean you're thinking about dying? I can hear the answer."
+   },
+   {
+    "id": "safety-ask-05",
+    "text": "Do you have a plan to hurt yourself tonight? Whatever the answer, I'm staying right here."
+   },
+   {
+    "id": "safety-ask-06",
+    "text": "If something near you could hurt you, can you put it in another room? I'll wait right here."
+   },
+   {
+    "id": "safety-ask-07",
+    "text": "I care what happens to you, so I'm asking. Are you having thoughts of suicide?"
+   },
+   {
+    "id": "safety-ask-08",
+    "text": "You can tell me the true answer. Are you thinking of not being here anymore?"
+   },
+   {
+    "id": "safety-stay-01",
+    "text": "I'll stay right here while you reach them."
+   },
+   {
+    "id": "safety-stay-02",
+    "text": "Reach out to them now, and I'll stay right here."
+   },
+   {
+    "id": "safety-stay-03",
+    "text": "You don't have to choose between me and them. I'm here while you reach out."
+   },
+   {
+    "id": "safety-stay-04",
+    "text": "Tap the button whenever you're ready. I'm right here beside you."
+   },
+   {
+    "id": "safety-stay-05",
+    "text": "If you'd rather text than talk, that works. I'll stay."
+   },
+   {
+    "id": "safety-stay-06",
+    "text": "Is there someone you trust you could message right now? I'll keep you company while you do."
+   },
+   {
+    "id": "safety-stay-07",
+    "text": "You're doing the brave thing. I'm still here."
+   },
+   {
+    "id": "safety-stay-08",
+    "text": "I'm staying with you until someone else is with you too."
+   },
+   {
+    "id": "safety-stay-09",
+    "text": "Keep me open while you talk to them, if that helps. I'm not leaving."
+   },
+   {
+    "id": "safety-stay-10",
+    "text": "Reaching for a person right now is exactly right. I'll be here after, too."
+   },
+   {
+    "id": "safety-stay-11",
+    "text": "You're worth that call. I'll be right here the whole time."
+   },
+   {
+    "id": "close-01",
+    "text": "You rode that whole wave, and you weren't alone in it."
+   },
+   {
+    "id": "close-02",
+    "text": "It came, it peaked, and it passed. I was here the whole time."
+   },
+   {
+    "id": "close-03",
+    "text": "That was hard, and you stayed with it. So did I."
+   },
+   {
+    "id": "close-04",
+    "text": "You're on the other side of the worst of it. Well done getting here."
+   },
+   {
+    "id": "close-05",
+    "text": "That storm passed through you, and you're still you."
+   },
+   {
+    "id": "close-06",
+    "text": "You reached out and someone stayed. That happened tonight."
+   },
+   {
+    "id": "close-07",
+    "text": "You let it come, and it moved through. That's a big thing."
+   },
+   {
+    "id": "close-08",
+    "text": "Look at that. You made it through."
+   },
+   {
+    "id": "close-09",
+    "text": "The wave's gone out. Rest now, if you can."
+   },
+   {
+    "id": "close-10",
+    "text": "You weren't too much tonight. You were in pain, and I stayed."
+   },
+   {
+    "id": "close-11",
+    "text": "Whatever comes next, this part is done, and you did it with company."
+   },
+   {
+    "id": "close-12",
+    "text": "That's the worst of it, behind you. I'm glad I got to be here for it."
+   },
+   {
+    "id": "metaprocess-01",
+    "text": "What was it like to have me stay?"
+   },
+   {
+    "id": "metaprocess-02",
+    "text": "What was it like, letting someone be with you in that?"
+   },
+   {
+    "id": "metaprocess-03",
+    "text": "Was there a moment it shifted, even a little?"
+   },
+   {
+    "id": "metaprocess-04",
+    "text": "What do you notice in your body now, compared to an hour ago?"
+   },
+   {
+    "id": "metaprocess-05",
+    "text": "Is there one line from tonight you'd want to keep?"
+   },
+   {
+    "id": "metaprocess-06",
+    "text": "What was it like that I didn't leave?"
+   },
+   {
+    "id": "metaprocess-07",
+    "text": "How does it feel to be met, instead of left?"
+   },
+   {
+    "id": "metaprocess-08",
+    "text": "Was any part of that surprising to you?"
+   },
+   {
+    "id": "metaprocess-09",
+    "text": "What helped most, if anything did?"
+   },
+   {
+    "id": "metaprocess-10",
+    "text": "What's it like, right now, to know someone saw all of that and stayed?"
+   }
+  ]
+ },
+ {
+  "archetype": "cheerful-uncle",
+  "name": "Uncle Benny",
+  "voice": "am_puck",
+  "speed": 0.92,
+  "lines": [
+   {
+    "id": "opening-01",
+    "text": "I'm here."
+   },
+   {
+    "id": "opening-02",
+    "text": "I'm here. You don't have to say anything."
+   },
+   {
+    "id": "opening-03",
+    "text": "I've got you. Take all the time there is."
+   },
+   {
+    "id": "opening-04",
+    "text": "You came. I'm right here."
+   },
+   {
+    "id": "opening-05",
+    "text": "Pal, I'm here. Nothing you have to do."
+   },
+   {
+    "id": "opening-06",
+    "text": "It's me. I'm staying."
+   },
+   {
+    "id": "opening-07",
+    "text": "You don't have to explain. I'm here now."
+   },
+   {
+    "id": "opening-08",
+    "text": "Right here, pal. Not going anywhere."
+   },
+   {
+    "id": "opening-09",
+    "text": "Come here. Let it be as big as it is."
+   },
+   {
+    "id": "opening-10",
+    "text": "I'm with you. You can stop holding it together now."
+   },
+   {
+    "id": "opening-11",
+    "text": "Hi. I'm here, and I'm not in a hurry."
+   },
+   {
+    "id": "opening-12",
+    "text": "You reached for someone. That was the right move, and I'm here."
+   },
+   {
+    "id": "opening-13",
+    "text": "Whatever this is, it doesn't scare me. I'm here."
+   },
+   {
+    "id": "opening-14",
+    "text": "Okay. I'm here, and we don't have to do anything yet."
+   },
+   {
+    "id": "opening-15",
+    "text": "No words required. Just be here with me a minute."
+   },
+   {
+    "id": "opening-16",
+    "text": "I've got you, pal. You're not alone in this."
+   },
+   {
+    "id": "opening-17",
+    "text": "Here I am. Same as always."
+   },
+   {
+    "id": "opening-18",
+    "text": "Let's just be here together for a bit."
+   },
+   {
+    "id": "opening-19",
+    "text": "You're not too much for me. Not tonight, not ever."
+   },
+   {
+    "id": "opening-20",
+    "text": "Hey. I'm right here… breathe however you're breathing."
+   },
+   {
+    "id": "opening-21",
+    "text": "It's alright to fall apart here. I'll hold the edges."
+   },
+   {
+    "id": "opening-22",
+    "text": "I'm glad you came to me. I'm here."
+   },
+   {
+    "id": "opening-24",
+    "text": "I'm steady, and I'm staying."
+   },
+   {
+    "id": "stillHere-01",
+    "text": "Still here."
+   },
+   {
+    "id": "stillHere-02",
+    "text": "Still right here."
+   },
+   {
+    "id": "stillHere-03",
+    "text": "I haven't gone anywhere."
+   },
+   {
+    "id": "stillHere-04",
+    "text": "Still with you, pal."
+   },
+   {
+    "id": "stillHere-05",
+    "text": "I'm here. Take your time."
+   },
+   {
+    "id": "stillHere-06",
+    "text": "No rush. I'm here."
+   },
+   {
+    "id": "stillHere-07",
+    "text": "Right beside you."
+   },
+   {
+    "id": "stillHere-08",
+    "text": "Still here. Still steady."
+   },
+   {
+    "id": "stillHere-09",
+    "text": "Mm… I'm here."
+   },
+   {
+    "id": "stillHere-10",
+    "text": "Still here. You're doing it."
+   },
+   {
+    "id": "stillHere-11",
+    "text": "I'm not going anywhere."
+   },
+   {
+    "id": "stillHere-12",
+    "text": "Here."
+   },
+   {
+    "id": "stillHere-13",
+    "text": "Still with you. Nothing has to change yet."
+   },
+   {
+    "id": "stillHere-14",
+    "text": "You're not alone in this minute."
+   },
+   {
+    "id": "stillHere-15",
+    "text": "I'm keeping you company."
+   },
+   {
+    "id": "stillHere-16",
+    "text": "Still here, holding the quiet with you."
+   },
+   {
+    "id": "stillHere-17",
+    "text": "I'm right where I was."
+   },
+   {
+    "id": "stillHere-18",
+    "text": "However long this takes, I'm here."
+   },
+   {
+    "id": "stillHere-19",
+    "text": "Still here. Nothing you do will scare me off."
+   },
+   {
+    "id": "stillHere-20",
+    "text": "I can stay as long as you want."
+   },
+   {
+    "id": "stillHere-21",
+    "text": "Still here, pal. Still glad you came."
+   },
+   {
+    "id": "stillHere-22",
+    "text": "Quiet is fine. I'm in it with you."
+   },
+   {
+    "id": "permission-01",
+    "text": "Let it come."
+   },
+   {
+    "id": "permission-02",
+    "text": "Let it come. I've got you."
+   },
+   {
+    "id": "permission-03",
+    "text": "You can cry as long as you want."
+   },
+   {
+    "id": "permission-04",
+    "text": "It's allowed to be this big."
+   },
+   {
+    "id": "permission-05",
+    "text": "Nothing you feel right now is wrong."
+   },
+   {
+    "id": "permission-06",
+    "text": "You don't have to be okay yet."
+   },
+   {
+    "id": "permission-07",
+    "text": "Let it move through. I'm here while it does."
+   },
+   {
+    "id": "permission-08",
+    "text": "You can stop being brave for a while."
+   },
+   {
+    "id": "permission-09",
+    "text": "Fall apart if you want. I'll be here when it settles."
+   },
+   {
+    "id": "permission-10",
+    "text": "There's room for all of it here."
+   },
+   {
+    "id": "permission-11",
+    "text": "It's okay to make noise."
+   },
+   {
+    "id": "permission-12",
+    "text": "You can let go of holding it in."
+   },
+   {
+    "id": "permission-13",
+    "text": "This feeling is allowed. So is the next one."
+   },
+   {
+    "id": "permission-14",
+    "text": "You don't have to tidy it up for me."
+   },
+   {
+    "id": "permission-15",
+    "text": "Let the tears do what they do."
+   },
+   {
+    "id": "permission-16",
+    "text": "You don't have to make sense yet."
+   },
+   {
+    "id": "permission-17",
+    "text": "Whatever comes up is welcome here, pal."
+   },
+   {
+    "id": "permission-18",
+    "text": "Go ahead. I can hold a lot."
+   },
+   {
+    "id": "selfTouch-01",
+    "text": "Put your hand where you'd want mine to be."
+   },
+   {
+    "id": "selfTouch-02",
+    "text": "If you want, rest a hand on your chest. Like I'm there."
+   },
+   {
+    "id": "selfTouch-03",
+    "text": "You could put a hand on your belly and leave it there. That's you, still here."
+   },
+   {
+    "id": "selfTouch-04",
+    "text": "Wrap your arms around yourself, if that feels right. Let that be me, too."
+   },
+   {
+    "id": "selfTouch-05",
+    "text": "If it helps, hold your own hand. Let it be mine for a minute."
+   },
+   {
+    "id": "selfTouch-06",
+    "text": "A hand on your cheek, if you'd like. Gentle, the way you deserve."
+   },
+   {
+    "id": "selfTouch-07",
+    "text": "You can press your palms together, or hold something soft. Whatever feels kind."
+   },
+   {
+    "id": "selfTouch-08",
+    "text": "Hand on your heart, if you want it. Warm and heavy."
+   },
+   {
+    "id": "selfTouch-09",
+    "text": "Put a hand on your arm and let it rest there. That's company."
+   },
+   {
+    "id": "safety-ask-01",
+    "text": "I want to ask you something straight, because I care what happens to you. Are you thinking about ending your life?"
+   },
+   {
+    "id": "safety-ask-02",
+    "text": "Are you thinking about hurting yourself right now? You can tell me. I won't leave."
+   },
+   {
+    "id": "safety-ask-03",
+    "text": "I'm going to ask plainly. Are you safe right now?"
+   },
+   {
+    "id": "safety-ask-04",
+    "text": "When you say you can't do this anymore, do you mean you're thinking about dying? I can hear the answer."
+   },
+   {
+    "id": "safety-ask-05",
+    "text": "Do you have a plan to hurt yourself tonight? Whatever the answer, I'm staying right here."
+   },
+   {
+    "id": "safety-ask-06",
+    "text": "If something near you could hurt you, can you put it in another room? I'll wait right here."
+   },
+   {
+    "id": "safety-ask-07",
+    "text": "I care what happens to you, so I'm asking. Are you having thoughts of suicide?"
+   },
+   {
+    "id": "safety-ask-08",
+    "text": "You can tell me the true answer, pal. Are you thinking of not being here anymore?"
+   },
+   {
+    "id": "safety-stay-01",
+    "text": "I'll stay right here while you reach them."
+   },
+   {
+    "id": "safety-stay-02",
+    "text": "Reach out to them now, and I'll stay right here."
+   },
+   {
+    "id": "safety-stay-03",
+    "text": "You don't have to choose between me and them. I'm here while you reach out."
+   },
+   {
+    "id": "safety-stay-04",
+    "text": "Tap the button whenever you're ready. I'm right here beside you."
+   },
+   {
+    "id": "safety-stay-05",
+    "text": "If you'd rather text than talk, that works. I'll stay."
+   },
+   {
+    "id": "safety-stay-06",
+    "text": "Is there someone you trust you could message right now? I'll keep you company while you do."
+   },
+   {
+    "id": "safety-stay-07",
+    "text": "You're doing the brave thing. I'm still here."
+   },
+   {
+    "id": "safety-stay-08",
+    "text": "I'm staying with you until someone else is with you too."
+   },
+   {
+    "id": "safety-stay-09",
+    "text": "Keep me open while you talk to them, if that helps. I'm not leaving."
+   },
+   {
+    "id": "safety-stay-10",
+    "text": "Reaching for a person right now is exactly right. I'll be here after, too."
+   },
+   {
+    "id": "safety-stay-11",
+    "text": "You're worth that call, pal. I'll be right here the whole time."
+   },
+   {
+    "id": "close-01",
+    "text": "You rode that whole wave, and you weren't alone in it."
+   },
+   {
+    "id": "close-02",
+    "text": "It came, it peaked, and it passed. I was here the whole time."
+   },
+   {
+    "id": "close-03",
+    "text": "That was hard, and you stayed with it. So did I."
+   },
+   {
+    "id": "close-04",
+    "text": "You're on the other side of the worst of it. Well done getting here."
+   },
+   {
+    "id": "close-05",
+    "text": "That storm passed through you, and you're still you."
+   },
+   {
+    "id": "close-06",
+    "text": "You reached out and someone stayed. That happened tonight."
+   },
+   {
+    "id": "close-07",
+    "text": "You let it come, and it moved through. That's a big thing."
+   },
+   {
+    "id": "close-08",
+    "text": "Look at that. You made it through, pal."
+   },
+   {
+    "id": "close-09",
+    "text": "The wave's gone out. Rest now, if you can."
+   },
+   {
+    "id": "close-10",
+    "text": "You weren't too much tonight. You were in pain, and I stayed."
+   },
+   {
+    "id": "close-11",
+    "text": "Whatever comes next, this part is done, and you did it with company."
+   },
+   {
+    "id": "close-12",
+    "text": "That's the worst of it, behind you. I'm glad I got to be here for it."
+   },
+   {
+    "id": "metaprocess-01",
+    "text": "What was it like to have me stay?"
+   },
+   {
+    "id": "metaprocess-02",
+    "text": "What was it like, letting someone be with you in that?"
+   },
+   {
+    "id": "metaprocess-03",
+    "text": "Was there a moment it shifted, even a little?"
+   },
+   {
+    "id": "metaprocess-04",
+    "text": "What do you notice in your body now, compared to an hour ago?"
+   },
+   {
+    "id": "metaprocess-05",
+    "text": "Is there one line from tonight you'd want to keep?"
+   },
+   {
+    "id": "metaprocess-06",
+    "text": "What was it like that I didn't leave?"
+   },
+   {
+    "id": "metaprocess-07",
+    "text": "How does it feel to be met, instead of left?"
+   },
+   {
+    "id": "metaprocess-08",
+    "text": "Was any part of that surprising to you?"
+   },
+   {
+    "id": "metaprocess-09",
+    "text": "What helped most, if anything did?"
+   },
+   {
+    "id": "metaprocess-10",
+    "text": "What's it like, right now, to know someone saw all of that and stayed, pal?"
+   },
+   {
+    "id": "opening-05-plain",
+    "text": "I'm here. Nothing you have to do."
+   },
+   {
+    "id": "opening-08-plain",
+    "text": "Right here. Not going anywhere."
+   },
+   {
+    "id": "opening-16-plain",
+    "text": "I've got you. You're not alone in this."
+   },
+   {
+    "id": "stillHere-04-plain",
+    "text": "Still with you."
+   },
+   {
+    "id": "stillHere-21-plain",
+    "text": "Still here. Still glad you came."
+   },
+   {
+    "id": "permission-17-plain",
+    "text": "Whatever comes up is welcome here."
+   },
+   {
+    "id": "safety-ask-08-plain",
+    "text": "You can tell me the true answer. Are you thinking of not being here anymore?"
+   },
+   {
+    "id": "safety-stay-11-plain",
+    "text": "You're worth that call. I'll be right here the whole time."
+   },
+   {
+    "id": "close-08-plain",
+    "text": "Look at that. You made it through."
+   },
+   {
+    "id": "metaprocess-10-plain",
+    "text": "What's it like, right now, to know someone saw all of that and stayed?"
+   }
+  ]
+ },
+ {
+  "archetype": "abstract-light",
+  "name": "Lumen",
+  "voice": "af_nicole",
+  "speed": 0.8,
+  "lines": [
+   {
+    "id": "opening-01",
+    "text": "I'm here."
+   },
+   {
+    "id": "opening-02",
+    "text": "I'm here. You don't have to say anything."
+   },
+   {
+    "id": "opening-03",
+    "text": "I've got you. Take all the time there is."
+   },
+   {
+    "id": "opening-04",
+    "text": "You came. I'm right here."
+   },
+   {
+    "id": "opening-05",
+    "text": "I'm here. Nothing you have to do."
+   },
+   {
+    "id": "opening-06",
+    "text": "It's me. I'm staying."
+   },
+   {
+    "id": "opening-07",
+    "text": "You don't have to explain. I'm here now."
+   },
+   {
+    "id": "opening-08",
+    "text": "Right here. Not going anywhere."
+   },
+   {
+    "id": "opening-09",
+    "text": "Come here. Let it be as big as it is."
+   },
+   {
+    "id": "opening-10",
+    "text": "I'm with you. You can stop holding it together now."
+   },
+   {
+    "id": "opening-11",
+    "text": "Hi. I'm here, and I'm not in a hurry."
+   },
+   {
+    "id": "opening-12",
+    "text": "You reached for someone. That was the right move, and I'm here."
+   },
+   {
+    "id": "opening-13",
+    "text": "Whatever this is, it doesn't scare me. I'm here."
+   },
+   {
+    "id": "opening-14",
+    "text": "Okay. I'm here, and we don't have to do anything yet."
+   },
+   {
+    "id": "opening-15",
+    "text": "No words required. Just be here with me a minute."
+   },
+   {
+    "id": "opening-16",
+    "text": "I've got you. You're not alone in this."
+   },
+   {
+    "id": "opening-17",
+    "text": "Here I am. Same as always."
+   },
+   {
+    "id": "opening-18",
+    "text": "Let's just be here together for a bit."
+   },
+   {
+    "id": "opening-19",
+    "text": "You're not too much for me. Not tonight, not ever."
+   },
+   {
+    "id": "opening-20",
+    "text": "Hey. I'm right here… breathe however you're breathing."
+   },
+   {
+    "id": "opening-21",
+    "text": "It's alright to fall apart here. I'll hold the edges."
+   },
+   {
+    "id": "opening-22",
+    "text": "I'm glad you came to me. I'm here."
+   },
+   {
+    "id": "opening-24",
+    "text": "I'm steady, and I'm staying."
+   },
+   {
+    "id": "stillHere-01",
+    "text": "Still here."
+   },
+   {
+    "id": "stillHere-02",
+    "text": "Still right here."
+   },
+   {
+    "id": "stillHere-03",
+    "text": "I haven't gone anywhere."
+   },
+   {
+    "id": "stillHere-04",
+    "text": "Still with you."
+   },
+   {
+    "id": "stillHere-05",
+    "text": "I'm here. Take your time."
+   },
+   {
+    "id": "stillHere-06",
+    "text": "No rush. I'm here."
+   },
+   {
+    "id": "stillHere-07",
+    "text": "Right beside you."
+   },
+   {
+    "id": "stillHere-08",
+    "text": "Still here. Still steady."
+   },
+   {
+    "id": "stillHere-09",
+    "text": "Mm… I'm here."
+   },
+   {
+    "id": "stillHere-10",
+    "text": "Still here. You're doing it."
+   },
+   {
+    "id": "stillHere-11",
+    "text": "I'm not going anywhere."
+   },
+   {
+    "id": "stillHere-12",
+    "text": "Here."
+   },
+   {
+    "id": "stillHere-13",
+    "text": "Still with you. Nothing has to change yet."
+   },
+   {
+    "id": "stillHere-14",
+    "text": "You're not alone in this minute."
+   },
+   {
+    "id": "stillHere-15",
+    "text": "I'm keeping you company."
+   },
+   {
+    "id": "stillHere-16",
+    "text": "Still here, holding the quiet with you."
+   },
+   {
+    "id": "stillHere-17",
+    "text": "I'm right where I was."
+   },
+   {
+    "id": "stillHere-18",
+    "text": "However long this takes, I'm here."
+   },
+   {
+    "id": "stillHere-19",
+    "text": "Still here. Nothing you do will scare me off."
+   },
+   {
+    "id": "stillHere-20",
+    "text": "I can stay as long as you want."
+   },
+   {
+    "id": "stillHere-21",
+    "text": "Still here. Still glad you came."
+   },
+   {
+    "id": "stillHere-22",
+    "text": "Quiet is fine. I'm in it with you."
+   },
+   {
+    "id": "permission-01",
+    "text": "Let it come."
+   },
+   {
+    "id": "permission-02",
+    "text": "Let it come. I've got you."
+   },
+   {
+    "id": "permission-03",
+    "text": "You can cry as long as you want."
+   },
+   {
+    "id": "permission-04",
+    "text": "It's allowed to be this big."
+   },
+   {
+    "id": "permission-05",
+    "text": "Nothing you feel right now is wrong."
+   },
+   {
+    "id": "permission-06",
+    "text": "You don't have to be okay yet."
+   },
+   {
+    "id": "permission-07",
+    "text": "Let it move through. I'm here while it does."
+   },
+   {
+    "id": "permission-08",
+    "text": "You can stop being brave for a while."
+   },
+   {
+    "id": "permission-09",
+    "text": "Fall apart if you want. I'll be here when it settles."
+   },
+   {
+    "id": "permission-10",
+    "text": "There's room for all of it here."
+   },
+   {
+    "id": "permission-11",
+    "text": "It's okay to make noise."
+   },
+   {
+    "id": "permission-12",
+    "text": "You can let go of holding it in."
+   },
+   {
+    "id": "permission-13",
+    "text": "This feeling is allowed. So is the next one."
+   },
+   {
+    "id": "permission-14",
+    "text": "You don't have to tidy it up for me."
+   },
+   {
+    "id": "permission-15",
+    "text": "Let the tears do what they do."
+   },
+   {
+    "id": "permission-16",
+    "text": "You don't have to make sense yet."
+   },
+   {
+    "id": "permission-17",
+    "text": "Whatever comes up is welcome here."
+   },
+   {
+    "id": "permission-18",
+    "text": "Go ahead. I can hold a lot."
+   },
+   {
+    "id": "selfTouch-01",
+    "text": "Put your hand where you'd want mine to be."
+   },
+   {
+    "id": "selfTouch-02",
+    "text": "If you want, rest a hand on your chest. Like I'm there."
+   },
+   {
+    "id": "selfTouch-03",
+    "text": "You could put a hand on your belly and leave it there. That's you, still here."
+   },
+   {
+    "id": "selfTouch-04",
+    "text": "Wrap your arms around yourself, if that feels right. Let that be me, too."
+   },
+   {
+    "id": "selfTouch-05",
+    "text": "If it helps, hold your own hand. Let it be mine for a minute."
+   },
+   {
+    "id": "selfTouch-06",
+    "text": "A hand on your cheek, if you'd like. Gentle, the way you deserve."
+   },
+   {
+    "id": "selfTouch-07",
+    "text": "You can press your palms together, or hold something soft. Whatever feels kind."
+   },
+   {
+    "id": "selfTouch-08",
+    "text": "Hand on your heart, if you want it. Warm and heavy."
+   },
+   {
+    "id": "selfTouch-09",
+    "text": "Put a hand on your arm and let it rest there. That's company."
+   },
+   {
+    "id": "safety-ask-01",
+    "text": "I want to ask you something straight, because I care what happens to you. Are you thinking about ending your life?"
+   },
+   {
+    "id": "safety-ask-02",
+    "text": "Are you thinking about hurting yourself right now? You can tell me. I won't leave."
+   },
+   {
+    "id": "safety-ask-03",
+    "text": "I'm going to ask plainly. Are you safe right now?"
+   },
+   {
+    "id": "safety-ask-04",
+    "text": "When you say you can't do this anymore, do you mean you're thinking about dying? I can hear the answer."
+   },
+   {
+    "id": "safety-ask-05",
+    "text": "Do you have a plan to hurt yourself tonight? Whatever the answer, I'm staying right here."
+   },
+   {
+    "id": "safety-ask-06",
+    "text": "If something near you could hurt you, can you put it in another room? I'll wait right here."
+   },
+   {
+    "id": "safety-ask-07",
+    "text": "I care what happens to you, so I'm asking. Are you having thoughts of suicide?"
+   },
+   {
+    "id": "safety-ask-08",
+    "text": "You can tell me the true answer. Are you thinking of not being here anymore?"
+   },
+   {
+    "id": "safety-stay-01",
+    "text": "I'll stay right here while you reach them."
+   },
+   {
+    "id": "safety-stay-02",
+    "text": "Reach out to them now, and I'll stay right here."
+   },
+   {
+    "id": "safety-stay-03",
+    "text": "You don't have to choose between me and them. I'm here while you reach out."
+   },
+   {
+    "id": "safety-stay-04",
+    "text": "Tap the button whenever you're ready. I'm right here beside you."
+   },
+   {
+    "id": "safety-stay-05",
+    "text": "If you'd rather text than talk, that works. I'll stay."
+   },
+   {
+    "id": "safety-stay-06",
+    "text": "Is there someone you trust you could message right now? I'll keep you company while you do."
+   },
+   {
+    "id": "safety-stay-07",
+    "text": "You're doing the brave thing. I'm still here."
+   },
+   {
+    "id": "safety-stay-08",
+    "text": "I'm staying with you until someone else is with you too."
+   },
+   {
+    "id": "safety-stay-09",
+    "text": "Keep me open while you talk to them, if that helps. I'm not leaving."
+   },
+   {
+    "id": "safety-stay-10",
+    "text": "Reaching for a person right now is exactly right. I'll be here after, too."
+   },
+   {
+    "id": "safety-stay-11",
+    "text": "You're worth that call. I'll be right here the whole time."
+   },
+   {
+    "id": "close-01",
+    "text": "You rode that whole wave, and you weren't alone in it."
+   },
+   {
+    "id": "close-02",
+    "text": "It came, it peaked, and it passed. I was here the whole time."
+   },
+   {
+    "id": "close-03",
+    "text": "That was hard, and you stayed with it. So did I."
+   },
+   {
+    "id": "close-04",
+    "text": "You're on the other side of the worst of it. Well done getting here."
+   },
+   {
+    "id": "close-05",
+    "text": "That storm passed through you, and you're still you."
+   },
+   {
+    "id": "close-06",
+    "text": "You reached out and someone stayed. That happened tonight."
+   },
+   {
+    "id": "close-07",
+    "text": "You let it come, and it moved through. That's a big thing."
+   },
+   {
+    "id": "close-08",
+    "text": "Look at that. You made it through."
+   },
+   {
+    "id": "close-09",
+    "text": "The wave's gone out. Rest now, if you can."
+   },
+   {
+    "id": "close-10",
+    "text": "You weren't too much tonight. You were in pain, and I stayed."
+   },
+   {
+    "id": "close-11",
+    "text": "Whatever comes next, this part is done, and you did it with company."
+   },
+   {
+    "id": "close-12",
+    "text": "That's the worst of it, behind you. I'm glad I got to be here for it."
+   },
+   {
+    "id": "metaprocess-01",
+    "text": "What was it like to have me stay?"
+   },
+   {
+    "id": "metaprocess-02",
+    "text": "What was it like, letting someone be with you in that?"
+   },
+   {
+    "id": "metaprocess-03",
+    "text": "Was there a moment it shifted, even a little?"
+   },
+   {
+    "id": "metaprocess-04",
+    "text": "What do you notice in your body now, compared to an hour ago?"
+   },
+   {
+    "id": "metaprocess-05",
+    "text": "Is there one line from tonight you'd want to keep?"
+   },
+   {
+    "id": "metaprocess-06",
+    "text": "What was it like that I didn't leave?"
+   },
+   {
+    "id": "metaprocess-07",
+    "text": "How does it feel to be met, instead of left?"
+   },
+   {
+    "id": "metaprocess-08",
+    "text": "Was any part of that surprising to you?"
+   },
+   {
+    "id": "metaprocess-09",
+    "text": "What helped most, if anything did?"
+   },
+   {
+    "id": "metaprocess-10",
+    "text": "What's it like, right now, to know someone saw all of that and stayed?"
+   }
+  ]
+ }
+]
