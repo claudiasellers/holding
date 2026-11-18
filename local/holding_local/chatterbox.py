@@ -193,9 +193,10 @@ class Chatterbox:
                 if "position_ids" in self._lm_inputs:
                     lm_in["position_ids"] = pos
                 logits, *present = self.language_model.run(None, lm_in)
-                # Turbo's card penalises every token so far; the original only the last one.
-                seen = np.unique(tokens)[np.newaxis, :] if turbo else tokens[:, -1:]
-                scores = apply_repetition_penalty(logits[:, -1, :], seen)
+                # Penalise every speech token so far, as both model cards and Transformers.js do.
+                # Penalising only the last one let greedy decoding fall into a loop of near-silence
+                # that never reached the stop token (a 4 s line came out as 0.9 s after trimming).
+                scores = apply_repetition_penalty(logits[:, -1, :], np.unique(tokens)[np.newaxis, :])
                 nxt = np.argmax(scores, axis=-1, keepdims=True).astype(np.int64)
                 tokens = np.concatenate((tokens, nxt), axis=-1)
                 if (nxt.flatten() == STOP_SPEECH_TOKEN).all():

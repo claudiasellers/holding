@@ -122,6 +122,11 @@ def clear_cache(mid: str = "chatterbox") -> int:
 
 
 # ---------- speaking ----------
+def min_seconds(text: str) -> float:
+    """Far shorter than anyone speaks (about 40 characters a second): below it, a line was cut off."""
+    return 0.025 * len(_norm(text))
+
+
 _live = 0  # live requests in flight; pre-rendering yields to them
 _live_lock = threading.Lock()
 
@@ -156,6 +161,9 @@ def synthesize(mid: str, text: str, voice: str, feeling, quality: str, live: boo
         if live:
             with _live_lock:
                 _live -= 1
+    if len(wav) / sr < min_seconds(text):
+        # Cut short: better the steady Kokoro voice than a clipped line. Not kept.
+        raise RuntimeError(f"{mid} stopped early ({len(wav) / sr:.1f}s for {len(text)} characters)")
     try:
         store(mid, text, voice, f, wav, sr)
     except OSError:

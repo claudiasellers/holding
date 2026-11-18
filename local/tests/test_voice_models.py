@@ -239,7 +239,7 @@ def test_line_cache_and_prerender(home, monkeypatch):
 
         def generate(self, text, cond, ex):
             calls.append((text, ex))
-            return np.full(2400, 0.25, dtype=np.float32)
+            return np.full(24000, 0.25, dtype=np.float32)
 
     monkeypatch.setattr(chatterbox, "engine", lambda mid="chatterbox": E())
     syn = expressive.synthesize
@@ -375,3 +375,34 @@ def test_real_mac_voices_speak():
         if os.environ.get("HOLDING_MLX_DELETE_AFTER") == "1":
             print(f"{mid}: deleted, {voice_models.delete(mid, cfg) / 1e9:.2f} GB freed")
     assert not failures, failures
+
+
+def test_a_line_cut_short_falls_back_and_is_not_kept(home, monkeypatch):
+    monkeypatch.setattr(state, "HOME", home)
+
+    class E:
+        def condition(self, key, fn):
+            return ("cond",)
+
+        def generate(self, text, cond, ex):
+            return np.full(int(0.9 * chatterbox.SR), 0.25, dtype=np.float32)  # 0.9 s for a long sentence
+
+    monkeypatch.setattr(chatterbox, "engine", lambda mid="chatterbox": E())
+    text = "That sounds like it really hurt. Of course you're tired. Come sit with me a while."
+    with pytest.raises(RuntimeError, match="stopped early"):
+        expressive.synthesize("chatterbox", text, "am_michael", 0.35, "int8")
+    assert expressive.cache_bytes("chatterbox") == 0
+    fake_chatterbox_files()
+    from holding_local import tts
+    monkeypatch.setattr(tts, "synthesize", lambda t, v, s, q: (np.zeros(48000, dtype=np.float32), 24000))
+    c, _ = client(home)
+    r = c.post("/v1/audio/speech", json={"model": "chatterbox", "input": text, "voice": "am_michael"}, headers=AUTH)
+    assert r.status_code == 200 and r.headers["x-voice-model"] == "kokoro"
+
+
+def test_penalty_covers_every_token_so_far():
+    e, seen = fake_engine([100, 100, 100])  # a model that wants to repeat
+    cond = (np.zeros((1, 3, 4), np.float32), np.array([[7]], np.int64), np.zeros((1, 192), np.float32),
+            np.zeros((1, 10, 80), np.float32))
+    e.generate("Hi.", cond)
+    assert seen["speech"] == [[7, 100, 100, 100]]  # a strong preference still wins over the penalty
