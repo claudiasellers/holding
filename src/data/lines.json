@@ -1926,78 +1926,168 @@
    "w": 0
   }
  ],
- "repair": [
-  {
-   "t": "I {miss}. That missed, and it's on me. Is that it, or something else?",
-   "ipf": "attunement",
-   "w": 0.3
+ "repair": {
+  "opener": {
+   "sharp": [
+    {
+     "t": "You're right to tell me.",
+     "ipf": "encouragement",
+     "w": 0.3
+    }
+   ],
+   "apology": [
+    {
+     "t": "You don't have to be sorry.",
+     "ipf": "protection",
+     "w": 0.3
+    }
+   ],
+   "silence": [
+    {
+     "t": "I think that last part may have missed.",
+     "ipf": "attunement",
+     "w": 0.3
+    }
+   ],
+   "again": [
+    {
+     "t": "I still didn't get it right.",
+     "ipf": "attunement",
+     "w": 0.3
+    }
+   ],
+   "repeat": [
+    {
+     "t": "I did it again.",
+     "ipf": "attunement",
+     "w": 0.3
+    }
+   ]
   },
-  {
-   "t": "I jumped to fixing when you needed me to just stay. That's on me. Let me try again.",
-   "ipf": "attunement",
-   "w": 0.4
-  },
-  {
-   "t": "That missed. I {miss}, and that wasn't what you were asking for. What was closer?",
-   "ipf": "attunement",
-   "w": 0.3
-  },
-  {
-   "t": "You're right, that wasn't it. I went too fast. I'm slowing down.",
-   "ipf": "soothing",
-   "w": 0.3
-  },
-  {
-   "t": "I {miss}. I'm sorry. I'm still here, and I'm listening more carefully now.",
-   "ipf": "attunement",
-   "w": 0.5
-  },
-  {
-   "t": "That one didn't land. I think I said too much. Let me just be here.",
-   "ipf": "soothing",
-   "w": 0.4
-  },
-  {
-   "t": "I misread that. It's not on you to explain better. Tell me what I got wrong, or just tap again.",
-   "ipf": "attunement",
-   "w": 0.2
-  },
-  {
-   "t": "I {miss}, and you deserved better. Is it closer to this: you wanted me quiet and close?",
-   "ipf": "soothing",
-   "w": 0.6
-  },
-  {
-   "t": "That landed wrong, and I'll own it. What would have helped, if anything comes to mind?",
-   "ipf": "attunement",
-   "w": 0.2
-  },
-  {
-   "t": "You noticed I {miss}. You were right to say so. I'm back with you now.",
-   "ipf": "encouragement",
-   "w": 0.5
-  },
-  {
-   "t": "Misses happen, and we come back from them. I'm coming back now. Is this closer?",
-   "ipf": "protection",
-   "w": 0.4
-  },
-  {
-   "t": "I was talking when you wanted company. Let's go back to just being here.",
-   "ipf": "soothing",
-   "w": 0.5
-  },
-  {
-   "t": "I wasn't with you on that one. My mistake, not yours. Is that it, or something else?",
-   "ipf": "attunement",
-   "w": 0.1
-  },
-  {
-   "t": "Thank you for telling me, {endearment}. I {miss}, and I'm right here, trying again.",
-   "ipf": "attunement",
-   "w": 0.7
+  "own": [
+   {
+    "t": "That's on me, not you.",
+    "ipf": "protection",
+    "w": 0.3
+   },
+   {
+    "t": "That one's mine, not yours.",
+    "ipf": "protection",
+    "w": 0.5
+   },
+   {
+    "t": "My miss, not yours.",
+    "ipf": "attunement",
+    "w": 0.2
+   }
+  ],
+  "check": [
+   {
+    "t": "Is that it, or something else?",
+    "ipf": "attunement",
+    "w": 0.3,
+    "tier": "name"
+   }
+  ],
+  "checkQuiet": [
+   {
+    "t": "Tap if that's it, or if it's something else.",
+    "ipf": "attunement",
+    "w": 0.3,
+    "tier": "bewith"
+   }
+  ],
+  "listen": [
+   {
+    "t": "Tell me what I got wrong, or show me with a tap. I'm listening.",
+    "ipf": "attunement",
+    "w": 0.3,
+    "tier": "name"
+   },
+   {
+    "t": "Show me with a tap, or in a few words. I'm right here.",
+    "ipf": "attunement",
+    "w": 0.4,
+    "tier": "name"
+   }
+  ],
+  "listenQuiet": [
+   {
+    "t": "Show me with a tap, or a few words. I'm right here.",
+    "ipf": "attunement",
+    "w": 0.4,
+    "tier": "bewith"
+   }
+  ],
+  "reattune": {
+   "quiet": [
+    {
+     "t": "Fewer words now. Just me, here.",
+     "ipf": "soothing",
+     "w": 0.3,
+     "tier": "bewith"
+    },
+    {
+     "t": "I'll stay close and quiet.",
+     "ipf": "soothing",
+     "w": 0.4,
+     "tier": "bewith"
+    }
+   ],
+   "stay": [
+    {
+     "t": "No fixing. Just here with you.",
+     "ipf": "soothing",
+     "w": 0.3,
+     "tier": "bewith"
+    },
+    {
+     "t": "I'm just going to stay.",
+     "ipf": "protection",
+     "w": 0.3,
+     "tier": "bewith"
+    }
+   ],
+   "noQuestions": [
+    {
+     "t": "No questions. I'm just here.",
+     "ipf": "soothing",
+     "w": 0.3,
+     "tier": "bewith"
+    }
+   ],
+   "slower": [
+    {
+     "t": "Slower now. I'm with you.",
+     "ipf": "soothing",
+     "w": 0.3,
+     "tier": "name"
+    }
+   ],
+   "deeper": [
+    {
+     "t": "Let's not keep it light. I'm here for the real thing.",
+     "ipf": "attunement",
+     "w": 0.4,
+     "tier": "name"
+    }
+   ],
+   "heard": [
+    {
+     "t": "Thank you for telling me. I've got it now.",
+     "ipf": "attunement",
+     "w": 0.4,
+     "tier": "name"
+    },
+    {
+     "t": "Okay. I hear you now.",
+     "ipf": "attunement",
+     "w": 0.2,
+     "tier": "name"
+    }
+   ]
   }
- ],
+ },
  "close": [
   {
    "t": "You rode that whole wave, and you weren't alone in it.",

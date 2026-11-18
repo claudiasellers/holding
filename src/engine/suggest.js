@@ -86,7 +86,8 @@ const BANK = {
     glad: ['That actually helped.', 'I feel a bit lighter.', 'Can I tell you something good?'],
   },
   asked: ['Yes, that\'s it.', 'Not quite.', 'I\'m not sure.'],
-  repair: ['That\'s better.', 'Still not quite.', 'Just stay with me.'],
+  // answers to the repair's check (§7.5); readCheckAnswer maps each to yes / else / stay
+  repair: ['Yes, that\'s it.', 'Something else.', 'Just stay with me.'],
   wordsBack: ['Something happened today.', 'It started when…', 'I\'m not ready yet.'],
   bodyBudget: ['I\'ll get some water.', 'I haven\'t eaten.', 'I\'m cold.'],
   name: ['Can I tell you what happened?', 'It started when…', 'I keep going over it.'],
@@ -98,8 +99,9 @@ const BANK = {
 
 /** Three rule-based suggestions for this gist. Deterministic for a given gist. */
 export function ruleSuggestions(g) {
+  // The repair's check gets exactly its three answers, in order (§7.5).
+  if (g.lastKind === 'repair') return [...BANK.repair];
   const pools = [];
-  if (g.lastKind === 'repair') pools.push(BANK.repair);
   if (g.lastKind === 'wordsBack') pools.push(BANK.wordsBack);
   if (g.lastKind === 'bodyBudget') pools.push(BANK.bodyBudget);
   if (g.parentAsked && g.tier !== 'bewith') pools.push(BANK.asked);
