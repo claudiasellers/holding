@@ -47,6 +47,9 @@ jobs:
             node_modules/@huggingface/transformers/.cache
           key: voice-${{ hashFiles('src/content/scripted-lines.json', 'scripts/prerender-voice.mjs') }}
           restore-keys: voice-
+      # ffmpeg encodes lines to 64 kbps MP3. Without it they'd be stored as WAV (~10x larger in the site and APK).
+      - name: Install ffmpeg
+        run: command -v ffmpeg || (sudo apt-get update -q && sudo apt-get install -y -q ffmpeg)
       - name: Pre-render scripted lines
         run: |
           if [ -f scripts/export-lines.mjs ]; then node scripts/export-lines.mjs; fi

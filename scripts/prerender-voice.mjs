@@ -20,11 +20,11 @@
  *   public/audio/index.json            { "<archetype>": { "<id>": { "src", "hash", "voice", "seconds" } } }
  * Only changed lines are re-rendered (hash of text + voice + speed).
  */
-import { readFile, writeFile, mkdir, rm, stat, copyFile } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, rm, stat, copyFile, readdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
-import { join, resolve, extname } from 'node:path';
+import { join, resolve, extname, dirname } from 'node:path';
 import { tmpdir } from 'node:os';
 import { pathToFileURL } from 'node:url';
 
@@ -41,6 +41,11 @@ function has(cmd, probeArgs = ['-version']) {
 }
 const encoder = has('ffmpeg') ? 'ffmpeg' : (process.platform === 'darwin' && has('afconvert', ['-h']) ? 'afconvert' : 'wav');
 const EXT = encoder === 'ffmpeg' ? '.mp3' : encoder === 'afconvert' ? '.m4a' : '.wav';
+// Uncompressed WAV is ~25x larger and ends up in the web build and the APK. Refuse it in CI.
+if (encoder === 'wav' && process.env.CI && !args.includes('--allow-wav')) {
+  console.error('[voice] No ffmpeg on this machine, so lines would be stored as WAV. Install ffmpeg (or pass --allow-wav).');
+  process.exit(1);
+}
 
 async function loadLines(p) {
   if (!existsSync(p)) {
@@ -71,20 +76,28 @@ if (!Array.isArray(groups)) { console.error('Expected an array of { archetype, v
 const indexPath = join(outDir, 'index.json');
 const index = existsSync(indexPath) ? JSON.parse(await readFile(indexPath, 'utf8')) : {};
 
-let KokoroTTS;
-try {
-  // Resolve from the project you run it in (cwd), not from where this script file lives.
-  const { createRequire } = await import('node:module');
-  const resolved = createRequire(join(process.cwd(), 'noop.js')).resolve('kokoro-js');
-  ({ KokoroTTS } = await import(pathToFileURL(resolved).href));
-} catch (_) {
-  console.error('kokoro-js is not installed. Run: npm i -D kokoro-js');
-  process.exit(1);
+// Load the model only when a line actually needs rendering (re-encoding and no-op runs need none).
+let tts = null;
+async function getTTS() {
+  if (tts) return tts;
+  let KokoroTTS;
+  try {
+    // Resolve from the project you run it in (cwd), not from where this script file lives.
+    const { createRequire } = await import('node:module');
+    const resolved = createRequire(join(process.cwd(), 'noop.js')).resolve('kokoro-js');
+    ({ KokoroTTS } = await import(pathToFileURL(resolved).href));
+  } catch (_) {
+    console.error('kokoro-js is not installed. Run: npm i -D kokoro-js');
+    process.exit(1);
+  }
+  console.log(`[voice] loading ${MODEL} (${DTYPE}) on CPU; encoder: ${encoder}`);
+  tts = await KokoroTTS.from_pretrained(MODEL, { dtype: DTYPE, device: 'cpu' });
+  return tts;
 }
-console.log(`[voice] loading ${MODEL} (${DTYPE}) on CPU; encoder: ${encoder}`);
-const tts = await KokoroTTS.from_pretrained(MODEL, { dtype: DTYPE, device: 'cpu' });
+console.log(`[voice] encoder: ${encoder}`);
+const webRoot = dirname(outDir);
 
-let made = 0, kept = 0, skipped = 0;
+let made = 0, kept = 0, skipped = 0, converted = 0;
 for (const g of groups) {
   const voice = g.voice || 'af_heart';
   const dir = join(outDir, g.archetype);
@@ -98,7 +111,16 @@ for (const g of groups) {
     const rel = `audio/${g.archetype}/${line.id}${EXT}`; // path relative to the web root
     const prev = index[g.archetype][line.id];
     if (!force && prev && prev.hash === h && existsSync(out)) { kept++; continue; }
-    const audio = await tts.generate(line.text, { voice: line.voice || voice, speed });
+    // Same line already rendered as raw WAV (no encoder at the time): encode it instead of re-rendering.
+    const prevFile = prev && prev.src ? join(webRoot, prev.src) : null;
+    if (!force && prev && prev.hash === h && prevFile && prevFile !== out && extname(prevFile) === '.wav' && existsSync(prevFile) && encoder !== 'wav') {
+      await encode(prevFile, out);
+      await rm(prevFile, { force: true });
+      index[g.archetype][line.id] = { ...prev, src: rel, bytes: (await stat(out)).size };
+      converted++;
+      continue;
+    }
+    const audio = await (await getTTS()).generate(line.text, { voice: line.voice || voice, speed });
     const tmp = join(tmpdir(), `holding-${process.pid}-${h}.wav`);
     await audio.save(tmp);
     await encode(tmp, out);
@@ -109,5 +131,16 @@ for (const g of groups) {
     process.stdout.write(`\r[voice] ${made} rendered, ${kept} unchanged`);
   }
 }
+// Drop audio files the index no longer points at (old formats, removed lines), so they don't ship.
+const wanted = new Set(Object.values(index).flatMap((byId) => Object.values(byId).map((e) => join(webRoot, e.src))));
+let pruned = 0;
+for (const sub of await readdir(outDir, { withFileTypes: true })) {
+  if (!sub.isDirectory()) continue;
+  const dir = join(outDir, sub.name);
+  for (const name of await readdir(dir)) {
+    const f = join(dir, name);
+    if (/\.(mp3|m4a|wav)$/.test(name) && !wanted.has(f)) { await rm(f, { force: true }); pruned++; }
+  }
+}
 await writeFile(indexPath, JSON.stringify(index, null, 2));
-console.log(`\n[voice] done: ${made} rendered, ${kept} unchanged, ${skipped} skipped (placeholders). Index: ${indexPath}`);
+console.log(`\n[voice] done: ${made} rendered, ${converted} re-encoded from WAV, ${kept} unchanged, ${pruned} stale files removed, ${skipped} skipped (placeholders). Index: ${indexPath}`);
