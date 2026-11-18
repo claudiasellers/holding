@@ -9,6 +9,7 @@ dependencies = [
   "httpx>=0.27",
   "numpy>=2.0",
   "kokoro-onnx>=0.6.1,<0.7",
+  "tokenizers>=0.20",         # Chatterbox's text tokenizer (the voice model itself is optional, downloaded from Settings)
   "python-multipart>=0.0.9",
   "qrcode>=7.4",
   "psutil>=5.9",

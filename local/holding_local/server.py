@@ -12,7 +12,7 @@ from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse, Response, StreamingResponse
 from starlette.concurrency import run_in_threadpool
 
-from . import __version__, catalog, llm, net, state, stt, tts
+from . import __version__, catalog, chatterbox, llm, net, state, stt, tts, voice_models
 
 API_PREFIXES = ("/v1/", "/health")
 HIDDEN_DIRS = {"node_modules", "local", "android", "ios", "tools", "scripts", "__pycache__"}
@@ -78,7 +78,7 @@ def create_app(cfg: dict | None = None) -> FastAPI:
         return {
             "Access-Control-Allow-Origin": origin,
             "Vary": "Origin",
-            "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+            "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
             "Access-Control-Allow-Headers": request.headers.get("access-control-request-headers")
             or "Authorization, Content-Type",
             "Access-Control-Allow-Private-Network": "true",  # Chrome Private Network Access preflight
@@ -135,10 +135,11 @@ def create_app(cfg: dict | None = None) -> FastAPI:
             "ok": up and have and tts.available(cfg["tts_quality"]),
             "version": __version__,
             "llm": {"runtime": "ollama", "reachable": up, "model": want, "downloaded": have},
-            "tts": {"engine": "kokoro-82m-v1.0", "ready": tts.available(cfg["tts_quality"])},
+            "tts": {"engine": "kokoro-82m-v1.0", "ready": tts.available(cfg["tts_quality"]),
+                    "selected": voice_models.selected(cfg), "chatterbox": chatterbox.available()},
             "stt": {"engine": "faster-whisper", "installed": stt.installed(), "model": cfg["whisper_model"]},
             "endpoints": ["/v1/chat/completions", "/v1/audio/speech", "/v1/audio/transcriptions",
-                          "/v1/models", "/v1/voices", "/v1/catalog"],
+                          "/v1/models", "/v1/voices", "/v1/catalog", "/v1/voice-models"],
         }
 
     @app.get("/v1/models")
@@ -146,6 +147,8 @@ def create_app(cfg: dict | None = None) -> FastAPI:
         _, names = await ollama_ok()
         data = [{"id": n, "object": "model", "owned_by": "ollama"} for n in names]
         data.append({"id": "kokoro", "object": "model", "owned_by": "local-tts"})
+        if chatterbox.available():
+            data.append({"id": "chatterbox", "object": "model", "owned_by": "local-tts"})
         if stt.installed():
             data.append({"id": "whisper-1", "object": "model", "owned_by": "local-stt"})
         return {"object": "list", "data": data, "default": llm_model()}
@@ -199,15 +202,56 @@ def create_app(cfg: dict | None = None) -> FastAPI:
             raise HTTPException(400, "'input' is empty")
         if len(text) > 4096:
             raise HTTPException(400, "'input' is longer than 4096 characters")
+        # "model" picks the voice model: kokoro, chatterbox, or the one chosen in Settings.
+        # OpenAI clients send tts-1 / gpt-4o-mini-tts, which mean "the chosen one".
+        want = body.get("model") if body.get("model") in voice_models.MODELS else voice_models.selected(cfg)
+        used = "chatterbox" if want == "chatterbox" and chatterbox.available() else "kokoro"
         try:
-            samples, sr = await run_in_threadpool(tts.synthesize, text, body.get("voice"), body.get("speed"),
-                                                  cfg["tts_quality"])
+            if used == "chatterbox":
+                ex = body.get("exaggeration")
+                samples, sr = await run_in_threadpool(chatterbox.synthesize, text, body.get("voice"),
+                                                      float(ex) if isinstance(ex, (int, float)) else None,
+                                                      cfg["tts_quality"])
+            else:
+                samples, sr = await run_in_threadpool(tts.synthesize, text, body.get("voice"), body.get("speed"),
+                                                      cfg["tts_quality"])
         except FileNotFoundError as e:
             raise HTTPException(503, str(e))
         except ValueError as e:
             raise HTTPException(400, str(e))
         data, media = await run_in_threadpool(tts.encode, samples, sr, body.get("response_format", "wav"))
-        return Response(data, media_type=media, headers={"X-Sample-Rate": str(sr)})
+        return Response(data, media_type=media, headers={"X-Sample-Rate": str(sr), "X-Voice-Model": used})
+
+    @app.get("/v1/voice-models")
+    async def list_voice_models():
+        return await run_in_threadpool(voice_models.listing, cfg)
+
+    @app.post("/v1/voice-models/select")
+    async def select_voice_model(request: Request):
+        body = await request.json()
+        try:
+            return {"selected": voice_models.select(str(body.get("id", "")), cfg)}
+        except KeyError:
+            raise HTTPException(404, "No such voice model.")
+        except FileNotFoundError as e:
+            raise HTTPException(409, str(e))
+
+    @app.post("/v1/voice-models/{model_id}/download")
+    async def download_voice_model(model_id: str):
+        if model_id not in voice_models.MODELS:
+            raise HTTPException(404, "No such voice model.")
+        voice_models.download(model_id, cfg)
+        return voice_models.info(model_id, cfg)
+
+    @app.delete("/v1/voice-models/{model_id}")
+    async def delete_voice_model(model_id: str):
+        if model_id not in voice_models.MODELS:
+            raise HTTPException(404, "No such voice model.")
+        try:
+            freed = await run_in_threadpool(voice_models.delete, model_id, cfg)
+        except PermissionError as e:
+            raise HTTPException(409, str(e))
+        return {"freed_bytes": freed, "selected": voice_models.selected(cfg)}
 
     @app.post("/v1/audio/transcriptions")
     async def transcriptions(file: UploadFile = File(...), model: str = Form("whisper-1"),

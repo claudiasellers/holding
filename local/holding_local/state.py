@@ -12,6 +12,7 @@ DEFAULTS = {
     "llm_model": None,          # chosen by setup from hardware
     "ollama_url": "http://127.0.0.1:11434",
     "tts_quality": "int8",
+    "tts_engine": "kokoro",     # voice model used when a request names none: kokoro | chatterbox
     "whisper_model": "small",
     "port": 8787,
     "app_dir": None,            # folder with the built app; None = auto-detect

@@ -9,6 +9,8 @@ import { getLLMProvider } from '../ai/providers.js';
 import { getTTSProvider } from '../voice/providers.js';
 import { store } from '../store.js';
 import { voiceFor } from '../voice/resolve.js';
+import { feelingFor } from '../voice/feeling.js';
+import { isExpressive } from '../voice/models.js';
 import { PRESETS } from '../data/archetypes.js';
 
 // Pre-rendered clips (phone builds) are in each preset's default voice; skip
@@ -156,9 +158,14 @@ export function createSession({ archetype, presence, ui, mode = 'hold' }) {
     speaking = new AbortController();
     const done = () => { presence.setSpeaking(0); presence.setOwn(state.lead ? 'holding' : 'listening'); ui.onSpeakEnd?.(); };
     const pre = typeof window !== 'undefined' ? window.HoldingMobile?.prerecorded : null;
-    if (s.voiceOn && pre?.has && recordedVoiceMatches(archetype) && await Promise.resolve(pre.has(archetype.id, text)).catch(() => false)) {
-      try { await pre.play(archetype.id, text, { onLevel: (l) => presence.setSpeaking(l), signal: speaking.signal }); done(); return; } catch { /* fall through to live voice */ }
-    }
+    const playRecorded = async () => {
+      if (!(s.voiceOn && pre?.has && recordedVoiceMatches(archetype) && await Promise.resolve(pre.has(archetype.id, text)).catch(() => false))) return false;
+      try { await pre.play(archetype.id, text, { onLevel: (l) => presence.setSpeaking(l), signal: speaking.signal }); return true; } catch { return false; /* fall through to live voice */ }
+    };
+    // Recordings are Kokoro: instant and offline, but flat. With an expressive
+    // voice chosen, speak live and keep the recording only as the fallback.
+    const expressive = isExpressive(tts, s.tts);
+    if (!expressive && await playRecorded()) { done(); return; }
     if (!s.voiceOn || !tts) {
       // captions only: hold the line on screen for a reading beat
       await sleep(Math.max(1600, text.length * 55), speaking.signal); done(); return;
@@ -169,11 +176,15 @@ export function createSession({ archetype, presence, ui, mode = 'hold' }) {
         rate: archetype.voice.rate * policy.rate,
         pitch: archetype.voice.pitch * policy.pitch,
         archetype,
+        tier: policy.tier,
+        feeling: feelingFor(archetype, policy.tier),
         onLevel: (l) => presence.setSpeaking(l),
         signal: speaking.signal,
       });
     } catch (e) {
       console.info('[holding] tts failed:', e?.message);
+      if (speaking.signal.aborted) { done(); return; }
+      if (expressive && await playRecorded()) { done(); return; }
       if (s.tts.provider !== 'webspeech') {
         try { await getTTSProvider('webspeech')?.speak(text, { voiceId: await voiceFor('webspeech', archetype).catch(() => undefined), rate: archetype.voice.rate * policy.rate, pitch: archetype.voice.pitch * policy.pitch, onLevel: (l) => presence.setSpeaking(l), signal: speaking.signal }); } catch {}
       } else await sleep(Math.max(1400, text.length * 50), speaking.signal);
