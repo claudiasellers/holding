@@ -8,12 +8,12 @@ export const DEFAULT_SETTINGS = {
   voiceOn: true, captions: true, conversationLog: false, breathPacer: false, reducedMotion: null,
   camera: false,             // opt-in on-device mirroring from the camera
   endearments: true,
-  suggestions: true,         // three tappable replies above the input
-  suggestionsAI: 'auto',     // let a local model write them: 'auto' (not the in-browser model on phones) | 'on' | 'off'
   safetyContact: { name: '', phone: '' },
   ai: { provider: 'scripted', webllm: {}, 'openai-local': {}, 'holding-rag': {} },
   tts: { provider: 'webspeech', voiceId: '', webspeech: {}, kokoro: {}, 'openai-speech': {} },
   stt: { provider: 'browser' },
+  suggestions: true,         // three tappable replies above the input
+  suggestionsAI: 'auto',     // let a local model write them: 'auto' (not the in-browser model on phones) | 'on' | 'off'
   debugTuning: false,
 };
 
