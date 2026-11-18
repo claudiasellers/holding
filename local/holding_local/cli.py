@@ -107,7 +107,9 @@ def cmd_voice(a):
             mark = "*" if m["id"] == data["selected"] else " "
             state_ = f"downloaded, {fmt(m['bytes'])}" if m["downloaded"] else (
                 f"partly downloaded, {fmt(m['bytes'])}" if m["bytes"] else f"not downloaded ({m['size_note']})")
-            print(f" {mark} {m['id']:<11} {state_}")
+            if not m["runs_here"]:
+                state_ = f"Mac only ({m['size_note']})"
+            print(f" {mark} {m['id']:<21} {state_}")
         if data["disk"]["free_bytes"] is not None:
             print(f"   {fmt(data['disk']['free_bytes'])} free on this disk. * = the voice in use.")
         return
@@ -115,8 +117,13 @@ def cmd_voice(a):
         sys.exit(f"Unknown voice model '{a.id}'. Choices: {', '.join(voice_models.MODELS)}")
     if a.action == "download":
         job = voice_models.download(a.id, cfg)
+        phase = None
         while job.get("running"):
-            if job.get("total"):
+            if job.get("phase") != phase and job.get("phase") in ("installing", "preparing"):
+                phase = job["phase"]
+                print("\nInstalling the Mac voice engine (once)..." if phase == "installing"
+                      else "\nGetting it ready (first run)...")
+            if job.get("total") and job.get("phase") == "downloading":
                 from .setup import _bar
                 _bar(job["done"], job["total"], a.id)
             time.sleep(0.3)

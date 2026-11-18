@@ -22,7 +22,7 @@ export async function voiceFor(providerId, archetype) {
 }
 
 /** Providers whose voices are Kokoro voice ids (stored on archetype.voice.kokoro). */
-export function usesKokoroIds(providerId) { return providerId === 'kokoro' || providerId === 'openai-speech' || providerId === 'chatterbox'; }
+export function usesKokoroIds(providerId) { return providerId === 'kokoro' || providerId === 'openai-speech' || providerId === 'chatterbox' || providerId === 'chatterbox-turbo'; }
 
 /** The voice the user picked for this archetype on this provider ('' = automatic). */
 export function chosenVoice(providerId, archetype) {

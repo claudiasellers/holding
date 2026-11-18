@@ -1,6 +1,8 @@
-# Voice models: unit tests for Holding Local, then the real Chatterbox model end to end,
-# both the Holding Local engine (Python, ONNX Runtime) and the in-browser engine
-# (Transformers.js, run in Node). Saves the spoken samples as an artifact to listen to.
+# Voice models: unit tests for Holding Local, then the real models end to end:
+# - Chatterbox and Chatterbox Turbo in the Holding Local engine (Python, ONNX Runtime),
+# - the same two in-browser engines (Transformers.js / ONNX Runtime, run in Node),
+# - the Mac voices (mlx-audio) on an Apple silicon runner.
+# Saves the spoken samples as artifacts to listen to.
 name: Voice models
 
 on:
@@ -37,13 +39,13 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .holding-local/models
-          key: holding-local-voices-v1-${{ hashFiles('local/holding_local/chatterbox.py', 'local/holding_local/catalog.py') }}
-          restore-keys: holding-local-voices-v1-
-      - name: Real Chatterbox (downloads ~1.6 GB the first time)
+          key: holding-local-voices-v2-${{ hashFiles('local/holding_local/chatterbox.py', 'local/holding_local/catalog.py') }}
+          restore-keys: holding-local-voices-v2-
+      - name: Real Chatterbox and Turbo (downloads ~2.6 GB the first time)
         env:
           HOLDING_REAL_CHATTERBOX: '1'
           HOLDING_SAMPLES_DIR: ${{ github.workspace }}/samples
-        run: uv run --with pytest pytest -q -s -k real
+        run: uv run --with pytest pytest -q -s -k real_chatterbox
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -70,9 +72,60 @@ jobs:
           key: chatterbox-js-v1
       - name: Real Chatterbox in Transformers.js (CPU)
         run: node test/voice/chatterbox.smoke.mjs --out samples
+      - name: Install the ONNX Runtime the Turbo test runs on
+        run: npm i --no-save "@huggingface/transformers@$(node -p "require('fs').readFileSync('src/voice/chatterbox-version.js','utf8').match(/'([^']+)'/)[1]")" onnxruntime-node@1.30.0
+      - name: Restore Turbo files
+        uses: actions/cache@v4
+        with:
+          path: .turbo-cache
+          key: chatterbox-turbo-js-v1-${{ hashFiles('src/voice/chatterbox-turbo-core.js') }}
+          restore-keys: chatterbox-turbo-js-v1-
+      - name: Real Chatterbox Turbo, browser engine (ONNX Runtime, CPU)
+        run: node test/voice/chatterbox-turbo.smoke.mjs --out samples --cache .turbo-cache
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: voice-samples-browser-engine
+          path: samples
+          if-no-files-found: ignore
+
+  mac-voices:
+    # Apple silicon runner: install mlx-audio the way Settings does, then download each
+    # Mac voice, speak two lines, and delete it to keep the disk free.
+    runs-on: macos-14
+    timeout-minutes: 120
+    env:
+      HOLDING_LOCAL_HOME: ${{ github.workspace }}/.holding-local
+    defaults:
+      run:
+        working-directory: local
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: '3.12'
+      - name: Unit tests on macOS
+        run: uv run --with pytest pytest -q
+      - name: Install the Mac voice engine the way Settings does
+        run: uv run python -c "from holding_local import mlx_voices as m; assert m.supported(); m.install_engine(); assert m.engine_installed(); print('mlx-audio installed')"
+      - name: Check the GPU (falls back to the CPU on runners without Metal)
+        run: |
+          if uv run python -c "import mlx.core as mx; x = mx.ones((256, 256)) @ mx.ones((256, 256)); mx.eval(x); print('GPU ok:', mx.default_device())"; then
+            echo "GPU available"
+          else
+            echo "HOLDING_MLX_CPU=1" >> "$GITHUB_ENV"; echo "No Metal here: running the Mac voices on the CPU"
+          fi
+      - name: Real Mac voices (downloads each, then deletes it)
+        env:
+          HOLDING_REAL_MLX: '1'
+          HOLDING_MLX_DELETE_AFTER: '1'
+          # Dia (6.5 GB at full precision) needs more memory than this 7 GB runner has.
+          HOLDING_MLX_MODELS: chatterbox-turbo-mac,qwen3-tts-small,chatterbox-mac,csm,orpheus,qwen3-tts
+          HOLDING_SAMPLES_DIR: ${{ github.workspace }}/samples
+        run: uv run --with pytest pytest -q -s -k real_mac
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: voice-samples-mac
           path: samples
           if-no-files-found: ignore

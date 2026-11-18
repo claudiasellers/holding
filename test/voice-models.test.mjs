@@ -2,7 +2,8 @@
 // the feeling dial, and the Chatterbox core's pure helpers. No downloads.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { VOICE_MODELS, cachedSize, deleteCached, keyBelongsTo, formatBytes, isExpressive, modelForProvider } from '../src/voice/models.js';
+import { VOICE_MODELS, cachedSize, deleteCached, keyBelongsTo, formatBytes, isExpressive, hasFeelingDial, modelForProvider } from '../src/voice/models.js';
+import { createTurbo, pickNext, STOP_SPEECH_TOKEN, START_SPEECH_TOKEN, SILENCE_TOKEN, TURBO_FILES } from '../src/voice/chatterbox-turbo-core.js';
 import { feelingFor, DEFAULT_FEELING } from '../src/voice/feeling.js';
 import { tokenBudget, joinClips, trimSilence, resample, dtypesFor, CHATTERBOX_SR } from '../src/voice/chatterbox-core.js';
 
@@ -49,11 +50,16 @@ test('helpers', () => {
   assert.equal(formatBytes(92e6), '92 MB');
   assert.equal(formatBytes(0), '0 MB');
   assert.equal(modelForProvider('chatterbox').feeling, true);
-  assert.deepEqual(VOICE_MODELS.map((m) => m.id), ['kokoro', 'chatterbox']);
   assert.ok(isExpressive({ id: 'chatterbox', expressive: true }));
   assert.ok(isExpressive({ id: 'openai-speech' }, { 'openai-speech': { model: 'chatterbox' } }));
   assert.ok(!isExpressive({ id: 'openai-speech' }, { 'openai-speech': { model: 'kokoro' } }));
   assert.ok(!isExpressive({ id: 'kokoro' }));
+  assert.ok(isExpressive({ id: 'openai-speech' }, { 'openai-speech': { model: 'orpheus' } }));
+  assert.ok(hasFeelingDial({ id: 'openai-speech' }, { 'openai-speech': { model: 'qwen3-tts' } }));
+  assert.ok(!hasFeelingDial({ id: 'openai-speech' }, { 'openai-speech': { model: 'chatterbox-turbo' } }));
+  assert.ok(hasFeelingDial({ id: 'chatterbox', expressive: true, feeling: true }));
+  assert.ok(!hasFeelingDial({ id: 'chatterbox-turbo', expressive: true, feeling: false }));
+  assert.deepEqual(VOICE_MODELS.map((m) => m.id), ['kokoro', 'chatterbox', 'chatterbox-turbo']);
 });
 
 test('feeling dial: per figure, steadier at peak distress, clamped', () => {
@@ -85,4 +91,54 @@ test('peaks above full scale are scaled, not clipped', async () => {
   assert.ok(Math.abs(Math.max(...b.map(Math.abs)) - 0.95) < 1e-6);
   const quiet = Float32Array.from([0.1, 0.2]);
   assert.equal(limitPeak(quiet), quiet);
+});
+
+test('turbo: repetition penalty then greedy pick', () => {
+  const l = Float32Array.from([1, 2.2, 2, -1]);
+  assert.equal(pickNext(Float32Array.from(l), new Set()), 1);
+  assert.equal(pickNext(Float32Array.from(l), new Set([1])), 2); // 2.2 / 1.2 < 2
+  assert.ok(TURBO_FILES.includes('onnx/language_model_q4.onnx_data'));
+});
+
+test('turbo loop: positions, cache, silence padding (stand-in sessions)', async () => {
+  class T { constructor(type, data, dims) { this.type = type; this.data = data; this.dims = dims; } }
+  const ort = { Tensor: T };
+  const script = [100, 200];
+  const seen = { lm: [], dec: null };
+  const vocab = 6563;
+  const layers = 2;
+  const pastNames = Array.from({ length: layers }, (_, i) => [`past_key_values.${i}.key`, `past_key_values.${i}.value`]).flat();
+  const sess = (inputNames, outputNames, fn) => ({ inputNames, outputNames, run: async (f) => fn(f) });
+  const createSession = async (k) => ({
+    speech_encoder: sess(['audio_values'], ['cond_emb', 'prompt_token', 'speaker_embeddings', 'speaker_features'], () => ({
+      cond_emb: new T('float32', new Float32Array(3 * 4), [1, 3, 4]), prompt_token: new T('int64', BigInt64Array.from([7n, 8n]), [1, 2]),
+      speaker_embeddings: new T('float32', new Float32Array(2), [1, 2]), speaker_features: new T('float32', new Float32Array(2), [1, 1, 2]),
+    })),
+    embed_tokens: sess(['input_ids'], ['inputs_embeds'], (f) => ({ inputs_embeds: new T('float32', new Float32Array(f.input_ids.dims[1] * 4), [1, f.input_ids.dims[1], 4]) })),
+    language_model: sess(['inputs_embeds', 'attention_mask', 'position_ids', ...pastNames], ['logits', ...pastNames.map((n) => n.replace('past_key_values', 'present'))], (f) => {
+      const step = seen.lm.length;
+      const n = f.attention_mask.dims[1];
+      seen.lm.push({ pos: Array.from(f.position_ids.data, Number), past: f['past_key_values.0.key'].dims[2], mask: n });
+      const seq = f.inputs_embeds.dims[1];
+      const logits = new Float32Array(seq * vocab);
+      logits[(seq - 1) * vocab + (script[step] ?? STOP_SPEECH_TOKEN)] = 5;
+      const o = { logits: new T('float32', logits, [1, seq, vocab]) };
+      for (const p of pastNames) o[p.replace('past_key_values', 'present')] = new T('float32', new Float32Array(0), [1, 16, n, 64]);
+      return o;
+    }),
+    conditional_decoder: sess(['speech_tokens', 'speaker_embeddings', 'speaker_features'], ['waveform'], (f) => {
+      seen.dec = Array.from(f.speech_tokens.data, Number);
+      return { waveform: new T('float32', new Float32Array(4800).fill(0.5), [1, 4800]) };
+    }),
+  })[k];
+  const e = createTurbo({ ort, tokenizer: { encode: () => [11, 12, 13, 14, 15] }, createSession });
+  await e.load();
+  const cond = await e.voice('v', async () => new Float32Array(24000));
+  const a = await e.synthesize('I am here.', cond);
+  assert.deepEqual(seen.dec, [7, 8, 100, 200, SILENCE_TOKEN, SILENCE_TOKEN, SILENCE_TOKEN]);
+  assert.deepEqual(seen.lm[0], { pos: [0, 1, 2, 3, 4, 5, 6, 7], past: 0, mask: 8 });
+  assert.deepEqual(seen.lm[1], { pos: [8], past: 8, mask: 9 });
+  assert.deepEqual(seen.lm[2], { pos: [9], past: 9, mask: 10 });
+  assert.equal(seen.lm.length, 3);
+  assert.ok(a.length > 0 && START_SPEECH_TOKEN === 6561);
 });

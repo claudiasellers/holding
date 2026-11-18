@@ -12,7 +12,7 @@ from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse, Response, StreamingResponse
 from starlette.concurrency import run_in_threadpool
 
-from . import __version__, catalog, chatterbox, llm, net, state, stt, tts, voice_models
+from . import __version__, catalog, chatterbox, expressive, llm, net, state, stt, tts, voice_models
 
 API_PREFIXES = ("/v1/", "/health")
 HIDDEN_DIRS = {"node_modules", "local", "android", "ios", "tools", "scripts", "__pycache__"}
@@ -136,7 +136,8 @@ def create_app(cfg: dict | None = None) -> FastAPI:
             "version": __version__,
             "llm": {"runtime": "ollama", "reachable": up, "model": want, "downloaded": have},
             "tts": {"engine": "kokoro-82m-v1.0", "ready": tts.available(cfg["tts_quality"]),
-                    "selected": voice_models.selected(cfg), "chatterbox": chatterbox.available()},
+                    "selected": voice_models.selected(cfg), "chatterbox": chatterbox.available(),
+                    "ready": [k for k in voice_models.MODELS if k == "kokoro" or expressive.ready(k)]},
             "stt": {"engine": "faster-whisper", "installed": stt.installed(), "model": cfg["whisper_model"]},
             "endpoints": ["/v1/chat/completions", "/v1/audio/speech", "/v1/audio/transcriptions",
                           "/v1/models", "/v1/voices", "/v1/catalog", "/v1/voice-models"],
@@ -147,8 +148,9 @@ def create_app(cfg: dict | None = None) -> FastAPI:
         _, names = await ollama_ok()
         data = [{"id": n, "object": "model", "owned_by": "ollama"} for n in names]
         data.append({"id": "kokoro", "object": "model", "owned_by": "local-tts"})
-        if chatterbox.available():
-            data.append({"id": "chatterbox", "object": "model", "owned_by": "local-tts"})
+        for k in voice_models.MODELS:
+            if k != "kokoro" and expressive.ready(k):
+                data.append({"id": k, "object": "model", "owned_by": "local-tts"})
         if stt.installed():
             data.append({"id": "whisper-1", "object": "model", "owned_by": "local-stt"})
         return {"object": "list", "data": data, "default": llm_model()}
@@ -202,17 +204,19 @@ def create_app(cfg: dict | None = None) -> FastAPI:
             raise HTTPException(400, "'input' is empty")
         if len(text) > 4096:
             raise HTTPException(400, "'input' is longer than 4096 characters")
-        # "model" picks the voice model: kokoro, chatterbox, or the one chosen in Settings.
+        # "model" picks the voice model: kokoro, chatterbox, qwen3-tts, ... or the one chosen in Settings.
         # OpenAI clients send tts-1 / gpt-4o-mini-tts, which mean "the chosen one".
         want = body.get("model") if body.get("model") in voice_models.MODELS else voice_models.selected(cfg)
-        used = "chatterbox" if want == "chatterbox" and chatterbox.available() else "kokoro"
+        used = want if want != "kokoro" and expressive.ready(want) else "kokoro"
         try:
-            if used == "chatterbox":
-                ex = body.get("exaggeration")
-                samples, sr = await run_in_threadpool(chatterbox.synthesize, text, body.get("voice"),
-                                                      float(ex) if isinstance(ex, (int, float)) else None,
-                                                      cfg["tts_quality"])
-            else:
+            if used != "kokoro":
+                try:
+                    samples, sr = await run_in_threadpool(expressive.synthesize, used, text, body.get("voice"),
+                                                          body.get("exaggeration"), cfg["tts_quality"])
+                except (RuntimeError, MemoryError, ImportError) as e:  # a model that fails falls back to Kokoro
+                    used = "kokoro"
+                    print(f"Voice model failed, using Kokoro: {e}")
+            if used == "kokoro":
                 samples, sr = await run_in_threadpool(tts.synthesize, text, body.get("voice"), body.get("speed"),
                                                       cfg["tts_quality"])
         except FileNotFoundError as e:
@@ -224,23 +228,25 @@ def create_app(cfg: dict | None = None) -> FastAPI:
 
     @app.post("/v1/voice-prerender")
     async def start_prerender(request: Request):
-        """Record lines with Chatterbox ahead of time: {texts: [...], voice, exaggeration}."""
+        """Record lines ahead of time: {texts: [...], voice, exaggeration, model}. model defaults to the chosen one."""
         body = await request.json()
         texts = [str(t) for t in (body.get("texts") or []) if str(t).strip()][:2000]
-        if not chatterbox.available():
-            raise HTTPException(409, "Chatterbox is not downloaded.")
-        ex = body.get("exaggeration")
-        return chatterbox.prerender(texts, body.get("voice") or catalog.DEFAULT_VOICE,
-                                    float(ex) if isinstance(ex, (int, float)) else None, cfg["tts_quality"])
+        mid = body.get("model") if body.get("model") in voice_models.MODELS else voice_models.selected(cfg)
+        if mid == "kokoro" or not expressive.ready(mid):
+            raise HTTPException(409, f"{voice_models.MODELS[mid]['name']} has nothing to record ahead." if mid == "kokoro"
+                                else f"{voice_models.MODELS[mid]['name']} is not downloaded.")
+        return expressive.prerender(mid, texts, body.get("voice") or catalog.DEFAULT_VOICE,
+                                    body.get("exaggeration"), cfg["tts_quality"])
 
     @app.get("/v1/voice-prerender")
     async def prerender_status():
-        return {**chatterbox.prerender_status(), "lines_bytes": chatterbox.cache_bytes()}
+        j = expressive.prerender_status()
+        return {**j, "lines_bytes": expressive.cache_bytes(j.get("model") or voice_models.selected(cfg))}
 
     @app.delete("/v1/voice-prerender")
     async def stop_prerender():
-        chatterbox.cancel_prerender()
-        return chatterbox.prerender_status()
+        expressive.cancel_prerender()
+        return expressive.prerender_status()
 
     @app.get("/v1/voice-models")
     async def list_voice_models():
