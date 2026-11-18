@@ -166,12 +166,14 @@ export function renderSession(root, nav, { mode = 'hold' } = {}) {
       moreBtn.hidden = true; homeBtn.hidden = false;
     },
     onEndSpoken({ said }) {
+      if (endSpoken) return;          // once only: a second render would drop lines already ticked
+      endSpoken = true;
       if (!endAsk) return;
       clear(endCard).append(endKeepCard(keepable(said)));
       endCard.hidden = false;
     },
   };
-  let endAsk = false;
+  let endAsk = false, endSpoken = false;
   const session = createSession({ archetype: a, presence, ui, mode });
 
   function note(text) {
