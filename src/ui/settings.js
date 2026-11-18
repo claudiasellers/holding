@@ -33,6 +33,8 @@ export function renderSettings(root, nav) {
       h('label', { class: 'field' }, h('span', { class: 'lbl' }, 'Your name', h('small', {}, 'Optional. Used rarely.')), h('input', { type: 'text', value: S().userName, oninput: (e) => set({ userName: e.target.value.trim() }) })),
       slider('Warmth dose', store.warmthFor(a), (v) => set({ warmth: v }), { hint: 'If kindness ever feels like too much, turn this down. Steady and plain is a fine way to be held.' }),
       toggle('Pet names', S().endearments, (v) => set({ endearments: v })),
+      toggle('Suggested replies', S().suggestions !== false, (v) => set({ suggestions: v }), 'Three short things you could say, above the typing box. Tap one to say it.'),
+      select('Let the AI write suggestions', S().suggestionsAI || 'auto', [['auto', 'Automatic'], ['on', 'Always, when an AI is on'], ['off', 'Never (hand-written only)']], (v) => set({ suggestionsAI: v })),
       toggle('Captions', S().captions, (v) => set({ captions: v })),
       toggle('Breathing pacer', S().breathPacer, (v) => set({ breathPacer: v }), 'A slow ring that breathes. Off by default: breath focus is not calming for everyone.'),
       toggle('Reduce motion', S().reducedMotion ?? matchMedia('(prefers-reduced-motion: reduce)').matches, (v) => set({ reducedMotion: v })),

@@ -18,6 +18,7 @@ Design basis: *Emotion-Coaching Parent App — Research-Grounded Design* (hostil
 | "Hold me": parent speaks first and keeps a paced presence; tiles, typing and voice are all optional | `src/engine/dialogue.js`, `src/ui/session.js` |
 | Deterministic turn policy (length, questions, pacing, warmth) and an output guard for every line | `src/engine/policy.js`, `src/engine/guard.js` |
 | 438 scripted lines (fallback and instant opening lines) | `src/data/lines.json` |
+| Three suggested replies above the input; rules everywhere, a local model once you type ([docs/SUGGESTIONS.md](docs/SUGGESTIONS.md)) | `src/engine/suggest.js`, `src/ui/suggestions.js` |
 | Repair ("That missed"), role-reversal refusal, critic protection, safety flow with 988 and your person | engine + session |
 | Keepsakes, new-rule cards with dated evidence, repair log, no streaks | `src/ui/memory.js` |
 | Optional camera mirroring (MediaPipe, on-device, opt-in) | `src/engine/camera.js` |
