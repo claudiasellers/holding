@@ -126,6 +126,16 @@ export async function initMobile() {
     window.dispatchEvent(new CustomEvent('holding:device', { detail: probe }));
   });
 
+  // Keep the chosen parent's recorded lines offline, and follow changes of archetype.
+  const cacheChosen = () => {
+    const id = window.Holding && window.Holding.store && window.Holding.store.data.archetype && window.Holding.store.data.archetype.id;
+    if (id && id !== cacheChosen.last) { cacheChosen.last = id; prerecorded.cacheArchetype(id).catch(() => {}); }
+  };
+  setTimeout(() => {
+    cacheChosen();
+    if (window.Holding && window.Holding.store && window.Holding.store.on) window.Holding.store.on((k) => { if (k === 'data') cacheChosen(); });
+  }, 0);
+
   // ?install opens the sheet directly (used by links in docs and the README).
   if (new URLSearchParams(location.search).has('install')) showInstallSheet();
   return HoldingMobile;

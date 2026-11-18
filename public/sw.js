@@ -36,11 +36,8 @@ self.addEventListener('install', (event) => {
       if (res.ok) {
         const list = await res.json();
         urls = Array.from(new Set([...urls, ...list.shell]));
-        // Audio goes into its own long-lived cache.
-        if (Array.isArray(list.audio) && list.audio.length) {
-          const audio = await caches.open(AUDIO);
-          await addAllTolerant(audio, list.audio);
-        }
+        // Audio is NOT fetched here: all archetypes together are ~15 MB. The app asks for the chosen
+        // archetype's lines (CACHE_AUDIO), and any line played once is kept (see audio()).
       }
     } catch (_) { /* dev server or first deploy without manifest: runtime caching only */ }
     await addAllTolerant(cache, urls);
