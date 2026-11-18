@@ -39,7 +39,14 @@ These runs used a 4-vCPU GitHub runner, so an Apple Silicon Mac should be severa
 - The client splits replies at pauses and makes the next phrase while the current one plays.
 - If the live voice fails, the instant pre-recorded line plays instead.
 
-Pre-rendering each parent's scripted lines with Chatterbox once, in the background on Holding Local, would make the scripted part of a session instant and expressive. That is the natural next step.
+**Recorded ahead.** On Holding Local, choosing Chatterbox starts recording the current parent's scripted lines in the background. That is about 430 lines, filled with the same endearment and name the session uses, with the "Hold me" openers first. Every line Chatterbox speaks is also kept, so repeats are instant. Settings shows the progress, a time estimate and a Stop button.
+
+- Recording pauses while the app is speaking live.
+- A kept line is reused when its feeling is within 25% of the one asked for. That covers the eased feeling at peak distress.
+- Lines are stored as float16 in `~/.holding-local/voice-cache/chatterbox/`, about 50 KB per second of speech. They are deleted together with the model.
+- API: `POST /v1/voice-prerender {texts, voice, exaggeration}`, `GET /v1/voice-prerender` for progress, and `DELETE /v1/voice-prerender` to stop.
+
+Typed conversations are still spoken live, at the speeds above.
 
 ## How the feeling works
 

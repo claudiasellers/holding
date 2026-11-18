@@ -202,22 +202,166 @@ def unload():
         _engine = None
 
 
-def synthesize(text: str, voice: str, exaggeration: float | None, quality: str):
+def cache_dir():
+    return state.HOME / "voice-cache" / "chatterbox"
+
+
+def _norm(text: str) -> str:
+    return " ".join(str(text).split())
+
+
+def _cache_key(text: str, voice: str) -> str:
+    import hashlib
+    return hashlib.sha1(f"{voice or ''}\u0000{_norm(text)}".encode()).hexdigest()[:20]
+
+
+def cached(text: str, voice: str, exaggeration: float, tolerance: float = 0.15):
+    """A line rendered before in this voice at about this feeling: samples, or None.
+    Scripted lines repeat a lot, so this is what makes them instant."""
+    d = cache_dir()
+    if not d.exists():
+        return None
+    key = _cache_key(text, voice)
+    # The app eases the feeling to 80% at peak distress; treat that as the same take.
+    tolerance = max(tolerance, 0.25 * exaggeration)
+    best, dist = None, tolerance + 1e-9
+    for f in d.glob(f"{key}-*.npy"):
+        try:
+            x = float(f.stem.rsplit("-", 1)[1])
+        except ValueError:
+            continue
+        if abs(x - exaggeration) <= dist:
+            best, dist = f, abs(x - exaggeration)
+    if best is None:
+        return None
+    try:
+        return np.load(best)
+    except (OSError, ValueError):
+        return None
+
+
+def store(text: str, voice: str, exaggeration: float, samples: np.ndarray):
+    d = cache_dir()
+    d.mkdir(parents=True, exist_ok=True)
+    # float16 halves the size and is far below what anyone can hear
+    np.save(d / f"{_cache_key(text, voice)}-{exaggeration:.2f}.npy", samples.astype(np.float16))
+
+
+def cache_bytes() -> int:
+    d = cache_dir()
+    return sum(f.stat().st_size for f in d.glob("*.npy")) if d.exists() else 0
+
+
+def clear_cache() -> int:
+    import shutil
+    n = cache_bytes()
+    shutil.rmtree(cache_dir(), ignore_errors=True)
+    return n
+
+
+_live = 0  # live requests in flight; pre-rendering yields to them
+_live_lock = threading.Lock()
+
+
+def synthesize(text: str, voice: str, exaggeration: float | None, quality: str, live: bool = True):
     """Returns (samples float32, 24000). The reference voice is Kokoro's rendering of `voice`."""
+    global _live
     from . import tts
-    e = engine()
     ex = float(exaggeration if exaggeration is not None else DEFAULT_EXAGGERATION)
-    ex = min(max(ex, 0.25), 1.5)
+    ex = round(min(max(ex, 0.25), 1.5), 2)
+    hit = cached(text, voice, ex)
+    if hit is not None:
+        return hit.astype(np.float32), SR
+    e = engine()
 
     def reference():
         samples, sr = tts.synthesize(REF_TEXT, voice, 0.95, quality)
         return resample(np.asarray(samples, dtype=np.float32), sr)
 
-    cond = e.condition(f"kokoro:{voice or ''}", reference)
-    gap = np.zeros(int(SR * 0.3), dtype=np.float32)
-    out = []
-    for part in split_long(text):
-        if out:
-            out.append(gap)
-        out.append(e.generate(part, cond, ex))
-    return (np.concatenate(out) if out else np.zeros(1, dtype=np.float32)), SR
+    if live:
+        with _live_lock:
+            _live += 1
+    try:
+        cond = e.condition(f"kokoro:{voice or ''}", reference)
+        gap = np.zeros(int(SR * 0.3), dtype=np.float32)
+        out = []
+        for part in split_long(text):
+            if out:
+                out.append(gap)
+            out.append(e.generate(part, cond, ex))
+        wav = np.concatenate(out) if out else np.zeros(1, dtype=np.float32)
+    finally:
+        if live:
+            with _live_lock:
+                _live -= 1
+    try:
+        store(text, voice, ex, wav)
+    except OSError:
+        pass
+    return wav, SR
+
+
+def live_busy() -> bool:
+    return _live > 0
+
+
+# ---------- pre-rendering a parent's scripted lines in the background ----------
+_job: dict = {}
+
+
+def prerender_status() -> dict:
+    j = dict(_job)
+    j.pop("cancel", None)
+    j.pop("texts", None)
+    return j or {"running": False, "done": 0, "total": 0}
+
+
+def prerender(texts: list[str], voice: str, exaggeration: float | None, quality: str, wait: bool = False) -> dict:
+    """Render every line not already cached, one at a time, pausing while the app is speaking live."""
+    global _job
+    import time
+    if _job.get("running"):
+        _job["cancel"] = True
+        for _ in range(600):
+            if not _job.get("running"):
+                break
+            time.sleep(0.1)
+    ex = round(min(max(float(exaggeration if exaggeration is not None else DEFAULT_EXAGGERATION), 0.25), 1.5), 2)
+    seen, todo = set(), []
+    for t in texts:
+        t = _norm(t)
+        if t and t not in seen:
+            seen.add(t)
+            todo.append(t)
+    job = {"running": True, "voice": voice, "feeling": ex, "total": len(todo), "done": 0, "rendered": 0,
+           "seconds": 0.0, "error": None, "started": time.time()}
+    _job = job
+
+    def run():
+        try:
+            for t in todo:
+                if job.get("cancel"):
+                    break
+                if cached(t, voice, ex) is None:
+                    while live_busy() and not job.get("cancel"):
+                        time.sleep(0.2)
+                    t0 = time.time()
+                    synthesize(t, voice, ex, quality, live=False)
+                    job["seconds"] += time.time() - t0
+                    job["rendered"] += 1
+                job["done"] += 1
+        except Exception as e:
+            job["error"] = str(e)
+        finally:
+            job["running"] = False
+
+    if wait:
+        run()
+    else:
+        threading.Thread(target=run, name="chatterbox-prerender", daemon=True).start()
+    return prerender_status()
+
+
+def cancel_prerender():
+    if _job.get("running"):
+        _job["cancel"] = True

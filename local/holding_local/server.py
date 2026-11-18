@@ -222,6 +222,26 @@ def create_app(cfg: dict | None = None) -> FastAPI:
         data, media = await run_in_threadpool(tts.encode, samples, sr, body.get("response_format", "wav"))
         return Response(data, media_type=media, headers={"X-Sample-Rate": str(sr), "X-Voice-Model": used})
 
+    @app.post("/v1/voice-prerender")
+    async def start_prerender(request: Request):
+        """Record lines with Chatterbox ahead of time: {texts: [...], voice, exaggeration}."""
+        body = await request.json()
+        texts = [str(t) for t in (body.get("texts") or []) if str(t).strip()][:2000]
+        if not chatterbox.available():
+            raise HTTPException(409, "Chatterbox is not downloaded.")
+        ex = body.get("exaggeration")
+        return chatterbox.prerender(texts, body.get("voice") or catalog.DEFAULT_VOICE,
+                                    float(ex) if isinstance(ex, (int, float)) else None, cfg["tts_quality"])
+
+    @app.get("/v1/voice-prerender")
+    async def prerender_status():
+        return {**chatterbox.prerender_status(), "lines_bytes": chatterbox.cache_bytes()}
+
+    @app.delete("/v1/voice-prerender")
+    async def stop_prerender():
+        chatterbox.cancel_prerender()
+        return chatterbox.prerender_status()
+
     @app.get("/v1/voice-models")
     async def list_voice_models():
         return await run_in_threadpool(voice_models.listing, cfg)

@@ -6,7 +6,9 @@ import { h, clear, toast, slider } from './dom.js';
 import { store } from '../store.js';
 import { getTTSProvider } from '../voice/providers.js';
 import { VOICE_MODELS, cachedSize, deleteCached, storageEstimate, formatBytes, canRun, isExpressive } from '../voice/models.js';
-import { listServerModels, downloadServerModel, deleteServerModel, selectServerModel } from '../voice/server-models.js';
+import { listServerModels, downloadServerModel, deleteServerModel, selectServerModel, startPrerender, prerenderStatus, stopPrerender } from '../voice/server-models.js';
+import { scriptedTexts } from '../voice/scripted-texts.js';
+import { voiceFor } from '../voice/resolve.js';
 import { feelingFor, FEELING_MIN, FEELING_MAX } from '../voice/feeling.js';
 
 const S = () => store.settings;
@@ -132,7 +134,7 @@ function serverPanel(list, foot, rerender) {
       const prog = m.downloading ? h('div', { class: 'progress' }, h('i', { style: { width: pct + '%' } })) : null;
       const buttons = [];
       if (!m.downloaded && !m.downloading) buttons.push(h('button', { class: 'btn primary', onclick: async (e) => { e.target.disabled = true; try { await downloadServerModel(cfg(), m.id); } catch (err) { toast(err.message); } refresh(); } }, m.bytes ? 'Finish download' : 'Download'));
-      if (m.downloaded && !inUse) buttons.push(h('button', { class: 'btn', onclick: async () => { try { await selectServerModel(cfg(), m.id); set({ tts: { 'openai-speech': { ...cfg(), model: m.id } } }); toast(`${m.name} is now the voice.`); } catch (err) { toast(err.message); } rerender(); } }, 'Use'));
+      if (m.downloaded && !inUse) buttons.push(h('button', { class: 'btn', onclick: async () => { try { await selectServerModel(cfg(), m.id); set({ tts: { 'openai-speech': { ...cfg(), model: m.id } } }); toast(`${m.name} is now the voice.`); if (m.feeling) await prerenderFor(cfg()).catch(() => {}); } catch (err) { toast(err.message); } rerender(); } }, 'Use'));
       if (m.bytes && m.deletable && !m.downloading) buttons.push(h('button', { class: 'btn ghost', style: { color: 'var(--danger)' }, onclick: async () => {
         if (!confirmTap('srv-' + m.id, m.name)) return;
         try {
@@ -149,7 +151,9 @@ function serverPanel(list, foot, rerender) {
         buttons, prog,
       }));
     }
-    const used = (data.models || []).reduce((n, m) => n + (m.bytes || 0), 0);
+    const cb = (data.models || []).find((m) => m.id === 'chatterbox');
+    if (cb?.downloaded && selected === 'chatterbox') list.append(prerenderBlock(cfg, cb));
+    const used = (data.models || []).reduce((n, m) => n + (m.bytes || 0) + (m.lines_bytes || 0), 0);
     foot.textContent = `Voices on your computer use ${formatBytes(used)}.` + (data.disk?.free_bytes != null ? ` It has ${formatBytes(data.disk.free_bytes)} free.` : '');
     clearTimeout(timer);
     if (downloading && document.body.contains(list)) timer = setTimeout(refresh, 1000);
@@ -158,4 +162,41 @@ function serverPanel(list, foot, rerender) {
     clear(list); list.append(h('p', { class: 'status bad', style: { margin: 0 } }, err.message || String(err)));
   });
   refresh();
+}
+
+// ---------- pre-recording scripted lines on Holding Local ----------
+async function prerenderFor(cfg) {
+  const a = store.data.archetype;
+  return startPrerender(cfg, { texts: scriptedTexts(a, S()), voice: await voiceFor('openai-speech', a), exaggeration: feelingFor(a) });
+}
+
+function prerenderBlock(cfg, model) {
+  const a = store.data.archetype;
+  const status = h('p', { class: 'status vm-status' }, 'Checking…');
+  const prog = h('div', { class: 'progress', style: { display: 'none' } }, h('i'));
+  const btns = h('div', { class: 'row wrap' });
+  const box = h('div', { class: 'vm-row' },
+    h('div', { class: 'vm-head' }, h('b', {}, `${a.name}'s lines, recorded ahead`)),
+    h('p', { class: 'muted vm-blurb' }, 'Chatterbox is slow to speak live. Your computer can record every scripted line once, in the background, so they play at once with feeling. Your typed conversations are still spoken live.'),
+    status, prog, btns);
+  let timer = 0;
+  const draw = (j) => {
+    clear(btns);
+    const pct = j.total ? Math.round(j.done / j.total * 100) : 0;
+    prog.style.display = j.running ? '' : 'none';
+    prog.firstChild.style.width = pct + '%';
+    const left = j.running && j.rendered > 2 && j.seconds ? Math.round((j.seconds / j.rendered) * (j.total - j.done) / 60) : null;
+    status.className = 'status vm-status' + (j.error ? ' bad' : j.total && !j.running && j.done === j.total ? ' ok' : '');
+    status.textContent = j.error ? `Stopped: ${j.error}`
+      : j.running ? `Recording ${j.done} of ${j.total} lines${left != null ? `, about ${left} min left` : ''}. Leave Holding Local running.`
+        : j.total && j.done === j.total ? `All ${j.total} lines recorded · ${formatBytes(j.lines_bytes || model.lines_bytes)}`
+          : j.total ? `Stopped at ${j.done} of ${j.total} lines.` : `Not recorded yet${model.lines_bytes ? ` · ${formatBytes(model.lines_bytes)} of lines kept` : ''}.`;
+    if (j.running) btns.append(h('button', { class: 'btn ghost', onclick: async () => { await stopPrerender(cfg()).catch(() => {}); refresh(); } }, 'Stop'));
+    else btns.append(h('button', { class: 'btn', onclick: async (e) => { e.target.disabled = true; try { await prerenderFor(cfg()); } catch (err) { toast(err.message); } refresh(); } }, j.total && j.done === j.total ? 'Record again with this feeling' : 'Record the lines'));
+    clearTimeout(timer);
+    if (j.running && document.body.contains(box)) timer = setTimeout(refresh, 2000);
+  };
+  const refresh = () => prerenderStatus(cfg()).then(draw).catch((err) => { status.className = 'status bad vm-status'; status.textContent = err.message; });
+  refresh();
+  return box;
 }

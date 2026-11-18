@@ -71,6 +71,7 @@ def info(model_id: str, cfg: dict) -> dict:
         "id": model_id, "name": m["name"], "blurb": m["blurb"], "size_note": m["size_note"],
         "feeling": m["feeling"], "deletable": m["deletable"], "keep_reason": m["keep_reason"],
         "downloaded": have, "bytes": sum(_on_disk(p) for _, p, _ in files),
+        "lines_bytes": chatterbox.cache_bytes() if model_id == "chatterbox" else 0,
         "downloading": bool(job.get("running")), "done_bytes": job.get("done", 0),
         "total_bytes": job.get("total", 0), "error": job.get("error"),
     }
@@ -178,7 +179,9 @@ def delete(model_id: str, cfg: dict) -> int:
             except OSError:
                 pass
     if model_id == "chatterbox":
+        chatterbox.cancel_prerender()
         shutil.rmtree(chatterbox.folder(), ignore_errors=True)
+        freed += chatterbox.clear_cache()  # its recorded lines go with it
     _jobs.pop(model_id, None)
     if selected(cfg) == model_id:
         cfg["tts_engine"] = "kokoro"

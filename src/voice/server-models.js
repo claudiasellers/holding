@@ -21,3 +21,8 @@ export const listServerModels = (cfg) => api(cfg)('/voice-models');
 export const downloadServerModel = (cfg, id) => api(cfg)(`/voice-models/${encodeURIComponent(id)}/download`, { method: 'POST' });
 export const deleteServerModel = (cfg, id) => api(cfg)(`/voice-models/${encodeURIComponent(id)}`, { method: 'DELETE' });
 export const selectServerModel = (cfg, id) => api(cfg)('/voice-models/select', { method: 'POST', body: JSON.stringify({ id }) });
+
+// Pre-recording a parent's scripted lines with Chatterbox on the computer.
+export const startPrerender = (cfg, body) => api(cfg)('/voice-prerender', { method: 'POST', body: JSON.stringify(body) });
+export const prerenderStatus = (cfg) => api(cfg)('/voice-prerender');
+export const stopPrerender = (cfg) => api(cfg)('/voice-prerender', { method: 'DELETE' });

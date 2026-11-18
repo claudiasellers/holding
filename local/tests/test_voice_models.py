@@ -192,7 +192,52 @@ def test_real_chatterbox_speaks():
                 os.makedirs(dest, exist_ok=True)
                 with open(os.path.join(dest, f"{arch}-chatterbox-feeling-{ex}.wav"), "wb") as f:
                     f.write(tts.to_wav(wav, sr))
+        t0 = time.time()
+        again, _ = chatterbox.synthesize(text, arch, 0.8, cfg["tts_quality"])
+        print(f"{arch} repeat (kept line): {time.time() - t0:.3f}s")
+        assert time.time() - t0 < 1.0 and len(again) == len(wav)
         if dest:
             k, ksr = tts.synthesize(text, arch, None, cfg["tts_quality"])
             with open(os.path.join(dest, f"{arch}-kokoro.wav"), "wb") as f:
                 f.write(tts.to_wav(np.asarray(k), ksr))
+
+
+def test_line_cache_and_prerender(home, monkeypatch):
+    """Rendered lines are kept and reused at a nearby feeling; pre-rendering skips what's cached."""
+    monkeypatch.setattr(state, "HOME", home)
+    calls = []
+
+    class E:
+        def condition(self, key, fn):
+            return ("cond",)
+
+        def generate(self, text, cond, ex):
+            calls.append((text, ex))
+            return np.full(2400, 0.25, dtype=np.float32)
+
+    monkeypatch.setattr(chatterbox, "engine", lambda: E())
+    wav, sr = chatterbox.synthesize("I'm  here.", "bf_emma", 0.55, "int8")
+    assert sr == chatterbox.SR and len(calls) == 1
+    wav2, _ = chatterbox.synthesize("I'm here.", "bf_emma", 0.6, "int8")  # same line, close feeling: cached
+    assert len(calls) == 1 and np.allclose(wav, wav2, atol=1e-3)
+    chatterbox.synthesize("I'm here.", "bf_emma", 0.9, "int8")  # far feeling: new render
+    chatterbox.synthesize("I'm here.", "am_michael", 0.55, "int8")  # other voice: new render
+    assert len(calls) == 3
+    job = chatterbox.prerender(["I'm here.", "Still here.", "Still here.", "  "], "bf_emma", 0.55, "int8", wait=True)
+    assert job["total"] == 2 and job["done"] == 2 and job["rendered"] == 1 and not job["running"]
+    assert chatterbox.cache_bytes() > 0
+
+
+def test_prerender_endpoint_and_delete_clears_lines(home, monkeypatch):
+    monkeypatch.setattr(state, "HOME", home)
+    c, _ = client(home)
+    assert c.post("/v1/voice-prerender", json={"texts": ["Hi."]}, headers=AUTH).status_code == 409
+    fake_chatterbox_files()
+    seen = {}
+    monkeypatch.setattr(chatterbox, "prerender", lambda texts, voice, ex, q: seen.update(texts=texts, voice=voice, ex=ex) or {"running": True})
+    r = c.post("/v1/voice-prerender", json={"texts": ["Hi.", " "], "voice": "bf_emma", "exaggeration": 0.7}, headers=AUTH)
+    assert r.status_code == 200 and seen == {"texts": ["Hi."], "voice": "bf_emma", "ex": 0.7}
+    chatterbox.store("Hi.", "bf_emma", 0.7, np.zeros(100, np.float32))
+    assert c.get("/v1/voice-prerender", headers=AUTH).json()["lines_bytes"] > 0
+    r = c.delete("/v1/voice-models/chatterbox", headers=AUTH).json()
+    assert chatterbox.cache_bytes() == 0 and r["freed_bytes"] > 1000 * len(chatterbox.FILES)
