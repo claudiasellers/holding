@@ -4,7 +4,7 @@ import { registerTTSProvider } from './providers.js';
 import { KOKORO_VOICES } from './kokoro.js';
 
 let cfgSaved = { baseUrl: 'http://127.0.0.1:8787/v1', model: 'kokoro', token: '' };
-let ctx = null, current = null;
+let ctx = null, current = null, stopped = false, speakGen = 0;
 
 function audioCtx() { ctx = ctx || new (window.AudioContext || window.webkitAudioContext)(); return ctx; }
 
@@ -35,10 +35,13 @@ const provider = {
     return list.length ? list : known;
   },
   async speak(text, opts = {}) {
+    provider.stop();
+    const gen = ++speakGen;
+    stopped = false;
     const c = cfgSaved;
     const phrases = String(text).split(/…|\.\.\./).map((p) => p.trim()).filter(Boolean);
     for (const p of phrases) {
-      if (opts.signal?.aborted) return;
+      if (opts.signal?.aborted || stopped || gen !== speakGen) return;
       const r = await fetch(`${c.baseUrl.replace(/\/$/, '')}/audio/speech`, {
         method: 'POST', signal: opts.signal,
         headers: { 'Content-Type': 'application/json', ...(c.token ? { Authorization: `Bearer ${c.token}`, 'X-Pair-Token': c.token } : {}) },
@@ -46,6 +49,9 @@ const provider = {
       });
       if (!r.ok) throw new Error(`speech server ${r.status}`);
       const buf = await audioCtx().decodeAudioData(await r.arrayBuffer());
+      // Stopped while the audio was downloading or decoding: an abort listener
+      // added now would never fire, so the phrase would play in full.
+      if (opts.signal?.aborted || stopped || gen !== speakGen) return;
       await new Promise((resolve) => {
         const src = ctx.createBufferSource(); src.buffer = buf;
         const an = ctx.createAnalyser(); an.fftSize = 512; src.connect(an); an.connect(ctx.destination);
@@ -55,10 +61,12 @@ const provider = {
         src.onended = fin; opts.signal?.addEventListener('abort', () => { try { src.stop(); } catch {} fin(); }, { once: true });
         src.start();
       });
-      await new Promise((r2) => setTimeout(r2, 650));
+      if (opts.signal?.aborted || stopped || gen !== speakGen) return;
+      await new Promise((r2) => { const t = setTimeout(r2, 650); opts.signal?.addEventListener('abort', () => { clearTimeout(t); r2(); }, { once: true }); });
     }
   },
-  stop() { try { current?.stop(); } catch {} },
+  // Stops the phrase playing now and every phrase after it in the same line.
+  stop() { stopped = true; try { current?.stop(); } catch {} current = null; },
 };
 registerTTSProvider(provider);
 export default provider;

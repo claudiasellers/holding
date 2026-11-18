@@ -47,6 +47,11 @@ export function createSession({ archetype, presence, ui, mode = 'hold' }) {
     entryDistress: null, bodyBudgetDone: false,
   };
   const ctrl = new AbortController();
+  // Aborted only when the session screen is left (destroy). Unlike state.ended,
+  // nothing gets past it: not even the closing lines, which are allowed to play
+  // after End but must go quiet the moment the user leaves the screen.
+  const life = new AbortController();
+  const gone = () => life.signal.aborted;
   let speaking = null;              // AbortController for current speech
   let speakQueue = Promise.resolve();
   let modelReady = false, modelErr = null, modelPromise = null, modelProgress = 0;
@@ -138,7 +143,7 @@ export function createSession({ archetype, presence, ui, mode = 'hold' }) {
 
   // ---------- voice ----------
   function say(text, meta = {}) {
-    if (!text || state.ended && !meta.final) return Promise.resolve();
+    if (!text || gone() || state.ended && !meta.final) return Promise.resolve();
     const policy = policyFor(meta.tier || state.tier, store.warmthFor(archetype));
     state.said.push(text);
     state.history.push({ role: 'assistant', content: text });
@@ -148,20 +153,28 @@ export function createSession({ archetype, presence, ui, mode = 'hold' }) {
   }
 
   async function speakNow(text, policy, meta) {
-    if (state.ended && !meta.final) return;
+    if (gone() || state.ended && !meta.final) return;
+    // Own controller for this line, created before any await so a stop or a
+    // destroy that lands while the voice is being looked up still cancels it.
+    const ac = new AbortController();
+    speaking = ac;
+    const signal = ac.signal;
+    if (gone()) return;
     ui.onSay?.(text, meta);
     presence.setOwn('speaking');
     const tts = getTTSProvider(s.tts.provider) || getTTSProvider('webspeech');
     const voiceId = await voiceFor(tts?.id, archetype).catch(() => undefined);
-    speaking = new AbortController();
-    const done = () => { presence.setSpeaking(0); presence.setOwn(state.lead ? 'holding' : 'listening'); ui.onSpeakEnd?.(); };
+    const done = () => { if (gone()) return; presence.setSpeaking(0); presence.setOwn(state.lead ? 'holding' : 'listening'); ui.onSpeakEnd?.(); };
+    if (signal.aborted) return done();
     const pre = typeof window !== 'undefined' ? window.HoldingMobile?.prerecorded : null;
     if (s.voiceOn && pre?.has && recordedVoiceMatches(archetype) && await Promise.resolve(pre.has(archetype.id, text)).catch(() => false)) {
-      try { await pre.play(archetype.id, text, { onLevel: (l) => presence.setSpeaking(l), signal: speaking.signal }); done(); return; } catch { /* fall through to live voice */ }
+      if (signal.aborted) return done();
+      try { await pre.play(archetype.id, text, { onLevel: (l) => presence.setSpeaking(l), signal }); done(); return; } catch { /* fall through to live voice */ }
+      if (signal.aborted) return done();
     }
     if (!s.voiceOn || !tts) {
       // captions only: hold the line on screen for a reading beat
-      await sleep(Math.max(1600, text.length * 55), speaking.signal); done(); return;
+      await sleep(Math.max(1600, text.length * 55), signal); done(); return;
     }
     try {
       await tts.speak(text, {
@@ -170,18 +183,28 @@ export function createSession({ archetype, presence, ui, mode = 'hold' }) {
         pitch: archetype.voice.pitch * policy.pitch,
         archetype,
         onLevel: (l) => presence.setSpeaking(l),
-        signal: speaking.signal,
+        signal,
       });
     } catch (e) {
+      // A stopped line often rejects (an aborted fetch, a cancelled utterance).
+      // That is not a failure, so never hand it to the fallback voice.
+      if (signal.aborted) return done();
       console.info('[holding] tts failed:', e?.message);
       if (s.tts.provider !== 'webspeech') {
-        try { await getTTSProvider('webspeech')?.speak(text, { voiceId: await voiceFor('webspeech', archetype).catch(() => undefined), rate: archetype.voice.rate * policy.rate, pitch: archetype.voice.pitch * policy.pitch, onLevel: (l) => presence.setSpeaking(l), signal: speaking.signal }); } catch {}
-      } else await sleep(Math.max(1400, text.length * 50), speaking.signal);
+        try {
+          const fbVoice = await voiceFor('webspeech', archetype).catch(() => undefined);
+          if (!signal.aborted) await getTTSProvider('webspeech')?.speak(text, { voiceId: fbVoice, rate: archetype.voice.rate * policy.rate, pitch: archetype.voice.pitch * policy.pitch, onLevel: (l) => presence.setSpeaking(l), signal });
+        } catch {}
+      } else await sleep(Math.max(1400, text.length * 50), signal);
     }
     done();
   }
 
-  function stopSpeaking() { speaking?.abort(); getTTSProvider(s.tts.provider)?.stop?.(); getTTSProvider('webspeech')?.stop?.(); }
+  function stopSpeaking() {
+    speaking?.abort();
+    getTTSProvider(s.tts.provider)?.stop?.();
+    getTTSProvider('webspeech')?.stop?.();
+  }
 
   // ---------- replies ----------
   async function reply(kind, opts = {}) {
@@ -347,14 +370,18 @@ export function createSession({ archetype, presence, ui, mode = 'hold' }) {
     state.ended = true;
     ctrl.abort();
     store.push('episodes', { archetype: archetype.id, mode: state.mode, minutes: Math.round((Date.now() - state.startedAt) / 6e4), affect: state.affect, misses: state.misses });
+    if (gone()) return;
     ui.onEnd?.({ said: [...new Set(state.said)], closing, meta });
     await say(closing, { kind: 'close', final: true, tier: 'name' });
-    await sleep(900);
+    await sleep(900, life.signal);
+    if (gone()) return;
     await say(meta, { kind: 'metaprocess', final: true, tier: 'name' });
-    presence.setOwn('holding');
+    if (!gone()) presence.setOwn('holding');
   }
 
-  function destroy() { state.ended = true; ctrl.abort(); stopSpeaking(); }
+  // Leaving the screen: everything goes quiet now, including closing lines
+  // still queued or playing.
+  function destroy() { state.ended = true; ctrl.abort(); life.abort(); stopSpeaking(); }
 
   return {
     state, start, end, destroy, onTile, onText, onMiss, chooseWordsBack,
