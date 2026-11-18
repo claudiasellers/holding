@@ -38,6 +38,8 @@ jobs:
           restore-keys: voice-
       - name: Pre-render scripted lines
         run: |
+          # ffmpeg makes 64 kbps mp3s; without it the script falls back to wav, ~10x larger.
+          command -v ffmpeg >/dev/null || (sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg)
           if [ -f scripts/export-lines.mjs ]; then node scripts/export-lines.mjs; fi
           if [ -f src/content/scripted-lines.json ]; then node scripts/prerender-voice.mjs; else echo "No scripted lines file; skipping."; fi
       - run: npm run build

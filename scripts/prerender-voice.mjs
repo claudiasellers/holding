@@ -93,7 +93,7 @@ for (const g of groups) {
   for (const line of g.lines || []) {
     if (!line.text || /\{[^}]+\}/.test(line.text)) { skipped++; continue; }
     const speed = line.speed ?? g.speed ?? 1;
-    const h = hashOf(line.text, voice, String(speed), MODEL, DTYPE);
+    const h = hashOf(line.text, voice, String(speed), MODEL, DTYPE, EXT); // EXT: a new encoder re-renders
     const out = join(dir, `${line.id}${EXT}`);
     const rel = `audio/${g.archetype}/${line.id}${EXT}`; // path relative to the web root
     const prev = index[g.archetype][line.id];
@@ -103,6 +103,8 @@ for (const g of groups) {
     await audio.save(tmp);
     await encode(tmp, out);
     await rm(tmp, { force: true });
+    // Drop the same line in another format (e.g. a .wav left over from a run without ffmpeg).
+    if (prev && prev.src && prev.src !== rel) await rm(join(outDir, '..', prev.src), { force: true });
     const seconds = audio.audio && audio.sampling_rate ? +(audio.audio.length / audio.sampling_rate).toFixed(2) : null;
     index[g.archetype][line.id] = { src: rel, text: line.text, hash: h, voice: line.voice || voice, speed, seconds, bytes: (await stat(out)).size };
     made++;
