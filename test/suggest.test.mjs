@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { gist, ruleSuggestions, suggestionGuard, buildSuggestPrompt, parseModelSuggestions, mergeSuggestions, topicsFrom, isStarter, RECENT_TURNS } from '../src/engine/suggest.js';
+import { gist, ruleSuggestions, questionKind, suggestionGuard, buildSuggestPrompt, parseModelSuggestions, mergeSuggestions, topicsFrom, isStarter, RECENT_TURNS } from '../src/engine/suggest.js';
 import { suggestionModel } from '../src/ui/suggestions.js';
 import { readText, RISK } from '../src/engine/affect.js';
 
@@ -105,4 +105,44 @@ test('model use: never in scripted mode or safety; in-browser model kept off pho
   assert.equal(suggestionModel({ ai: { provider: 'openai-local' }, suggestionsAI: 'auto' }, true), 'openai-local');
   assert.equal(suggestionModel({ ai: { provider: 'holding-rag' }, suggestionsAI: 'auto' }, false), null);
   assert.equal(suggestionModel({ ai: { provider: 'openai-local' }, suggestionsAI: 'off' }, false), null);
+});
+
+test('chips answer the question she just asked (opener "How\'s today treating you?")', () => {
+  const g = gist(st({ mode: 'talk', tier: 'ordinary', history: [{ role: 'assistant', content: "How's today treating you?" }] }));
+  assert.equal(g.question, 'day');
+  const s = ruleSuggestions(g);
+  assert.deepEqual(s.slice(0, 2), ['Pretty good, actually.', 'Honestly, kind of hard.']);
+  for (const bad of ["Yes, that's it.", 'Not quite.', 'Just stay with me.']) assert.ok(!s.includes(bad), s.join(' | '));
+});
+
+test('"Yes, that\'s it" only follows a check on a guess or a repair', () => {
+  const yes = "Yes, that's it.";
+  const has = (o) => ruleSuggestions(gist(st(o))).includes(yes);
+  assert.ok(has({ tier: 'name', history: [{ role: 'assistant', content: "I'm hearing something like grief in this. Is that close?" }] }));
+  assert.ok(has({ lastReplyKind: 'repair', history: [{ role: 'assistant', content: 'I missed that. Was it this?' }] }));
+  for (const content of ["How's today treating you?", 'Hey. Glad you\'re here this morning. How did you sleep?', 'Anything today that might be hard?',
+    'What was it like to have me stay?', 'Do you want to tell me, love, or stay a bit longer first?', "Hi. You're up. What's the first thing on your plate?",
+    "Let's find the old rule. When you fall apart and reach out, what's supposed to happen next?", "I'm here."])
+    for (const tier of ['bewith', 'name', 'makesense', 'ordinary']) assert.ok(!has({ tier, history: [{ role: 'assistant', content }] }), `${tier}: ${content}`);
+});
+
+test('question kinds for the scripted library\'s questions', () => {
+  const k = (t) => questionKind(t);
+  assert.equal(k("How's today treating you?"), 'day');
+  assert.equal(k('Hi, love. Ordinary day, or interesting one?'), 'day');
+  assert.equal(k('Hey. Glad you\'re here this morning. How did you sleep?'), 'sleep');
+  assert.equal(k("Morning. How's your body today? Rested, sore, somewhere in between?"), 'body');
+  assert.equal(k('Is that it, or something else?'), 'check');
+  assert.equal(k('Sounds like dread more than panic. Is that close?'), 'check');
+  assert.equal(k('Do you want to tell me, or stay a bit longer first?'), 'choice');
+  assert.equal(k('What was it like to have me stay?'), 'reflect');
+  assert.equal(k("Hey. Good to see you. What's going on?"), 'whatsUp');
+  assert.equal(k('Anything today that might be hard?'), 'yesNo');
+  assert.equal(k("I'm here. Not going anywhere."), null);
+});
+
+test('every question-answer chip is safe to say', () => {
+  const lines = ["How's today treating you?", 'How did you sleep?', 'Rested, sore?', 'Is that close?', 'Tell me, or stay a bit longer?', 'What was it like?', "What's going on?", 'Anything hard?', 'Breakfast, or coffee?'];
+  for (const content of lines) for (const tier of ['name', 'makesense', 'ordinary'])
+    for (const t of ruleSuggestions(gist(st({ tier, history: [{ role: 'assistant', content }] })))) assert.equal(suggestionGuard(t), t, t);
 });
