@@ -1,0 +1,26 @@
+{
+  "name": "holding",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "A comforting parent figure with marked mirroring, voice, and local-only AI.",
+  "scripts": {
+    "dev": "vite",
+    "build": "node scripts/export-lines.mjs && vite build && node scripts/build-mobile.mjs",
+    "preview": "vite preview",
+    "test": "node --test test/*.mjs",
+    "voice:prerender": "node scripts/export-lines.mjs && node scripts/prerender-voice.mjs",
+    "android": "npm run build && npx cap sync android",
+    "lines": "node scripts/export-lines.mjs",
+    "test:mobile": "node test/mobile/e2e.mjs"
+  },
+  "devDependencies": {
+    "vite": "8.3.8",
+    "@capacitor/cli": "^8.0.0",
+    "kokoro-js": "^1.2.1"
+  },
+  "dependencies": {
+    "@capacitor/core": "^8.0.0",
+    "@capacitor/android": "^8.0.0"
+  }
+}

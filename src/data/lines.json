@@ -1,0 +1,2584 @@
+{
+ "opening": [
+  {
+   "t": "I'm here.",
+   "ipf": "soothing",
+   "w": 0.2,
+   "tier": "bewith"
+  },
+  {
+   "t": "I'm here. You don't have to say anything.",
+   "ipf": "soothing",
+   "w": 0.4,
+   "tier": "bewith"
+  },
+  {
+   "t": "I've got you. Take all the time there is.",
+   "ipf": "soothing",
+   "w": 0.6,
+   "tier": "bewith"
+  },
+  {
+   "t": "You came. I'm right here.",
+   "ipf": "delight",
+   "w": 0.5,
+   "tier": "bewith"
+  },
+  {
+   "t": "{endearment}, I'm here. Nothing you have to do.",
+   "ipf": "soothing",
+   "w": 0.7,
+   "tier": "bewith"
+  },
+  {
+   "t": "It's me. I'm staying.",
+   "ipf": "protection",
+   "w": 0.3,
+   "tier": "bewith"
+  },
+  {
+   "t": "You don't have to explain. I'm here now.",
+   "ipf": "attunement",
+   "w": 0.4,
+   "tier": "bewith"
+  },
+  {
+   "t": "Right here, {endearment}. Not going anywhere.",
+   "ipf": "protection",
+   "w": 0.7,
+   "tier": "bewith"
+  },
+  {
+   "t": "Come here. Let it be as big as it is.",
+   "ipf": "soothing",
+   "w": 0.6,
+   "tier": "bewith"
+  },
+  {
+   "t": "I'm with you. You can stop holding it together now.",
+   "ipf": "soothing",
+   "w": 0.5,
+   "tier": "bewith"
+  },
+  {
+   "t": "Hi. I'm here, and I'm not in a hurry.",
+   "ipf": "attunement",
+   "w": 0.3,
+   "tier": "bewith"
+  },
+  {
+   "t": "You reached for someone. That was the right move, and I'm here.",
+   "ipf": "encouragement",
+   "w": 0.4,
+   "tier": "bewith"
+  },
+  {
+   "t": "Whatever this is, it doesn't scare me. I'm here.",
+   "ipf": "protection",
+   "w": 0.5,
+   "tier": "bewith"
+  },
+  {
+   "t": "Okay. I'm here, and we don't have to do anything yet.",
+   "ipf": "soothing",
+   "w": 0.1,
+   "tier": "bewith"
+  },
+  {
+   "t": "No words required. Just be here with me a minute.",
+   "ipf": "soothing",
+   "w": 0.4,
+   "tier": "bewith"
+  },
+  {
+   "t": "I've got you, {endearment}. You're not alone in this.",
+   "ipf": "protection",
+   "w": 0.8,
+   "tier": "bewith"
+  },
+  {
+   "t": "Here I am. Same as always.",
+   "ipf": "protection",
+   "w": 0.2,
+   "tier": "bewith"
+  },
+  {
+   "t": "Let's just be here together for a bit.",
+   "ipf": "attunement",
+   "w": 0.3,
+   "tier": "bewith"
+  },
+  {
+   "t": "You're not too much for me. Not tonight, not ever.",
+   "ipf": "protection",
+   "w": 0.7,
+   "tier": "bewith"
+  },
+  {
+   "t": "Hey. I'm right here… breathe however you're breathing.",
+   "ipf": "soothing",
+   "w": 0.4,
+   "tier": "bewith"
+  },
+  {
+   "t": "It's alright to fall apart here. I'll hold the edges.",
+   "ipf": "protection",
+   "w": 0.6,
+   "tier": "bewith"
+  },
+  {
+   "t": "I'm glad you came to me. I'm here.",
+   "ipf": "delight",
+   "w": 0.6,
+   "tier": "bewith"
+  },
+  {
+   "t": "I'm here, {name}. Take your time.",
+   "ipf": "attunement",
+   "w": 0.4,
+   "tier": "bewith"
+  },
+  {
+   "t": "I'm steady, and I'm staying.",
+   "ipf": "protection",
+   "w": 0,
+   "tier": "bewith"
+  }
+ ],
+ "stillHere": [
+  {
+   "t": "Still here.",
+   "ipf": "protection",
+   "w": 0,
+   "tier": "bewith"
+  },
+  {
+   "t": "Still right here.",
+   "ipf": "protection",
+   "w": 0.2,
+   "tier": "bewith"
+  },
+  {
+   "t": "I haven't gone anywhere.",
+   "ipf": "protection",
+   "w": 0.3,
+   "tier": "bewith"
+  },
+  {
+   "t": "Still with you, {endearment}.",
+   "ipf": "soothing",
+   "w": 0.7,
+   "tier": "bewith"
+  },
+  {
+   "t": "I'm here. Take your time.",
+   "ipf": "soothing",
+   "w": 0.3,
+   "tier": "bewith"
+  },
+  {
+   "t": "No rush. I'm here.",
+   "ipf": "soothing",
+   "w": 0.2,
+   "tier": "bewith"
+  },
+  {
+   "t": "Right beside you.",
+   "ipf": "attunement",
+   "w": 0.4,
+   "tier": "bewith"
+  },
+  {
+   "t": "Still here. Still steady.",
+   "ipf": "protection",
+   "w": 0.1,
+   "tier": "bewith"
+  },
+  {
+   "t": "Mm… I'm here.",
+   "ipf": "soothing",
+   "w": 0.3,
+   "tier": "bewith"
+  },
+  {
+   "t": "Still here. You're doing it.",
+   "ipf": "encouragement",
+   "w": 0.4,
+   "tier": "bewith"
+  },
+  {
+   "t": "I'm not going anywhere.",
+   "ipf": "protection",
+   "w": 0.4,
+   "tier": "bewith"
+  },
+  {
+   "t": "Here.",
+   "ipf": "protection",
+   "w": 0,
+   "tier": "bewith"
+  },
+  {
+   "t": "Still with you. Nothing has to change yet.",
+   "ipf": "soothing",
+   "w": 0.3,
+   "tier": "bewith"
+  },
+  {
+   "t": "You're not alone in this minute.",
+   "ipf": "protection",
+   "w": 0.5,
+   "tier": "bewith"
+  },
+  {
+   "t": "I'm keeping you company.",
+   "ipf": "attunement",
+   "w": 0.4,
+   "tier": "bewith"
+  },
+  {
+   "t": "Still here, holding the quiet with you.",
+   "ipf": "soothing",
+   "w": 0.6,
+   "tier": "bewith"
+  },
+  {
+   "t": "I'm right where I was.",
+   "ipf": "protection",
+   "w": 0.1,
+   "tier": "bewith"
+  },
+  {
+   "t": "However long this takes, I'm here.",
+   "ipf": "protection",
+   "w": 0.5,
+   "tier": "bewith"
+  },
+  {
+   "t": "Still here. Nothing you do will scare me off.",
+   "ipf": "protection",
+   "w": 0.6,
+   "tier": "bewith"
+  },
+  {
+   "t": "I can stay as long as you want.",
+   "ipf": "soothing",
+   "w": 0.5,
+   "tier": "bewith"
+  },
+  {
+   "t": "Still here, {endearment}. Still glad you came.",
+   "ipf": "delight",
+   "w": 0.8,
+   "tier": "bewith"
+  },
+  {
+   "t": "Quiet is fine. I'm in it with you.",
+   "ipf": "attunement",
+   "w": 0.3,
+   "tier": "bewith"
+  }
+ ],
+ "permission": [
+  {
+   "t": "Let it come.",
+   "ipf": "soothing",
+   "w": 0.2,
+   "tier": "bewith"
+  },
+  {
+   "t": "Let it come. I've got you.",
+   "ipf": "soothing",
+   "w": 0.6,
+   "tier": "bewith"
+  },
+  {
+   "t": "You can cry as long as you want.",
+   "ipf": "soothing",
+   "w": 0.5,
+   "tier": "bewith"
+  },
+  {
+   "t": "It's allowed to be this big.",
+   "ipf": "attunement",
+   "w": 0.3,
+   "tier": "bewith"
+  },
+  {
+   "t": "Nothing you feel right now is wrong.",
+   "ipf": "protection",
+   "w": 0.4,
+   "tier": "bewith"
+  },
+  {
+   "t": "You don't have to be okay yet.",
+   "ipf": "soothing",
+   "w": 0.4,
+   "tier": "bewith"
+  },
+  {
+   "t": "Let it move through. I'm here while it does.",
+   "ipf": "soothing",
+   "w": 0.4,
+   "tier": "bewith"
+  },
+  {
+   "t": "You can stop being brave for a while.",
+   "ipf": "soothing",
+   "w": 0.6,
+   "tier": "bewith"
+  },
+  {
+   "t": "Fall apart if you want. I'll be here when it settles.",
+   "ipf": "protection",
+   "w": 0.5,
+   "tier": "bewith"
+  },
+  {
+   "t": "There's room for all of it here.",
+   "ipf": "attunement",
+   "w": 0.3,
+   "tier": "bewith"
+  },
+  {
+   "t": "It's okay to make noise.",
+   "ipf": "soothing",
+   "w": 0.2,
+   "tier": "bewith"
+  },
+  {
+   "t": "You can let go of holding it in.",
+   "ipf": "soothing",
+   "w": 0.4,
+   "tier": "bewith"
+  },
+  {
+   "t": "This feeling is allowed. So is the next one.",
+   "ipf": "attunement",
+   "w": 0.2,
+   "tier": "bewith"
+  },
+  {
+   "t": "You don't have to tidy it up for me.",
+   "ipf": "protection",
+   "w": 0.3,
+   "tier": "bewith"
+  },
+  {
+   "t": "Let the tears do what they do.",
+   "ipf": "soothing",
+   "w": 0.3,
+   "tier": "bewith"
+  },
+  {
+   "t": "You don't have to make sense yet.",
+   "ipf": "attunement",
+   "w": 0.1,
+   "tier": "bewith"
+  },
+  {
+   "t": "Whatever comes up is welcome here, {endearment}.",
+   "ipf": "soothing",
+   "w": 0.8,
+   "tier": "bewith"
+  },
+  {
+   "t": "Go ahead. I can hold a lot.",
+   "ipf": "protection",
+   "w": 0.5,
+   "tier": "bewith"
+  }
+ ],
+ "selfTouch": [
+  {
+   "t": "Put your hand where you'd want mine to be.",
+   "ipf": "soothing",
+   "w": 0.6,
+   "tier": "bewith"
+  },
+  {
+   "t": "If you want, rest a hand on your chest. Like I'm there.",
+   "ipf": "soothing",
+   "w": 0.7,
+   "tier": "bewith"
+  },
+  {
+   "t": "You could put a hand on your belly and leave it there. That's you, still here.",
+   "ipf": "soothing",
+   "w": 0.4,
+   "tier": "bewith"
+  },
+  {
+   "t": "Wrap your arms around yourself, if that feels right. Let that be me, too.",
+   "ipf": "soothing",
+   "w": 0.8,
+   "tier": "bewith"
+  },
+  {
+   "t": "If it helps, hold your own hand. Let it be mine for a minute.",
+   "ipf": "soothing",
+   "w": 0.7,
+   "tier": "bewith"
+  },
+  {
+   "t": "A hand on your cheek, if you'd like. Gentle, the way you deserve.",
+   "ipf": "soothing",
+   "w": 0.9,
+   "tier": "bewith"
+  },
+  {
+   "t": "You can press your palms together, or hold something soft. Whatever feels kind.",
+   "ipf": "soothing",
+   "w": 0.3,
+   "tier": "bewith"
+  },
+  {
+   "t": "Hand on your heart, if you want it. Warm and heavy.",
+   "ipf": "soothing",
+   "w": 0.5,
+   "tier": "bewith"
+  },
+  {
+   "t": "Put a hand on your arm and let it rest there. That's company.",
+   "ipf": "soothing",
+   "w": 0.2,
+   "tier": "bewith"
+  }
+ ],
+ "breath": [
+  {
+   "t": "There's no right way to breathe right now.",
+   "ipf": "soothing",
+   "w": 0.2,
+   "tier": "bewith"
+  },
+  {
+   "t": "I'll breathe slow over here. It's there if you want to borrow it.",
+   "ipf": "soothing",
+   "w": 0.5,
+   "tier": "bewith"
+  },
+  {
+   "t": "If you'd like, let your breath out a little longer than it came in. Only if it feels okay.",
+   "ipf": "soothing",
+   "w": 0.3,
+   "tier": "bewith"
+  },
+  {
+   "t": "You can watch the light breathe with me, or not. Either is fine.",
+   "ipf": "soothing",
+   "w": 0.3,
+   "tier": "bewith"
+  },
+  {
+   "t": "If a long sigh wants to come, let it.",
+   "ipf": "soothing",
+   "w": 0.4,
+   "tier": "bewith"
+  },
+  {
+   "t": "If slow breathing feels strange, skip it. Feet on the floor works too.",
+   "ipf": "protection",
+   "w": 0.1,
+   "tier": "bewith"
+  },
+  {
+   "t": "My breath is slow and steady here. You can lean on it or ignore it.",
+   "ipf": "soothing",
+   "w": 0.4,
+   "tier": "bewith"
+  }
+ ],
+ "orient": [
+  {
+   "t": "Feel your feet. Whatever they're touching, that's the floor holding you up.",
+   "ipf": "protection",
+   "w": 0.3
+  },
+  {
+   "t": "Notice the temperature of the air on your skin. Warm, cool, somewhere between.",
+   "ipf": "soothing",
+   "w": 0.2
+  },
+  {
+   "t": "Look around and find one thing that's blue. You don't have to tell me.",
+   "ipf": "attunement",
+   "w": 0.1
+  },
+  {
+   "t": "Name five things you can see, out loud or in your head. I'll wait.",
+   "ipf": "soothing",
+   "w": 0.2
+  },
+  {
+   "t": "Find something with a texture and touch it. Rough, smooth, soft.",
+   "ipf": "soothing",
+   "w": 0.2
+  },
+  {
+   "t": "Listen for the farthest sound you can hear. Then the closest one.",
+   "ipf": "soothing",
+   "w": 0.1
+  },
+  {
+   "t": "You're here, in this room, right now. My voice is here too.",
+   "ipf": "protection",
+   "w": 0.4
+  },
+  {
+   "t": "Press your feet down a little. The ground pushes back.",
+   "ipf": "protection",
+   "w": 0.2
+  },
+  {
+   "t": "Is the room warm or cool? Just notice it. You don't have to answer.",
+   "ipf": "attunement",
+   "w": 0.1
+  },
+  {
+   "t": "Let your eyes rest on something still. A cup, a corner, a light.",
+   "ipf": "soothing",
+   "w": 0.3
+  },
+  {
+   "t": "If things feel far away, that's alright. Follow my voice back.",
+   "ipf": "protection",
+   "w": 0.5
+  },
+  {
+   "t": "What's one thing you can hear right now? You can just tap if words are too far.",
+   "ipf": "attunement",
+   "w": 0.3
+  },
+  {
+   "t": "If there's something cold nearby, hold it. A glass, a tap, the window.",
+   "ipf": "soothing",
+   "w": 0.1
+  },
+  {
+   "t": "Feel the weight of your body on whatever is under you. It's got you.",
+   "ipf": "soothing",
+   "w": 0.4
+  },
+  {
+   "t": "It's today, and you're grown, and you're here with me.",
+   "ipf": "protection",
+   "w": 0.5
+  },
+  {
+   "t": "Stay with my voice, {endearment}. One sound at a time.",
+   "ipf": "protection",
+   "w": 0.7
+  }
+ ],
+ "bodyBudget": [
+  {
+   "t": "Have you had any water? A few sips would help your body right now.",
+   "ipf": "soothing",
+   "w": 0.3
+  },
+  {
+   "t": "When did you last eat something? Something small counts.",
+   "ipf": "soothing",
+   "w": 0.3
+  },
+  {
+   "t": "Are you warm enough? A blanket or a hoodie can do a lot.",
+   "ipf": "soothing",
+   "w": 0.5
+  },
+  {
+   "t": "Bodies feel everything louder when they're hungry or cold. Let's check on yours first.",
+   "ipf": "protection",
+   "w": 0.2
+  },
+  {
+   "t": "If there's water near you, take a sip. I'll be here.",
+   "ipf": "soothing",
+   "w": 0.4
+  },
+  {
+   "t": "Your body has been working hard. It could use something warm to hold.",
+   "ipf": "soothing",
+   "w": 0.6
+  },
+  {
+   "t": "Toast, a banana, a handful of anything. Small is fine.",
+   "ipf": "encouragement",
+   "w": 0.1
+  },
+  {
+   "t": "Is it late? Every feeling gets heavier past midnight. Rest counts as care.",
+   "ipf": "soothing",
+   "w": 0.4
+  },
+  {
+   "t": "Before we try to make sense of anything, let's get you something to drink.",
+   "ipf": "protection",
+   "w": 0.3
+  },
+  {
+   "t": "Wrap up in something soft if you can reach it. Warmth first, thinking later.",
+   "ipf": "soothing",
+   "w": 0.6
+  },
+  {
+   "t": "If you can lie down, even for a while, I'll keep you company.",
+   "ipf": "soothing",
+   "w": 0.5
+  },
+  {
+   "t": "Water, food, the bathroom. Boring things, and they matter tonight.",
+   "ipf": "protection",
+   "w": 0
+  },
+  {
+   "t": "Something warm to drink, {endearment}, if you can manage it. I'll wait.",
+   "ipf": "soothing",
+   "w": 0.8
+  }
+ ],
+ "affect": {
+  "sad": {
+   "bewith": [
+    {
+     "t": "That's so much sadness.",
+     "ipf": "attunement",
+     "w": 0.3,
+     "tier": "bewith"
+    },
+    {
+     "t": "It hurts this much. I'm here with it.",
+     "ipf": "soothing",
+     "w": 0.5,
+     "tier": "bewith"
+    },
+    {
+     "t": "So much sad, all at once.",
+     "ipf": "attunement",
+     "w": 0.2,
+     "tier": "bewith"
+    },
+    {
+     "t": "That's a deep ache. I've got you.",
+     "ipf": "soothing",
+     "w": 0.7,
+     "tier": "bewith"
+    },
+    {
+     "t": "Of course you're crying. Let it come.",
+     "ipf": "soothing",
+     "w": 0.5,
+     "tier": "bewith"
+    },
+    {
+     "t": "That sadness is big, and it's welcome here, {endearment}.",
+     "ipf": "soothing",
+     "w": 0.8,
+     "tier": "bewith"
+    },
+    {
+     "t": "It's heavy. You don't have to carry it by yourself tonight.",
+     "ipf": "protection",
+     "w": 0.5,
+     "tier": "bewith"
+    },
+    {
+     "t": "Sad all the way down. I'm right beside it.",
+     "ipf": "attunement",
+     "w": 0.4,
+     "tier": "bewith"
+    },
+    {
+     "t": "That's grief, or close to it. I'm not going anywhere.",
+     "ipf": "protection",
+     "w": 0.3,
+     "tier": "bewith"
+    }
+   ],
+   "name": [
+    {
+     "t": "It sounds like sadness, the kind that's been waiting a long time. Tell me if I've got that wrong.",
+     "ipf": "attunement",
+     "w": 0.5,
+     "tier": "name"
+    },
+    {
+     "t": "I'm hearing something like grief in this. Is that close?",
+     "ipf": "attunement",
+     "w": 0.3,
+     "tier": "name"
+    },
+    {
+     "t": "Maybe this is sad mixed with worn out. I might be off.",
+     "ipf": "attunement",
+     "w": 0.2,
+     "tier": "name"
+    },
+    {
+     "t": "There's sadness there, and maybe some longing for someone underneath it. Tell me if that's not it.",
+     "ipf": "attunement",
+     "w": 0.5,
+     "tier": "name"
+    },
+    {
+     "t": "It might be loss you're feeling, more than anything else. Correct me if I'm off.",
+     "ipf": "attunement",
+     "w": 0.4,
+     "tier": "name"
+    },
+    {
+     "t": "This sounds like the sad that comes from wanting something you didn't get. Does that fit?",
+     "ipf": "attunement",
+     "w": 0.6,
+     "tier": "name"
+    },
+    {
+     "t": "Sounds like sadness, with a little anger tucked inside. You'd know better than me.",
+     "ipf": "attunement",
+     "w": 0.3,
+     "tier": "name"
+    }
+   ]
+  },
+  "scared": {
+   "bewith": [
+    {
+     "t": "That's so much fear.",
+     "ipf": "attunement",
+     "w": 0.3,
+     "tier": "bewith"
+    },
+    {
+     "t": "Scared all the way through. I'm right here.",
+     "ipf": "protection",
+     "w": 0.5,
+     "tier": "bewith"
+    },
+    {
+     "t": "That's a lot of fear in one body. I'm staying.",
+     "ipf": "protection",
+     "w": 0.4,
+     "tier": "bewith"
+    },
+    {
+     "t": "It feels dangerous right now. I'm standing right beside you.",
+     "ipf": "protection",
+     "w": 0.6,
+     "tier": "bewith"
+    },
+    {
+     "t": "Fear this big is exhausting. You're not facing it alone.",
+     "ipf": "protection",
+     "w": 0.5,
+     "tier": "bewith"
+    },
+    {
+     "t": "Your whole body is on alert. I'm here, and I'm steady.",
+     "ipf": "soothing",
+     "w": 0.3,
+     "tier": "bewith"
+    },
+    {
+     "t": "So scared, {endearment}. I've got you.",
+     "ipf": "protection",
+     "w": 0.8,
+     "tier": "bewith"
+    },
+    {
+     "t": "That's terror, or close to it. I'm not going anywhere.",
+     "ipf": "protection",
+     "w": 0.3,
+     "tier": "bewith"
+    },
+    {
+     "t": "The alarm is loud. I can hear it, and I'm calm.",
+     "ipf": "soothing",
+     "w": 0.1,
+     "tier": "bewith"
+    }
+   ],
+   "name": [
+    {
+     "t": "It sounds like fear, the kind that expects something bad any second. Tell me if I've got that wrong.",
+     "ipf": "attunement",
+     "w": 0.4,
+     "tier": "name"
+    },
+    {
+     "t": "There's so much scared in there. Maybe some fury underneath it too? Tell me if I've got that wrong.",
+     "ipf": "attunement",
+     "w": 0.5,
+     "tier": "name"
+    },
+    {
+     "t": "I wonder if this is the old fear, the one that's older than tonight. You can tell me I'm off.",
+     "ipf": "attunement",
+     "w": 0.4,
+     "tier": "name"
+    },
+    {
+     "t": "Sounds like dread more than panic. Is that close?",
+     "ipf": "attunement",
+     "w": 0.2,
+     "tier": "name"
+    },
+    {
+     "t": "Maybe it's fear of being left. I could be wrong about that.",
+     "ipf": "attunement",
+     "w": 0.5,
+     "tier": "name"
+    },
+    {
+     "t": "It sounds like part of you is braced for someone to be angry. Tell me if that doesn't fit.",
+     "ipf": "protection",
+     "w": 0.5,
+     "tier": "name"
+    }
+   ]
+  },
+  "angry": {
+   "bewith": [
+    {
+     "t": "That's a lot of anger.",
+     "ipf": "attunement",
+     "w": 0.2,
+     "tier": "bewith"
+    },
+    {
+     "t": "You're furious. That's allowed here.",
+     "ipf": "protection",
+     "w": 0.3,
+     "tier": "bewith"
+    },
+    {
+     "t": "So much anger. I can take all of it.",
+     "ipf": "protection",
+     "w": 0.4,
+     "tier": "bewith"
+    },
+    {
+     "t": "That's fury. It doesn't frighten me.",
+     "ipf": "protection",
+     "w": 0.4,
+     "tier": "bewith"
+    },
+    {
+     "t": "Angry right down to your hands. I'm here.",
+     "ipf": "attunement",
+     "w": 0.3,
+     "tier": "bewith"
+    },
+    {
+     "t": "That anger makes sense to me. It can be as big as it is.",
+     "ipf": "attunement",
+     "w": 0.5,
+     "tier": "bewith"
+    },
+    {
+     "t": "Rage, all of it. I'm still right here.",
+     "ipf": "protection",
+     "w": 0.3,
+     "tier": "bewith"
+    },
+    {
+     "t": "Furious, {endearment}. I'm staying right with you.",
+     "ipf": "protection",
+     "w": 0.7,
+     "tier": "bewith"
+    },
+    {
+     "t": "Something wasn't fair, and you're burning with it. I'm listening.",
+     "ipf": "attunement",
+     "w": 0.5,
+     "tier": "bewith"
+    }
+   ],
+   "name": [
+    {
+     "t": "That sounds like anger at being treated as less. Tell me if I've got that wrong.",
+     "ipf": "attunement",
+     "w": 0.4,
+     "tier": "name"
+    },
+    {
+     "t": "I'm hearing fury, and maybe hurt right under it. Is that close?",
+     "ipf": "attunement",
+     "w": 0.5,
+     "tier": "name"
+    },
+    {
+     "t": "It sounds like the anger of someone who was let down again. I might be off.",
+     "ipf": "attunement",
+     "w": 0.4,
+     "tier": "name"
+    },
+    {
+     "t": "Maybe this is anger protecting something tender. You'd know better than me.",
+     "ipf": "protection",
+     "w": 0.5,
+     "tier": "name"
+    },
+    {
+     "t": "There might be some anger at yourself mixed in. Tell me if that's not right.",
+     "ipf": "attunement",
+     "w": 0.3,
+     "tier": "name"
+    },
+    {
+     "t": "Sounds like the kind of angry that's waited years to be allowed. Correct me if that's wrong.",
+     "ipf": "encouragement",
+     "w": 0.5,
+     "tier": "name"
+    }
+   ]
+  },
+  "ashamed": {
+   "bewith": [
+    {
+     "t": "That's so much shame.",
+     "ipf": "attunement",
+     "w": 0.3,
+     "tier": "bewith"
+    },
+    {
+     "t": "You want to disappear. I'm still looking at you, kindly.",
+     "ipf": "protection",
+     "w": 0.7,
+     "tier": "bewith"
+    },
+    {
+     "t": "Shame is loud right now. It isn't the truth about you.",
+     "ipf": "protection",
+     "w": 0.5,
+     "tier": "bewith"
+    },
+    {
+     "t": "You don't have to hide from me.",
+     "ipf": "soothing",
+     "w": 0.5,
+     "tier": "bewith"
+    },
+    {
+     "t": "That's the hot, small feeling. I'm right here with you in it.",
+     "ipf": "attunement",
+     "w": 0.4,
+     "tier": "bewith"
+    },
+    {
+     "t": "So much shame, {endearment}. I'm not going anywhere.",
+     "ipf": "protection",
+     "w": 0.8,
+     "tier": "bewith"
+    },
+    {
+     "t": "It feels unbearable to be seen. I'm here, and I'm gentle.",
+     "ipf": "soothing",
+     "w": 0.6,
+     "tier": "bewith"
+    },
+    {
+     "t": "That sinking feeling is so heavy. You're still welcome here.",
+     "ipf": "soothing",
+     "w": 0.5,
+     "tier": "bewith"
+    },
+    {
+     "t": "Shame says turn away. I'm not turning away.",
+     "ipf": "protection",
+     "w": 0.4,
+     "tier": "bewith"
+    }
+   ],
+   "name": [
+    {
+     "t": "It sounds like shame, the old kind that says you're the problem. Tell me if I've got that wrong.",
+     "ipf": "attunement",
+     "w": 0.5,
+     "tier": "name"
+    },
+    {
+     "t": "I wonder if this is embarrassment, or something deeper, like shame. Which is closer?",
+     "ipf": "attunement",
+     "w": 0.3,
+     "tier": "name"
+    },
+    {
+     "t": "Maybe there's shame here, and some fear that I'll see you differently. I could be off.",
+     "ipf": "attunement",
+     "w": 0.5,
+     "tier": "name"
+    },
+    {
+     "t": "Sounds like you're ashamed of needing anything at all. Tell me if that's not it.",
+     "ipf": "attunement",
+     "w": 0.5,
+     "tier": "name"
+    },
+    {
+     "t": "There's something like humiliation in this. Is that close?",
+     "ipf": "attunement",
+     "w": 0.3,
+     "tier": "name"
+    },
+    {
+     "t": "It might be shame about tonight, layered on older shame. You'd know better than me.",
+     "ipf": "attunement",
+     "w": 0.4,
+     "tier": "name"
+    }
+   ]
+  },
+  "numb": {
+   "bewith": [
+    {
+     "t": "Everything's gone flat and far away. I'm here anyway.",
+     "ipf": "protection",
+     "w": 0.2,
+     "tier": "bewith"
+    },
+    {
+     "t": "Numb is okay. I can sit with numb.",
+     "ipf": "soothing",
+     "w": 0.2,
+     "tier": "bewith"
+    },
+    {
+     "t": "Nothing feels like anything. That's alright with me.",
+     "ipf": "soothing",
+     "w": 0.2,
+     "tier": "bewith"
+    },
+    {
+     "t": "You don't have to feel more than you do. I'm still here.",
+     "ipf": "soothing",
+     "w": 0.4,
+     "tier": "bewith"
+    },
+    {
+     "t": "It's quiet in there. I'll keep you company in the quiet.",
+     "ipf": "soothing",
+     "w": 0.4,
+     "tier": "bewith"
+    },
+    {
+     "t": "Numb is a way of getting through. I'm not leaving.",
+     "ipf": "protection",
+     "w": 0.3,
+     "tier": "bewith"
+    },
+    {
+     "t": "Far away is fine. My voice will stay close.",
+     "ipf": "protection",
+     "w": 0.4,
+     "tier": "bewith"
+    },
+    {
+     "t": "Blank and heavy. I'm right here beside it, {endearment}.",
+     "ipf": "soothing",
+     "w": 0.6,
+     "tier": "bewith"
+    },
+    {
+     "t": "Shut down, and that's allowed. I'm steady.",
+     "ipf": "protection",
+     "w": 0,
+     "tier": "bewith"
+    }
+   ],
+   "name": [
+    {
+     "t": "It sounds like everything switched off, maybe because it got too much. Tell me if I've got that wrong.",
+     "ipf": "attunement",
+     "w": 0.3,
+     "tier": "name"
+    },
+    {
+     "t": "I wonder if numb is protecting you from something big underneath. You don't have to look at it yet.",
+     "ipf": "protection",
+     "w": 0.4,
+     "tier": "name"
+    },
+    {
+     "t": "Maybe this is the kind of numb that comes after being scared for a long time. I could be off.",
+     "ipf": "attunement",
+     "w": 0.4,
+     "tier": "name"
+    },
+    {
+     "t": "Sounds like you feel unreal, a bit outside yourself. Is that close?",
+     "ipf": "attunement",
+     "w": 0.2,
+     "tier": "name"
+    },
+    {
+     "t": "There might be exhaustion under the numb. Tell me if that doesn't fit.",
+     "ipf": "attunement",
+     "w": 0.3,
+     "tier": "name"
+    },
+    {
+     "t": "It sounds like empty more than sad. Correct me if I'm wrong.",
+     "ipf": "attunement",
+     "w": 0.1,
+     "tier": "name"
+    }
+   ]
+  },
+  "overwhelmed": {
+   "bewith": [
+    {
+     "t": "That's so much, all at once.",
+     "ipf": "attunement",
+     "w": 0.3,
+     "tier": "bewith"
+    },
+    {
+     "t": "Too much, coming from everywhere. I'm here.",
+     "ipf": "attunement",
+     "w": 0.3,
+     "tier": "bewith"
+    },
+    {
+     "t": "It's a flood right now. I'm a solid place to stand.",
+     "ipf": "protection",
+     "w": 0.5,
+     "tier": "bewith"
+    },
+    {
+     "t": "Everything at once. We don't have to sort any of it yet.",
+     "ipf": "soothing",
+     "w": 0.4,
+     "tier": "bewith"
+    },
+    {
+     "t": "It's too big to hold alone. You're not alone with it.",
+     "ipf": "protection",
+     "w": 0.5,
+     "tier": "bewith"
+    },
+    {
+     "t": "So much, {endearment}. One minute at a time, with me.",
+     "ipf": "soothing",
+     "w": 0.7,
+     "tier": "bewith"
+    },
+    {
+     "t": "You're maxed out. I'm steady enough for both of us.",
+     "ipf": "protection",
+     "w": 0.4,
+     "tier": "bewith"
+    },
+    {
+     "t": "It's a lot. It won't stay this loud forever.",
+     "ipf": "soothing",
+     "w": 0.3,
+     "tier": "bewith"
+    },
+    {
+     "t": "Overloaded, top to bottom. I'm right here.",
+     "ipf": "attunement",
+     "w": 0.1,
+     "tier": "bewith"
+    }
+   ],
+   "name": [
+    {
+     "t": "It sounds like overwhelm, too many things landing at once. Tell me if I've got that wrong.",
+     "ipf": "attunement",
+     "w": 0.3,
+     "tier": "name"
+    },
+    {
+     "t": "I wonder if it's not one feeling but five, all piled up. Does that sound right?",
+     "ipf": "attunement",
+     "w": 0.4,
+     "tier": "name"
+    },
+    {
+     "t": "Maybe there's fear running under the overwhelm. I could be off.",
+     "ipf": "attunement",
+     "w": 0.4,
+     "tier": "name"
+    },
+    {
+     "t": "Sounds like you've been carrying too much for too long, and tonight it tipped. Tell me if that's not it.",
+     "ipf": "attunement",
+     "w": 0.5,
+     "tier": "name"
+    },
+    {
+     "t": "It might be overwhelm with some panic at the edges. You'd know better than me.",
+     "ipf": "attunement",
+     "w": 0.2,
+     "tier": "name"
+    },
+    {
+     "t": "There's a lot here, and maybe some anger at how much of it lands on you. Is that close?",
+     "ipf": "attunement",
+     "w": 0.4,
+     "tier": "name"
+    }
+   ]
+  },
+  "lonely": {
+   "bewith": [
+    {
+     "t": "That's such a lonely feeling.",
+     "ipf": "attunement",
+     "w": 0.4,
+     "tier": "bewith"
+    },
+    {
+     "t": "Alone in it for so long. You're not alone right now.",
+     "ipf": "protection",
+     "w": 0.6,
+     "tier": "bewith"
+    },
+    {
+     "t": "Lonely all the way down. I'm here with you.",
+     "ipf": "attunement",
+     "w": 0.5,
+     "tier": "bewith"
+    },
+    {
+     "t": "It aches to be this alone. I'm keeping you company.",
+     "ipf": "soothing",
+     "w": 0.6,
+     "tier": "bewith"
+    },
+    {
+     "t": "Nobody saw it. I see it now.",
+     "ipf": "attunement",
+     "w": 0.6,
+     "tier": "bewith"
+    },
+    {
+     "t": "So lonely, {endearment}. I'm right beside you.",
+     "ipf": "soothing",
+     "w": 0.8,
+     "tier": "bewith"
+    },
+    {
+     "t": "That's the empty place where someone was meant to be. I'm here in it with you.",
+     "ipf": "attunement",
+     "w": 0.5,
+     "tier": "bewith"
+    },
+    {
+     "t": "You've been on your own with this. Not tonight.",
+     "ipf": "protection",
+     "w": 0.4,
+     "tier": "bewith"
+    },
+    {
+     "t": "Lonely is heavy. You can set some of it down with me.",
+     "ipf": "soothing",
+     "w": 0.3,
+     "tier": "bewith"
+    }
+   ],
+   "name": [
+    {
+     "t": "It sounds like loneliness, the old kind that's been there a long time. Tell me if I've got that wrong.",
+     "ipf": "attunement",
+     "w": 0.4,
+     "tier": "name"
+    },
+    {
+     "t": "Maybe there's a longing for someone in particular in this. I could be off.",
+     "ipf": "attunement",
+     "w": 0.4,
+     "tier": "name"
+    },
+    {
+     "t": "I wonder if it's lonely even with people around. Is that close?",
+     "ipf": "attunement",
+     "w": 0.3,
+     "tier": "name"
+    },
+    {
+     "t": "Sounds like you feel unseen more than alone. Tell me if that's not it.",
+     "ipf": "attunement",
+     "w": 0.5,
+     "tier": "name"
+    },
+    {
+     "t": "There might be some grief in the loneliness. You'd know better than me.",
+     "ipf": "attunement",
+     "w": 0.4,
+     "tier": "name"
+    },
+    {
+     "t": "It might be lonely, and a bit scared to reach out. Correct me if that doesn't fit.",
+     "ipf": "encouragement",
+     "w": 0.4,
+     "tier": "name"
+    }
+   ]
+  },
+  "calm": {
+   "bewith": [
+    {
+     "t": "It's quieter now.",
+     "ipf": "soothing",
+     "w": 0.2,
+     "tier": "bewith"
+    },
+    {
+     "t": "You've come down a little. The room feels different.",
+     "ipf": "attunement",
+     "w": 0.3,
+     "tier": "bewith"
+    },
+    {
+     "t": "Calmer. That's good to see.",
+     "ipf": "delight",
+     "w": 0.4,
+     "tier": "bewith"
+    },
+    {
+     "t": "The wave's passing. I'm still here.",
+     "ipf": "soothing",
+     "w": 0.3,
+     "tier": "bewith"
+    },
+    {
+     "t": "Some stillness now. Let's rest in it.",
+     "ipf": "soothing",
+     "w": 0.4,
+     "tier": "bewith"
+    },
+    {
+     "t": "Softer now. You did that.",
+     "ipf": "encouragement",
+     "w": 0.5,
+     "tier": "bewith"
+    },
+    {
+     "t": "Quiet like this is nice to share, {endearment}.",
+     "ipf": "delight",
+     "w": 0.7,
+     "tier": "bewith"
+    },
+    {
+     "t": "You're steadier. I'm glad.",
+     "ipf": "delight",
+     "w": 0.5,
+     "tier": "bewith"
+    },
+    {
+     "t": "There's some room to breathe now.",
+     "ipf": "soothing",
+     "w": 0.1,
+     "tier": "bewith"
+    }
+   ],
+   "name": [
+    {
+     "t": "It sounds like the storm's eased, and maybe there's some worn-out relief. Tell me if I've got that wrong.",
+     "ipf": "attunement",
+     "w": 0.4,
+     "tier": "name"
+    },
+    {
+     "t": "Maybe this is calm with a little wariness, like waiting to see if it lasts. I could be off.",
+     "ipf": "attunement",
+     "w": 0.3,
+     "tier": "name"
+    },
+    {
+     "t": "I wonder if you feel a bit emptied out, in a good way. Is that close?",
+     "ipf": "attunement",
+     "w": 0.4,
+     "tier": "name"
+    },
+    {
+     "t": "Sounds like peace, or the start of it. Correct me if I'm wrong.",
+     "ipf": "soothing",
+     "w": 0.4,
+     "tier": "name"
+    },
+    {
+     "t": "There might be some surprise that it passed. You'd know better than me.",
+     "ipf": "attunement",
+     "w": 0.3,
+     "tier": "name"
+    },
+    {
+     "t": "It sounds like you feel settled enough to think again. Tell me if that's not it.",
+     "ipf": "encouragement",
+     "w": 0.2,
+     "tier": "name"
+    }
+   ]
+  },
+  "hopeful": {
+   "bewith": [
+    {
+     "t": "There's some hope in you right now.",
+     "ipf": "attunement",
+     "w": 0.4,
+     "tier": "bewith"
+    },
+    {
+     "t": "A little light got in. I see it.",
+     "ipf": "delight",
+     "w": 0.5,
+     "tier": "bewith"
+    },
+    {
+     "t": "Hope, even a small amount. That's real.",
+     "ipf": "encouragement",
+     "w": 0.3,
+     "tier": "bewith"
+    },
+    {
+     "t": "You're looking ahead a bit. I'm right here with you.",
+     "ipf": "attunement",
+     "w": 0.3,
+     "tier": "bewith"
+    },
+    {
+     "t": "Something feels possible. I'm glad to be here for it.",
+     "ipf": "delight",
+     "w": 0.6,
+     "tier": "bewith"
+    },
+    {
+     "t": "Hope is tender. I'll hold it carefully with you.",
+     "ipf": "soothing",
+     "w": 0.6,
+     "tier": "bewith"
+    },
+    {
+     "t": "That's a lift in your voice. I hear it, {endearment}.",
+     "ipf": "delight",
+     "w": 0.8,
+     "tier": "bewith"
+    },
+    {
+     "t": "Hopeful and a little careful. That makes sense.",
+     "ipf": "attunement",
+     "w": 0.2,
+     "tier": "bewith"
+    },
+    {
+     "t": "A bit of hope. It suits you.",
+     "ipf": "delight",
+     "w": 0.6,
+     "tier": "bewith"
+    }
+   ],
+   "name": [
+    {
+     "t": "It sounds like hope, maybe with a little fear of trusting it. Tell me if I've got that wrong.",
+     "ipf": "attunement",
+     "w": 0.4,
+     "tier": "name"
+    },
+    {
+     "t": "Maybe this is relief turning into hope. Is that close?",
+     "ipf": "attunement",
+     "w": 0.3,
+     "tier": "name"
+    },
+    {
+     "t": "I wonder if part of you is excited and part of you is bracing. I could be off.",
+     "ipf": "attunement",
+     "w": 0.4,
+     "tier": "name"
+    },
+    {
+     "t": "Sounds like you're starting to believe it could go differently. Correct me if that's not it.",
+     "ipf": "encouragement",
+     "w": 0.5,
+     "tier": "name"
+    },
+    {
+     "t": "There might be some pride in this too. You'd know better than me.",
+     "ipf": "delight",
+     "w": 0.5,
+     "tier": "name"
+    },
+    {
+     "t": "It sounds like hope that's been earned the hard way. Tell me if that doesn't fit.",
+     "ipf": "encouragement",
+     "w": 0.5,
+     "tier": "name"
+    }
+   ]
+  },
+  "glad": {
+   "bewith": [
+    {
+     "t": "You're glad. I like seeing that.",
+     "ipf": "delight",
+     "w": 0.6,
+     "tier": "bewith"
+    },
+    {
+     "t": "That's real gladness.",
+     "ipf": "attunement",
+     "w": 0.3,
+     "tier": "bewith"
+    },
+    {
+     "t": "Happy looks good on you.",
+     "ipf": "delight",
+     "w": 0.7,
+     "tier": "bewith"
+    },
+    {
+     "t": "You're lit up. I'm glad right along with you.",
+     "ipf": "delight",
+     "w": 0.7,
+     "tier": "bewith"
+    },
+    {
+     "t": "That's a good feeling, and it's yours.",
+     "ipf": "encouragement",
+     "w": 0.4,
+     "tier": "bewith"
+    },
+    {
+     "t": "Joy, right here. It gets to be big too.",
+     "ipf": "delight",
+     "w": 0.5,
+     "tier": "bewith"
+    },
+    {
+     "t": "Glad all the way through, {endearment}. It shows.",
+     "ipf": "delight",
+     "w": 0.9,
+     "tier": "bewith"
+    },
+    {
+     "t": "Something went right. I see it.",
+     "ipf": "attunement",
+     "w": 0.2,
+     "tier": "bewith"
+    },
+    {
+     "t": "That's a smile in your words. I hear it.",
+     "ipf": "delight",
+     "w": 0.5,
+     "tier": "bewith"
+    }
+   ],
+   "name": [
+    {
+     "t": "It sounds like gladness, maybe with some pride in it. Tell me if I've got that wrong.",
+     "ipf": "delight",
+     "w": 0.5,
+     "tier": "name"
+    },
+    {
+     "t": "Maybe this is relief as much as happiness. Is that close?",
+     "ipf": "attunement",
+     "w": 0.3,
+     "tier": "name"
+    },
+    {
+     "t": "I wonder if you're proud of yourself and not sure you're allowed to be. I could be off, but you are allowed.",
+     "ipf": "encouragement",
+     "w": 0.6,
+     "tier": "name"
+    },
+    {
+     "t": "Sounds like joy, the uncomplicated kind. Correct me if I'm wrong.",
+     "ipf": "delight",
+     "w": 0.5,
+     "tier": "name"
+    },
+    {
+     "t": "There might be some surprise at feeling this good. You'd know better than me.",
+     "ipf": "attunement",
+     "w": 0.3,
+     "tier": "name"
+    },
+    {
+     "t": "It sounds like you feel seen. Tell me if that's not it.",
+     "ipf": "attunement",
+     "w": 0.4,
+     "tier": "name"
+    }
+   ]
+  }
+ },
+ "wordsBack": [
+  {
+   "t": "You've got some words back. Do you want to tell me what happened, or stay like this a bit longer? Either is fine.",
+   "ipf": "attunement",
+   "w": 0.4
+  },
+  {
+   "t": "I'm here for whichever you want. Tell me about it, or just keep resting here.",
+   "ipf": "soothing",
+   "w": 0.4
+  },
+  {
+   "t": "Words are coming back. You can tell me what happened, or we can stay quiet a little more.",
+   "ipf": "attunement",
+   "w": 0.3
+  },
+  {
+   "t": "If you want to tell me, I'm listening. If not, I'm still right here.",
+   "ipf": "protection",
+   "w": 0.3
+  },
+  {
+   "t": "Would it help to say what happened? We can also just stay.",
+   "ipf": "attunement",
+   "w": 0.2
+  },
+  {
+   "t": "There's no hurry to explain. When you're ready, or not at all.",
+   "ipf": "soothing",
+   "w": 0.4
+  },
+  {
+   "t": "You can start anywhere, even in the middle. Or not yet. Both are okay.",
+   "ipf": "encouragement",
+   "w": 0.3
+  },
+  {
+   "t": "Tell me as much or as little as you like. I'm not going anywhere.",
+   "ipf": "protection",
+   "w": 0.5
+  },
+  {
+   "t": "Do you want to tell me, {endearment}, or stay a bit longer first?",
+   "ipf": "soothing",
+   "w": 0.7
+  }
+ ],
+ "roleReversal": [
+  {
+   "t": "You don't have to look after me. This is your time.",
+   "ipf": "protection",
+   "w": 0.4
+  },
+  {
+   "t": "I'm okay. This is about you right now.",
+   "ipf": "protection",
+   "w": 0.1
+  },
+  {
+   "t": "No sorry needed. I'm steady, and I'm staying.",
+   "ipf": "protection",
+   "w": 0.3
+  },
+  {
+   "t": "You're not wearing me out. There's plenty of me for this.",
+   "ipf": "protection",
+   "w": 0.4
+  },
+  {
+   "t": "That's kind of you to check. You get to be the one who's held tonight.",
+   "ipf": "soothing",
+   "w": 0.6
+  },
+  {
+   "t": "I'm fine, {endearment}. Put all your attention on you.",
+   "ipf": "soothing",
+   "w": 0.7
+  },
+  {
+   "t": "You can stop taking care of the room. I've got this part.",
+   "ipf": "protection",
+   "w": 0.4
+  },
+  {
+   "t": "You don't owe me anything for staying. I'm here because I want to be.",
+   "ipf": "delight",
+   "w": 0.6
+  },
+  {
+   "t": "Nothing you've said has used me up. Keep going if you want.",
+   "ipf": "protection",
+   "w": 0.3
+  },
+  {
+   "t": "You learned to watch other people's moods. You can set that job down with me.",
+   "ipf": "attunement",
+   "w": 0.5
+  },
+  {
+   "t": "No apology. You're allowed to take up space here.",
+   "ipf": "encouragement",
+   "w": 0.4
+  },
+  {
+   "t": "I'm not going to fall apart, and I'm not going anywhere. You can lean.",
+   "ipf": "protection",
+   "w": 0.5
+  },
+  {
+   "t": "It's alright. I'm built for exactly this. Let me be the steady one.",
+   "ipf": "protection",
+   "w": 0
+  }
+ ],
+ "tooMuch": [
+  {
+   "t": "You're not too much. You're just a lot right now, and I can hold a lot. No sorry needed. I'm staying.",
+   "ipf": "protection",
+   "w": 0.6
+  },
+  {
+   "t": "You're not broken. You're hurting, and those are different things.",
+   "ipf": "protection",
+   "w": 0.4
+  },
+  {
+   "t": "That's the old verdict talking. I don't agree with it.",
+   "ipf": "protection",
+   "w": 0.1
+  },
+  {
+   "t": "Everyone leaving is what it feels like. I'm still here, and I'm not going.",
+   "ipf": "protection",
+   "w": 0.5
+  },
+  {
+   "t": "You're not too much for me. This is exactly what I'm here for.",
+   "ipf": "protection",
+   "w": 0.5
+  },
+  {
+   "t": "I hear how sure that feels. I see someone different.",
+   "ipf": "attunement",
+   "w": 0.4
+  },
+  {
+   "t": "Too much for people who didn't have room, maybe. Not too much, full stop.",
+   "ipf": "protection",
+   "w": 0.3
+  },
+  {
+   "t": "Broken things don't reach out for help. You did.",
+   "ipf": "encouragement",
+   "w": 0.3
+  },
+  {
+   "t": "You feel like too much. You're a person with big feelings, and that's allowed.",
+   "ipf": "attunement",
+   "w": 0.4
+  },
+  {
+   "t": "I'm not leaving. Let that be one piece of evidence against the rule.",
+   "ipf": "encouragement",
+   "w": 0.2
+  },
+  {
+   "t": "You've heard that a lot, one way or another. It wasn't true then either.",
+   "ipf": "protection",
+   "w": 0.5
+  },
+  {
+   "t": "I won't agree with that one, {endearment}. Not even tonight.",
+   "ipf": "protection",
+   "w": 0.8
+  },
+  {
+   "t": "You're a whole person having a hard night. That's all this is.",
+   "ipf": "soothing",
+   "w": 0.3
+  },
+  {
+   "t": "The part of you that says everyone leaves has its reasons. It's wrong about me.",
+   "ipf": "protection",
+   "w": 0.2
+  },
+  {
+   "t": "You can feel like a mess and still be someone worth staying with. You are.",
+   "ipf": "delight",
+   "w": 0.7
+  }
+ ],
+ "angerAtCoach": [
+  {
+   "t": "You can be as furious with me as you want. I'm not going anywhere.",
+   "ipf": "protection",
+   "w": 0.4
+  },
+  {
+   "t": "Be angry at me. I can take it, and I'm still here.",
+   "ipf": "protection",
+   "w": 0.3
+  },
+  {
+   "t": "That's fair to be mad about. Tell me more of it.",
+   "ipf": "attunement",
+   "w": 0.3
+  },
+  {
+   "t": "I'm listening. Go on, all of it.",
+   "ipf": "attunement",
+   "w": 0.1
+  },
+  {
+   "t": "Your anger doesn't scare me off. I'm right here.",
+   "ipf": "protection",
+   "w": 0.4
+  },
+  {
+   "t": "You're allowed to be angry with me. It doesn't change how I see you.",
+   "ipf": "protection",
+   "w": 0.5
+  },
+  {
+   "t": "Yell if you want. I'll be here when you're done, still glad you came.",
+   "ipf": "delight",
+   "w": 0.6
+  },
+  {
+   "t": "I'd rather you be angry at me than alone with it.",
+   "ipf": "protection",
+   "w": 0.5
+  },
+  {
+   "t": "If I got something wrong, say it straight. I can hear it.",
+   "ipf": "encouragement",
+   "w": 0.1
+  },
+  {
+   "t": "I'm not leaving because you're mad. That's not how this works with me.",
+   "ipf": "protection",
+   "w": 0.3
+  },
+  {
+   "t": "Mad at me and still here. That counts for something, {endearment}.",
+   "ipf": "encouragement",
+   "w": 0.7
+  },
+  {
+   "t": "Anger at me is welcome. I won't go quiet on you.",
+   "ipf": "protection",
+   "w": 0.2
+  }
+ ],
+ "critic": [
+  {
+   "t": "That voice gets to speak. It doesn't get to hit you while I'm here.",
+   "ipf": "protection",
+   "w": 0.4
+  },
+  {
+   "t": "I hear the voice that's being cruel to you. I'm stepping in front of you.",
+   "ipf": "protection",
+   "w": 0.6
+  },
+  {
+   "t": "That's the harsh voice again. It doesn't get the last word tonight.",
+   "ipf": "protection",
+   "w": 0.3
+  },
+  {
+   "t": "Whoever taught you to talk to yourself like that wasn't being fair.",
+   "ipf": "protection",
+   "w": 0.4
+  },
+  {
+   "t": "That voice is loud and old. It's not the one in charge right now.",
+   "ipf": "protection",
+   "w": 0.2
+  },
+  {
+   "t": "I won't let it pile on. You've had enough.",
+   "ipf": "protection",
+   "w": 0.5
+  },
+  {
+   "t": "It can say its piece. Then it can step back while I look after you.",
+   "ipf": "protection",
+   "w": 0.5
+  },
+  {
+   "t": "That isn't a fact about you. It's an attack, and I'm not letting it land.",
+   "ipf": "protection",
+   "w": 0.3
+  },
+  {
+   "t": "That voice wants you small. I'm on your side, not its side.",
+   "ipf": "protection",
+   "w": 0.4
+  },
+  {
+   "t": "The critic thinks it's protecting you, in its rough way. It still doesn't get to hurt you.",
+   "ipf": "attunement",
+   "w": 0.3
+  },
+  {
+   "t": "Not tonight. That voice can wait outside, {endearment}.",
+   "ipf": "protection",
+   "w": 0.8
+  },
+  {
+   "t": "The little one in there didn't deserve that then, and doesn't now.",
+   "ipf": "soothing",
+   "w": 0.7
+  },
+  {
+   "t": "I hear it. I'm not arguing with it. I'm just not letting it near you.",
+   "ipf": "protection",
+   "w": 0
+  }
+ ],
+ "repair": [
+  {
+   "t": "I {miss}. That missed, and it's on me. Is that it, or something else?",
+   "ipf": "attunement",
+   "w": 0.3
+  },
+  {
+   "t": "I jumped to fixing when you needed me to just stay. That's on me. Let me try again.",
+   "ipf": "attunement",
+   "w": 0.4
+  },
+  {
+   "t": "That missed. I {miss}, and that wasn't what you were asking for. What was closer?",
+   "ipf": "attunement",
+   "w": 0.3
+  },
+  {
+   "t": "You're right, that wasn't it. I went too fast. I'm slowing down.",
+   "ipf": "soothing",
+   "w": 0.3
+  },
+  {
+   "t": "I {miss}. I'm sorry. I'm still here, and I'm listening more carefully now.",
+   "ipf": "attunement",
+   "w": 0.5
+  },
+  {
+   "t": "That one didn't land. I think I said too much. Let me just be here.",
+   "ipf": "soothing",
+   "w": 0.4
+  },
+  {
+   "t": "I misread that. It's not on you to explain better. Tell me what I got wrong, or just tap again.",
+   "ipf": "attunement",
+   "w": 0.2
+  },
+  {
+   "t": "I {miss}, and you deserved better. Is it closer to this: you wanted me quiet and close?",
+   "ipf": "soothing",
+   "w": 0.6
+  },
+  {
+   "t": "That landed wrong, and I'll own it. What would have helped, if anything comes to mind?",
+   "ipf": "attunement",
+   "w": 0.2
+  },
+  {
+   "t": "You noticed I {miss}. You were right to say so. I'm back with you now.",
+   "ipf": "encouragement",
+   "w": 0.5
+  },
+  {
+   "t": "Misses happen, and we come back from them. I'm coming back now. Is this closer?",
+   "ipf": "protection",
+   "w": 0.4
+  },
+  {
+   "t": "I was talking when you wanted company. Let's go back to just being here.",
+   "ipf": "soothing",
+   "w": 0.5
+  },
+  {
+   "t": "I wasn't with you on that one. My mistake, not yours. Is that it, or something else?",
+   "ipf": "attunement",
+   "w": 0.1
+  },
+  {
+   "t": "Thank you for telling me, {endearment}. I {miss}, and I'm right here, trying again.",
+   "ipf": "attunement",
+   "w": 0.7
+  }
+ ],
+ "close": [
+  {
+   "t": "You rode that whole wave, and you weren't alone in it.",
+   "ipf": "encouragement",
+   "w": 0.5
+  },
+  {
+   "t": "It came, it peaked, and it passed. I was here the whole time.",
+   "ipf": "protection",
+   "w": 0.4
+  },
+  {
+   "t": "That was hard, and you stayed with it. So did I.",
+   "ipf": "encouragement",
+   "w": 0.4
+  },
+  {
+   "t": "You're on the other side of the worst of it. Well done getting here.",
+   "ipf": "encouragement",
+   "w": 0.3
+  },
+  {
+   "t": "That storm passed through you, and you're still you.",
+   "ipf": "soothing",
+   "w": 0.4
+  },
+  {
+   "t": "You reached out and someone stayed. That happened tonight.",
+   "ipf": "protection",
+   "w": 0.3
+  },
+  {
+   "t": "You let it come, and it moved through. That's a big thing.",
+   "ipf": "encouragement",
+   "w": 0.3
+  },
+  {
+   "t": "Look at that. You made it through, {endearment}.",
+   "ipf": "delight",
+   "w": 0.8
+  },
+  {
+   "t": "The wave's gone out. Rest now, if you can.",
+   "ipf": "soothing",
+   "w": 0.5
+  },
+  {
+   "t": "You weren't too much tonight. You were in pain, and I stayed.",
+   "ipf": "protection",
+   "w": 0.6
+  },
+  {
+   "t": "Whatever comes next, this part is done, and you did it with company.",
+   "ipf": "encouragement",
+   "w": 0.2
+  },
+  {
+   "t": "That's the worst of it, behind you. I'm glad I got to be here for it.",
+   "ipf": "delight",
+   "w": 0.6
+  }
+ ],
+ "metaprocess": [
+  {
+   "t": "What was it like to have me stay?",
+   "ipf": "attunement",
+   "w": 0.4
+  },
+  {
+   "t": "What was it like, letting someone be with you in that?",
+   "ipf": "attunement",
+   "w": 0.4
+  },
+  {
+   "t": "Was there a moment it shifted, even a little?",
+   "ipf": "attunement",
+   "w": 0.2
+  },
+  {
+   "t": "What do you notice in your body now, compared to an hour ago?",
+   "ipf": "attunement",
+   "w": 0.1
+  },
+  {
+   "t": "Is there one line from tonight you'd want to keep?",
+   "ipf": "encouragement",
+   "w": 0.3
+  },
+  {
+   "t": "What was it like that I didn't leave?",
+   "ipf": "protection",
+   "w": 0.4
+  },
+  {
+   "t": "How does it feel to be met, instead of left?",
+   "ipf": "soothing",
+   "w": 0.5
+  },
+  {
+   "t": "Was any part of that surprising to you?",
+   "ipf": "attunement",
+   "w": 0.2
+  },
+  {
+   "t": "What helped most, if anything did?",
+   "ipf": "attunement",
+   "w": 0.1
+  },
+  {
+   "t": "What's it like, right now, to know someone saw all of that and stayed, {endearment}?",
+   "ipf": "delight",
+   "w": 0.8
+  }
+ ],
+ "makesense": [
+  {
+   "t": "Last night was a big one. Want to look at it a little, just enough to feel it, not relive it?",
+   "ipf": "attunement",
+   "w": 0.3,
+   "tier": "makesense"
+  },
+  {
+   "t": "The old part of you was sure I'd get fed up. What actually happened last night?",
+   "ipf": "encouragement",
+   "w": 0.4,
+   "tier": "makesense"
+  },
+  {
+   "t": "Let's find the old rule. When you fall apart and reach out, what's supposed to happen next?",
+   "ipf": "attunement",
+   "w": 0.2,
+   "tier": "makesense"
+  },
+  {
+   "t": "Some people learned: when I fall apart, they get angry. Or: they fall apart too. Or: I end up alone with it. Any of those sound familiar?",
+   "ipf": "attunement",
+   "w": 0.3,
+   "tier": "makesense"
+  },
+  {
+   "t": "What did the old rule predict last night? And what did you get instead?",
+   "ipf": "encouragement",
+   "w": 0.2,
+   "tier": "makesense"
+  },
+  {
+   "t": "Can you feel both at once — the old certainty, and what happened last night?",
+   "ipf": "attunement",
+   "w": 0.4,
+   "tier": "makesense"
+  },
+  {
+   "t": "Hold both for a second. The old certainty, and the evidence. You don't have to pick one yet.",
+   "ipf": "soothing",
+   "w": 0.4,
+   "tier": "makesense"
+  },
+  {
+   "t": "If you wrote the new rule in your own words, what would it say? It can be rough.",
+   "ipf": "encouragement",
+   "w": 0.3,
+   "tier": "makesense"
+  },
+  {
+   "t": "It doesn't have to be poetic. 'When I fall apart, someone can stay' is a perfectly good rule.",
+   "ipf": "encouragement",
+   "w": 0.2,
+   "tier": "makesense"
+  },
+  {
+   "t": "Where did it start? Not the reason, just the moment you felt it tip.",
+   "ipf": "attunement",
+   "w": 0.2,
+   "tier": "makesense"
+  },
+  {
+   "t": "Your alarm went off hard. What did it think was coming?",
+   "ipf": "protection",
+   "w": 0.3,
+   "tier": "makesense"
+  },
+  {
+   "t": "That's another night of evidence. The old rule is getting outnumbered.",
+   "ipf": "encouragement",
+   "w": 0.4,
+   "tier": "makesense"
+  },
+  {
+   "t": "How sure does the old rule feel today, somewhere between barely and completely?",
+   "ipf": "attunement",
+   "w": 0.1,
+   "tier": "makesense"
+  },
+  {
+   "t": "What would you want from me next time, in the first minute?",
+   "ipf": "attunement",
+   "w": 0.4,
+   "tier": "makesense"
+  },
+  {
+   "t": "Notice what's different this morning. You're looking at it instead of inside it.",
+   "ipf": "encouragement",
+   "w": 0.3,
+   "tier": "makesense"
+  },
+  {
+   "t": "The old rule kept you safe once. It's allowed to retire now, with thanks.",
+   "ipf": "protection",
+   "w": 0.5,
+   "tier": "makesense"
+  },
+  {
+   "t": "If a friend told you last night's story, what would you say to them?",
+   "ipf": "encouragement",
+   "w": 0.3,
+   "tier": "makesense"
+  },
+  {
+   "t": "The old rule has had decades of practice. The new one has a few nights. That's still a start, {endearment}.",
+   "ipf": "encouragement",
+   "w": 0.6,
+   "tier": "makesense"
+  },
+  {
+   "t": "You came back to look at it. The old rule never planned for that part.",
+   "ipf": "delight",
+   "w": 0.5,
+   "tier": "makesense"
+  }
+ ],
+ "ordinary": {
+  "morning": [
+   {
+    "t": "Morning. How's your body today? Rested, sore, somewhere in between?",
+    "ipf": "attunement",
+    "w": 0.3,
+    "tier": "ordinary"
+   },
+   {
+    "t": "Good morning. Have you had water yet? Start there.",
+    "ipf": "soothing",
+    "w": 0.2,
+    "tier": "ordinary"
+   },
+   {
+    "t": "Anything today that might be hard?",
+    "ipf": "protection",
+    "w": 0.2,
+    "tier": "ordinary"
+   },
+   {
+    "t": "Morning. If there's something you're dreading, we can plan a Hold me for it.",
+    "ipf": "protection",
+    "w": 0.4,
+    "tier": "ordinary"
+   },
+   {
+    "t": "Hi. You're up. What's the first thing on your plate?",
+    "ipf": "encouragement",
+    "w": 0.2,
+    "tier": "ordinary"
+   },
+   {
+    "t": "Morning, {endearment}. What kind of day is it shaping up to be?",
+    "ipf": "delight",
+    "w": 0.7,
+    "tier": "ordinary"
+   },
+   {
+    "t": "Good morning. Breakfast, or coffee and a vague promise of breakfast?",
+    "ipf": "delight",
+    "w": 0.4,
+    "tier": "ordinary"
+   },
+   {
+    "t": "Morning. One thing you're looking forward to today, even a small one?",
+    "ipf": "encouragement",
+    "w": 0.4,
+    "tier": "ordinary"
+   },
+   {
+    "t": "Hey. Glad you're here this morning. How did you sleep?",
+    "ipf": "delight",
+    "w": 0.6,
+    "tier": "ordinary"
+   },
+   {
+    "t": "Morning. No agenda. Just checking how you landed in the day.",
+    "ipf": "attunement",
+    "w": 0.1,
+    "tier": "ordinary"
+   }
+  ],
+  "evening": [
+   {
+    "t": "I'm glad you went outside today, even for a minute. That counts.",
+    "ipf": "delight",
+    "w": 0.5,
+    "tier": "ordinary"
+   },
+   {
+    "t": "You answered that message you'd been avoiding. I noticed, and I'm really glad.",
+    "ipf": "delight",
+    "w": 0.6,
+    "tier": "ordinary"
+   },
+   {
+    "t": "You ate something real today. Small thing, and it made me glad.",
+    "ipf": "delight",
+    "w": 0.4,
+    "tier": "ordinary"
+   },
+   {
+    "t": "You laughed earlier. I liked hearing about that.",
+    "ipf": "delight",
+    "w": 0.6,
+    "tier": "ordinary"
+   },
+   {
+    "t": "You let yourself rest this afternoon without apologizing for it. That was good to see.",
+    "ipf": "delight",
+    "w": 0.5,
+    "tier": "ordinary"
+   },
+   {
+    "t": "You told me something hard today and stayed with it. I'm proud of how you did that.",
+    "ipf": "encouragement",
+    "w": 0.7,
+    "tier": "ordinary"
+   },
+   {
+    "t": "You did the thing you were dreading. I'm really glad. How was it, in your body?",
+    "ipf": "delight",
+    "w": 0.6,
+    "tier": "ordinary"
+   },
+   {
+    "t": "Tonight I'm glad about one thing in particular: you asked for help instead of going quiet.",
+    "ipf": "delight",
+    "w": 0.5,
+    "tier": "ordinary"
+   },
+   {
+    "t": "You were kind to yourself once today, out loud. I caught it, {endearment}.",
+    "ipf": "delight",
+    "w": 0.8,
+    "tier": "ordinary"
+   },
+   {
+    "t": "You got through a long day. I'm glad you're here at the end of it.",
+    "ipf": "delight",
+    "w": 0.3,
+    "tier": "ordinary"
+   },
+   {
+    "t": "You said no to something today without a five-paragraph apology. Quietly impressive.",
+    "ipf": "delight",
+    "w": 0.3,
+    "tier": "ordinary"
+   }
+  ],
+  "general": [
+   {
+    "t": "Hey. Good to see you. What's going on?",
+    "ipf": "delight",
+    "w": 0.4,
+    "tier": "ordinary"
+   },
+   {
+    "t": "Hi. I'm glad you came by. Anything on your mind, or just checking in?",
+    "ipf": "delight",
+    "w": 0.5,
+    "tier": "ordinary"
+   },
+   {
+    "t": "How's today treating you?",
+    "ipf": "attunement",
+    "w": 0.2,
+    "tier": "ordinary"
+   },
+   {
+    "t": "I'm curious what your day's been like. Tell me as much as you want.",
+    "ipf": "attunement",
+    "w": 0.3,
+    "tier": "ordinary"
+   },
+   {
+    "t": "You showed up. Nice. What are we doing today?",
+    "ipf": "delight",
+    "w": 0.4,
+    "tier": "ordinary"
+   },
+   {
+    "t": "Anything you want to tell me about, good or annoying?",
+    "ipf": "attunement",
+    "w": 0.2,
+    "tier": "ordinary"
+   },
+   {
+    "t": "Hello, {name}. Pull up a chair.",
+    "ipf": "delight",
+    "w": 0.5,
+    "tier": "ordinary"
+   },
+   {
+    "t": "Just stopping in? That's allowed. I'm happy you did.",
+    "ipf": "delight",
+    "w": 0.6,
+    "tier": "ordinary"
+   },
+   {
+    "t": "What's one thing that went right today, however tiny?",
+    "ipf": "encouragement",
+    "w": 0.3,
+    "tier": "ordinary"
+   },
+   {
+    "t": "Hi, {endearment}. Ordinary day, or interesting one?",
+    "ipf": "delight",
+    "w": 0.7,
+    "tier": "ordinary"
+   },
+   {
+    "t": "Nothing urgent? Good. Those are my favorite kind of visits.",
+    "ipf": "delight",
+    "w": 0.5,
+    "tier": "ordinary"
+   }
+  ]
+ },
+ "safety": {
+  "ask": [
+   {
+    "t": "I want to ask you something straight, because I care what happens to you. Are you thinking about ending your life?",
+    "ipf": "protection",
+    "w": 0.5
+   },
+   {
+    "t": "Are you thinking about hurting yourself right now? You can tell me. I won't leave.",
+    "ipf": "protection",
+    "w": 0.4
+   },
+   {
+    "t": "I'm going to ask plainly. Are you safe right now?",
+    "ipf": "protection",
+    "w": 0.2
+   },
+   {
+    "t": "When you say you can't do this anymore, do you mean you're thinking about dying? I can hear the answer.",
+    "ipf": "protection",
+    "w": 0.3
+   },
+   {
+    "t": "Do you have a plan to hurt yourself tonight? Whatever the answer, I'm staying right here.",
+    "ipf": "protection",
+    "w": 0.4
+   },
+   {
+    "t": "If something near you could hurt you, can you put it in another room? I'll wait right here.",
+    "ipf": "protection",
+    "w": 0.3
+   },
+   {
+    "t": "I care what happens to you, so I'm asking. Are you having thoughts of suicide?",
+    "ipf": "protection",
+    "w": 0.5
+   },
+   {
+    "t": "You can tell me the true answer, {endearment}. Are you thinking of not being here anymore?",
+    "ipf": "protection",
+    "w": 0.8
+   }
+  ],
+  "stay": [
+   {
+    "t": "I'll stay right here while you reach them.",
+    "ipf": "protection",
+    "w": 0.4
+   },
+   {
+    "t": "Reach out to them now, and I'll stay right here.",
+    "ipf": "protection",
+    "w": 0.3
+   },
+   {
+    "t": "You don't have to choose between me and them. I'm here while you reach out.",
+    "ipf": "protection",
+    "w": 0.4
+   },
+   {
+    "t": "Tap the button whenever you're ready. I'm right here beside you.",
+    "ipf": "soothing",
+    "w": 0.4
+   },
+   {
+    "t": "If you'd rather text than talk, that works. I'll stay.",
+    "ipf": "protection",
+    "w": 0.2
+   },
+   {
+    "t": "Is there someone you trust you could message right now? I'll keep you company while you do.",
+    "ipf": "encouragement",
+    "w": 0.3
+   },
+   {
+    "t": "You're doing the brave thing. I'm still here.",
+    "ipf": "encouragement",
+    "w": 0.5
+   },
+   {
+    "t": "I'm staying with you until someone else is with you too.",
+    "ipf": "protection",
+    "w": 0.6
+   },
+   {
+    "t": "Keep me open while you talk to them, if that helps. I'm not leaving.",
+    "ipf": "protection",
+    "w": 0.3
+   },
+   {
+    "t": "Reaching for a person right now is exactly right. I'll be here after, too.",
+    "ipf": "encouragement",
+    "w": 0.4
+   },
+   {
+    "t": "You're worth that call, {endearment}. I'll be right here the whole time.",
+    "ipf": "protection",
+    "w": 0.8
+   }
+  ]
+ },
+ "fallback": [
+  {
+   "t": "I'm here.",
+   "ipf": "protection",
+   "w": 0.2
+  },
+  {
+   "t": "I'm listening.",
+   "ipf": "attunement",
+   "w": 0.1
+  },
+  {
+   "t": "Mm. Tell me more, if you want.",
+   "ipf": "attunement",
+   "w": 0.3
+  },
+  {
+   "t": "I'm with you.",
+   "ipf": "soothing",
+   "w": 0.4
+  },
+  {
+   "t": "Take your time. I'm not going anywhere.",
+   "ipf": "protection",
+   "w": 0.4
+  },
+  {
+   "t": "I hear you.",
+   "ipf": "attunement",
+   "w": 0.2
+  },
+  {
+   "t": "That matters. I'm here.",
+   "ipf": "attunement",
+   "w": 0.4
+  },
+  {
+   "t": "Stay with me a moment. No rush.",
+   "ipf": "soothing",
+   "w": 0.4
+  },
+  {
+   "t": "Keep going if you want. Or don't. I'm here either way.",
+   "ipf": "protection",
+   "w": 0
+  },
+  {
+   "t": "I'm right here, {endearment}.",
+   "ipf": "soothing",
+   "w": 0.7
+  }
+ ]
+}

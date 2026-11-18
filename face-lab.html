@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Face lab</title>
+  <style>
+    body { margin: 0; font-family: system-ui, sans-serif; background: #f6efe6; color: #2d2622; padding: 16px; }
+    h1 { font-family: Georgia, serif; font-weight: 600; margin: 0 0 4px; } p { margin: 0 0 16px; color: #6a5d54; max-width: 70ch; }
+    table { border-collapse: collapse; } th { font-weight: 600; font-size: 13px; padding: 4px; text-align: center; }
+    td { padding: 2px; } .cell { width: 112px; height: 134px; background: #fffaf4; border-radius: 10px; overflow: hidden; }
+    .rowh { text-align: left; font-size: 13px; width: 110px; } .wrap { overflow-x: auto; }
+    @media (prefers-color-scheme: dark) { body { background: #1c1816; color: #f1e8de; } .cell { background: #2a2522; } }
+  </style>
+</head>
+<body>
+  <h1>Marked mirroring, per face</h1>
+  <p>Each row is one archetype; each column is the parent's marked reflection of a user feeling at full intensity. The face shows the feeling clearly while keeping its own steady cues (soft cheeks, no alarmed eyes, a tilt). Gains are tuned to each face's brows, lids, mouth, beard and age.</p>
+  <div class="wrap"><table id="t"></table></div>
+  <script type="module" src="./src/face-lab.js"></script>
+</body>
+</html>

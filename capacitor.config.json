@@ -1,0 +1,13 @@
+{
+  "appId": "app.holding.parent",
+  "appName": "Holding",
+  "webDir": "dist",
+  "android": {
+    "allowMixedContent": false,
+    "backgroundColor": "#f6efe6",
+    "webContentsDebuggingEnabled": false
+  },
+  "server": {
+    "androidScheme": "https"
+  }
+}

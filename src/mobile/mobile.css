@@ -1,0 +1,105 @@
+/* Mobile shell styles: install sheet, pairing panel, safe areas. Prefixed hm- to stay out of the core app's way. */
+:root {
+  /* Follow the core app's theme tokens (src/ui/styles.css); fallbacks keep it usable standalone. */
+  --hm-bg: var(--bg, #f6efe6);
+  --hm-surface: var(--card, #fffaf4);
+  --hm-surface-2: var(--bg2, #efe5d8);
+  --hm-text: var(--ink, #2d2622);
+  --hm-muted: var(--ink2, #6a5d54);
+  --hm-accent: var(--accent, #b5643c);
+  --hm-accent-ink: var(--accent-ink, #fff);
+  --hm-line: var(--line, #e2d5c5);
+  --hm-radius: 20px;
+  --hm-safe-top: env(safe-area-inset-top, 0px);
+  --hm-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --hm-safe-left: env(safe-area-inset-left, 0px);
+  --hm-safe-right: env(safe-area-inset-right, 0px);
+}
+
+/* Standalone (installed) polish: no rubber-band page bounce, no tap flashes, room for the notch. */
+@media (display-mode: standalone) {
+  html, body { overscroll-behavior-y: none; }
+}
+html { -webkit-tap-highlight-color: transparent; -webkit-text-size-adjust: 100%; }
+
+.hm-sheet-backdrop {
+  position: fixed; inset: 0; z-index: 9999;
+  display: flex; align-items: flex-end; justify-content: center;
+  background: rgba(10, 6, 14, 0); transition: background .25s ease;
+}
+.hm-sheet-backdrop.hm-open { background: rgba(10, 6, 14, .55); }
+.hm-sheet {
+  position: relative; overflow: hidden;
+  width: 100%; max-width: 520px;
+  max-height: calc(100dvh - var(--hm-safe-top) - 24px); overflow-y: auto;
+  background: var(--hm-surface); color: var(--hm-text);
+  border-radius: var(--hm-radius) var(--hm-radius) 0 0;
+  padding: 12px 20px calc(20px + var(--hm-safe-bottom));
+  font: 17px/1.5 var(--font, -apple-system, BlinkMacSystemFont, system-ui, sans-serif);
+  transform: translateY(100%); transition: transform .3s cubic-bezier(.2,.8,.2,1);
+  box-shadow: 0 -10px 40px rgba(0,0,0,.35);
+}
+.hm-open .hm-sheet { transform: none; }
+@media (min-width: 640px) {
+  .hm-sheet-backdrop { align-items: center; }
+  .hm-sheet { border-radius: var(--hm-radius); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hm-sheet, .hm-sheet-backdrop { transition: none; }
+  .hm-glow { animation: none !important; }
+}
+.hm-grabber { width: 40px; height: 5px; border-radius: 3px; background: var(--hm-line); margin: 0 auto 8px; }
+.hm-glow {
+  width: 72px; height: 72px; margin: 8px auto 4px; border-radius: 50%;
+  background: radial-gradient(circle, #fff4e8 0, #f6ba96 38%, rgba(214,140,120,0) 70%);
+  animation: hm-breathe 6s ease-in-out infinite;
+}
+@keyframes hm-breathe { 0%,100% { transform: scale(.88); opacity: .8 } 50% { transform: scale(1.08); opacity: 1 } }
+.hm-h2 { font-size: 22px; line-height: 1.25; margin: 8px 0 4px; text-align: center; font-weight: 600; }
+.hm-h3 { font-size: 18px; margin: 0 0 4px; font-weight: 600; }
+.hm-lead { text-align: center; color: var(--hm-muted); margin: 0 0 16px; }
+.hm-muted { color: var(--hm-muted); font-size: 15px; }
+.hm-steps { padding-left: 1.4em; margin: 0 0 12px; }
+.hm-steps li { margin: 10px 0; }
+.hm-inline-icon { vertical-align: -4px; color: var(--hm-accent); }
+.hm-row { display: flex; gap: 10px; flex-wrap: wrap; margin: 12px 0; }
+.hm-end { justify-content: flex-end; }
+.hm-btn {
+  appearance: none; border: 1px solid var(--hm-line); background: var(--hm-surface-2); color: var(--hm-text);
+  border-radius: 999px; padding: 12px 20px; min-height: 44px; font: inherit; font-size: 16px; cursor: pointer;
+}
+.hm-btn:focus-visible, .hm-input:focus-visible, .hm-chip:focus-visible { outline: 3px solid var(--hm-accent); outline-offset: 2px; }
+.hm-primary { background: var(--hm-accent); color: var(--hm-accent-ink); border-color: transparent; font-weight: 600; flex: 1; }
+.hm-quiet { background: transparent; border-color: transparent; color: var(--hm-muted); }
+.hm-details { margin: 8px 0; color: var(--hm-muted); font-size: 15px; }
+.hm-details summary { cursor: pointer; padding: 8px 0; min-height: 44px; display: flex; align-items: center; }
+.hm-details a { color: var(--hm-accent); }
+.hm-details code { background: var(--hm-surface-2); padding: 1px 6px; border-radius: 6px; font-size: 14px; }
+
+.hm-pair { display: block; }
+.hm-label { display: block; font-size: 14px; color: var(--hm-muted); margin: 12px 0 4px; }
+.hm-input {
+  width: 100%; box-sizing: border-box; min-height: 48px; padding: 12px 14px;
+  border-radius: 12px; border: 1px solid var(--hm-line); background: var(--hm-surface-2); color: var(--hm-text);
+  font: inherit; font-size: 17px; /* >=16px stops iOS zooming on focus */
+}
+.hm-code { letter-spacing: .12em; text-transform: uppercase; }
+.hm-status { margin: 8px 0; padding: 10px 12px; border-radius: 12px; background: var(--hm-surface-2); font-size: 15px; }
+
+.hm-chip {
+  position: fixed; z-index: 9000; left: 50%; transform: translateX(-50%);
+  bottom: calc(16px + var(--hm-safe-bottom));
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 16px; min-height: 44px; border-radius: 999px;
+  border: 1px solid var(--hm-line); background: var(--hm-surface); color: var(--hm-text);
+  font: 15px/1 -apple-system, BlinkMacSystemFont, system-ui, sans-serif; box-shadow: 0 6px 24px rgba(0,0,0,.3);
+}
+.hm-chip-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--hm-accent); box-shadow: 0 0 10px var(--hm-accent); }
+
+/* Offline / update toast */
+.hm-toast {
+  position: fixed; z-index: 9001; left: 16px; right: 16px; top: calc(12px + var(--hm-safe-top));
+  margin: 0 auto; max-width: 480px; padding: 12px 16px; border-radius: 14px;
+  background: var(--hm-surface); color: var(--hm-text); border: 1px solid var(--hm-line);
+  font: 15px/1.4 -apple-system, BlinkMacSystemFont, system-ui, sans-serif; box-shadow: 0 6px 24px rgba(0,0,0,.3);
+}
