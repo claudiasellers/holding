@@ -29,7 +29,9 @@ export function dtypesFor(device, { f16 = false } = {}) {
 }
 
 export function createChatterbox(lib, { device = 'webgpu', f16 = false, repo = CHATTERBOX_REPO } = {}) {
-  const { AutoModel, AutoProcessor, Tensor } = lib;
+  // ChatterboxModel by name: AutoModel does not map model_type 'chatterbox' to its four sessions.
+  const { ChatterboxModel, AutoProcessor, Tensor } = lib;
+  if (!ChatterboxModel) throw new Error('This Transformers.js has no Chatterbox support (needs 4.0 or later).');
   let model = null; let processor = null;
   const voices = new Map(); // key -> Promise<speaker conditioning>
 
@@ -39,7 +41,7 @@ export function createChatterbox(lib, { device = 'webgpu', f16 = false, repo = C
     async load(progress_callback) {
       if (model) return;
       [model, processor] = await Promise.all([
-        AutoModel.from_pretrained(repo, { device, dtype: dtypesFor(device, { f16 }), progress_callback }),
+        ChatterboxModel.from_pretrained(repo, { device, dtype: dtypesFor(device, { f16 }), progress_callback }),
         AutoProcessor.from_pretrained(repo, { progress_callback }),
       ]);
     },
