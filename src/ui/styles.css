@@ -142,6 +142,14 @@ details summary { cursor: pointer; min-height: 40px; display: flex; align-items:
 .stage > div { min-width: 0; }
 .stage .face-box { max-width: 100%; }
 
+/* what writes the parent's words (session) */
+.brain-row { display: flex; justify-content: center; margin-top: 4px; }
+.brain-chip { border: 1px solid var(--line); background: transparent; color: var(--ink2); border-radius: 999px; padding: 4px 12px; font-size: .8rem; min-height: 30px; max-width: 100%; }
+.brain-chip.scripted, .brain-chip.error { border-color: var(--danger); color: var(--ink); background: var(--card); }
+.brain-chip.ready::before { content: "● "; color: #4b9a64; }
+.brain-chip.loading::before { content: "● "; color: #c9a227; }
+.home-brain { text-align: center; font-size: .88rem; color: var(--ink2); margin: 0; }
+.home-brain button { background: none; border: 0; padding: 0; color: inherit; text-decoration: underline; font: inherit; cursor: pointer; }
 /* running conversation log (toggled from the session top bar) */
 .log-panel { display: none; position: absolute; inset: 4px 12px 8px; z-index: 5; overflow-y: auto; overscroll-behavior: contain; background: color-mix(in srgb, var(--card) 94%, transparent); border: 1px solid var(--line); border-radius: var(--r); box-shadow: var(--shadow); padding: 12px 14px; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
 .session.log-open .log-panel { display: block; }

@@ -5,7 +5,7 @@ import { normalizeArchetype, AFFECTS } from '../data/schema.js';
 import { store } from '../store.js';
 import { getTTSProvider } from '../voice/providers.js';
 import { pick } from '../engine/scripts.js';
-import { voiceFor } from '../voice/resolve.js';
+import { voiceFor, chosenVoice, withVoice } from '../voice/resolve.js';
 
 const SKINS = ['#f3d4bd', '#eac09d', '#e0b48a', '#d9a67c', '#c68e62', '#a8714c', '#8d5a3b', '#6d4430', '#5e3b28', '#4a2d1f'];
 const HAIRC = ['#1f1612', '#3b2a20', '#5a3420', '#8a5a33', '#b3884e', '#a33d2a', '#d9d4cc', '#8e8a86', '#b8b2aa', '#f0ece6'];
@@ -129,8 +129,7 @@ export function renderBuilder(root, nav) {
       tts?.listVoices(store.settings.tts[tts.id] || {}).then((vs) => {
         clear(vbox);
         const opts = [['', 'Automatic (best match)'], ...vs.map((v) => [v.id, v.label + (v.lang ? ` · ${v.lang}` : '')])];
-        const cur = tts.id === 'kokoro' ? draft.voice.kokoro : (draft.voice.voiceName || '');
-        vbox.append(select(`Specific voice (${tts.label})`, cur, opts, (v) => update((d) => { if (tts.id === 'kokoro') d.voice.kokoro = v || d.voice.kokoro; else { d.voice.voiceName = v; d.voice.hints = v ? [v, ...d.voice.hints.filter((x) => x !== v)] : d.voice.hints; } })));
+        vbox.append(select(`Specific voice (${tts.label})`, chosenVoice(tts.id, draft), opts, (v) => update((d) => { d.voice = withVoice(tts.id, d, v); })));
       }).catch(() => { clear(vbox); vbox.append(h('p', { class: 'muted' }, 'This browser has no voices available.')); });
     }
     if (tab === 'manner') {

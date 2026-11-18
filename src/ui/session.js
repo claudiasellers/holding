@@ -4,6 +4,17 @@ import { createSession } from '../engine/dialogue.js';
 import { store } from '../store.js';
 import { startCamera } from '../engine/camera.js';
 import { shouldAskOnEnd } from '../engine/endprompt.js';
+import { brainLabel, canUseDeviceAI, useDeviceAI, connectHoldingLocal } from '../ai/brain.js';
+
+// Why a reply to something the user typed came from the script library even
+// though an AI is switched on.
+const FALLBACK_NOTE = {
+  loading: 'The AI is still loading, so that reply was a scripted line.',
+  slow: 'The AI took too long, so that reply was a scripted line.',
+  failed: 'The AI didn\'t answer, so that reply was a scripted line.',
+  error: 'The AI couldn\'t start, so that reply was a scripted line.',
+  rejected: 'The AI\'s reply broke one of the parent\'s rules, so a scripted line was used instead.',
+};
 
 const TILES = [
   ['overwhelmed', 'Falling apart'], ['sad', 'Crying'], ['scared', 'Scared'], ['angry', 'Furious'],
@@ -21,6 +32,9 @@ export function renderSession(root, nav, { mode = 'hold' } = {}) {
   const caption = h('div', { class: 'caption' + (s.captions ? '' : ' hidden'), 'aria-live': 'polite' }, '');
   const ring = h('div', { class: 'breath-ring', 'aria-hidden': 'true' });
   const status = h('div', { class: 'status', style: { textAlign: 'center', minHeight: '1.2em' } }, '');
+  // Always-visible note on what writes the parent's words; tap to change it.
+  const brainBtn = h('button', { class: 'brain-chip', type: 'button', onclick: () => openSheet(brainSheet()) }, '');
+  let brain = { state: 'scripted' };
   const video = h('video', { class: 'hidden-video', playsinline: true, muted: true });
   const leadBtn = h('button', { class: 'pill' + (mode === 'hold' ? ' on' : ''), 'aria-pressed': mode === 'hold' ? 'true' : 'false' }, `${first} leads`);
   const tilesEl = h('div', { class: 'tiles', role: 'group', 'aria-label': 'How it feels right now' });
@@ -45,7 +59,7 @@ export function renderSession(root, nav, { mode = 'hold' } = {}) {
         h('button', { class: 'pill safe', onclick: () => session.enterSafety(), 'aria-label': 'I am not safe' }, 'Not safe'),
         leadBtn,
         h('button', { class: 'pill', onclick: () => session.onMiss(), title: 'Tell them they got it wrong' }, 'That missed'))),
-    h('div', { class: 'stage' }, h('div', { style: { position: 'relative', minHeight: 0, display: 'grid' } }, faceBox, ring), h('div', {}, caption, status), logPanel),
+    h('div', { class: 'stage' }, h('div', { style: { position: 'relative', minHeight: 0, display: 'grid' } }, faceBox, ring), h('div', {}, caption, status, h('div', { class: 'brain-row' }, brainBtn)), logPanel),
     tilesEl,
     inputBar,
     sheet, video);
@@ -77,14 +91,18 @@ export function renderSession(root, nav, { mode = 'hold' } = {}) {
   setLog(!!s.conversationLog, { remember: false });
 
   const ui = {
-    onSay(text) { caption.classList.remove('fade'); caption.textContent = text; logLine('parent', text); },
+    onSay(text, meta = {}) {
+      caption.classList.remove('fade'); caption.textContent = text; logLine('parent', text);
+      if (meta.typed && meta.source === 'script' && FALLBACK_NOTE[meta.fallback]) note(FALLBACK_NOTE[meta.fallback]);
+    },
+    onBrain(b) { brain = b; renderBrain(); },
     onSpeakEnd() { setTimeout(() => caption.classList.add('fade'), 2500); },
     onMirror(affect) {
       el.style.background = matchMedia('(prefers-color-scheme: dark)').matches ? '' : (TINT[affect] || '');
       tilesEl.querySelectorAll('.tile').forEach((t) => t.classList.toggle('on', t.dataset.a === affect));
     },
     onModelProgress(p) {
-      status.className = 'status' + (p.error ? ' bad' : p.progress >= 1 ? ' ok' : '');
+      status.className = 'status' + (p.error ? ' bad' : '');
       status.textContent = p.progress >= 1 ? (p.error ? p.text : '') : `${p.text || 'Loading model'} ${Math.round((p.progress || 0) * 100)}%`;
       if (p.error) setTimeout(() => (status.textContent = ''), 6000);
     },
@@ -102,6 +120,52 @@ export function renderSession(root, nav, { mode = 'hold' } = {}) {
     },
   };
   const session = createSession({ archetype: a, presence, ui, mode });
+
+  function note(text) {
+    status.className = 'status'; status.textContent = text;
+    clearTimeout(note._t); note._t = setTimeout(() => { if (status.textContent === text) status.textContent = ''; }, 7000);
+  }
+  function renderBrain() {
+    const b = brain;
+    brainBtn.className = 'brain-chip ' + b.state;
+    brainBtn.textContent = b.state === 'scripted' ? 'Scripted lines: not reading your words. Turn on AI'
+      : b.state === 'loading' ? `${brainLabel(b.provider)}: loading${b.progress > 0 && b.progress < 1 ? ` ${Math.round(b.progress * 100)}%` : '…'}`
+      : b.state === 'error' ? 'AI couldn\'t start: using scripted lines. Fix'
+      : `${brainLabel(b.provider)}: reading your words`;
+    brainBtn.setAttribute('aria-label', brainBtn.textContent);
+  }
+  function brainSheet() {
+    const msg = h('p', { class: 'status' }, '');
+    const busy = (b, fn) => async () => { b.disabled = true; try { await fn(); } catch (e) { msg.className = 'status bad'; msg.textContent = e.message || String(e); } finally { b.disabled = false; } };
+    const deviceBtn = canUseDeviceAI() ? h('button', { class: 'btn primary' }, 'Use the AI on this device') : null;
+    if (deviceBtn) deviceBtn.onclick = busy(deviceBtn, async () => {
+      useDeviceAI(); session.useProvider(); closeSheet();
+      toast(`Loading the AI. The first time is a one-time download (1 to 3 GB). ${first} uses scripted lines until it's ready.`, 5000);
+    });
+    const localBtn = h('button', { class: 'btn' + (deviceBtn ? '' : ' primary') }, 'Use Holding Local on my computer');
+    localBtn.onclick = busy(localBtn, async () => {
+      msg.className = 'status'; msg.textContent = 'Connecting…';
+      await connectHoldingLocal(); session.useProvider(); closeSheet();
+      toast(`Connected. ${first}'s words, voice and listening now run on your computer.`, 4000);
+    });
+    const b = brain;
+    const title = b.state === 'scripted' ? `Right now ${first} isn't reading what you type.`
+      : b.state === 'error' ? 'The AI couldn\'t start.'
+      : b.state === 'loading' ? 'The AI is loading.'
+      : `${first}'s words come from the AI.`;
+    const body = b.state === 'scripted' ? `${first}'s face reacts to feeling words, but the replies are pre-written lines picked by feeling. Turn on an AI and ${first} will answer what you actually say. Everything stays on your own devices.`
+      : b.state === 'error' ? `${b.error || 'Unknown error.'} Until it's fixed, ${first} uses scripted lines and won't follow what you type.`
+      : b.state === 'loading' ? `${brainLabel(b.provider)} is getting ready${b.progress > 0 && b.progress < 1 ? ` (${Math.round(b.progress * 100)}%)` : ''}. ${first} uses scripted lines until then. You can keep talking.`
+      : `${brainLabel(b.provider)} writes ${first}'s replies to what you type. If it is ever slow or breaks a rule, a scripted line fills in and a note says so.`;
+    return h('div', { class: 'stack' },
+      h('h3', {}, title),
+      h('p', { class: 'muted', style: { margin: 0 } }, body),
+      b.state === 'ready' || b.state === 'loading' ? null : h('div', { class: 'row wrap' }, deviceBtn, localBtn),
+      msg,
+      h('div', { class: 'row wrap' },
+        h('button', { class: 'btn ghost', onclick: () => nav('settings', { focus: 'ai' }) }, 'More options in Settings'),
+        h('button', { class: 'btn ghost', onclick: closeSheet }, 'Close')));
+  }
 
   for (const [k, l] of TILES) tilesEl.append(h('button', { class: 'tile', 'data-a': k, onclick: () => { logLine('tap', `You tapped “${l}”`); session.onTile(k); } }, l));
   if (mode !== 'hold') tilesEl.style.display = 'none';
@@ -216,6 +280,7 @@ export function renderSession(root, nav, { mode = 'hold' } = {}) {
       .catch((e) => { status.textContent = 'Camera mirroring unavailable: ' + (e.message || e); });
   }
 
+  renderBrain();
   session.start();
   return () => { session.destroy(); presence.destroy(); stopCam?.(); rec?.stop?.(); };
 }
