@@ -29,18 +29,23 @@ export function renderSession(root, nav, { mode = 'hold' } = {}) {
   const sendBtn = h('button', { class: 'icon-btn', 'aria-label': 'Send' }, 'Send');
   const inputBar = h('div', { class: 'inputbar' }, ta, micBtn, sendBtn);
   const sheet = h('div', { class: 'sheet', role: 'dialog', 'aria-modal': 'false' });
+  // Running text log of this conversation. Kept in memory for this session only; never saved.
+  const logList = h('div', { class: 'log-list' });
+  const logEmpty = h('p', { class: 'log-empty muted' }, 'Everything you and ' + first + ' say will show up here.');
+  const logPanel = h('div', { class: 'log-panel', id: 'session-log', role: 'log', 'aria-label': 'Conversation so far', 'aria-live': 'off', tabindex: '-1' }, logEmpty, logList);
+  const logBtn = h('button', { class: 'pill', 'aria-controls': 'session-log', 'aria-expanded': 'false' }, 'Log');
   let stopCam = null, rec = null;
   const endBtn = h('button', { class: 'pill', onclick: () => (session.state.ended ? nav('home') : session.end()) }, 'End');
   const saveBtn = h('button', { class: 'pill', onclick: () => openSheet(keepSheet({ said: [...new Set(session.state.said)], ending: false })), title: 'Keep lines to play back later' }, 'Save lines');
 
   const el = h('div', { class: 'session' },
     h('div', { class: 'topbar' },
-      h('div', { class: 'row' }, endBtn, saveBtn),
+      h('div', { class: 'row' }, endBtn, saveBtn, logBtn),
       h('div', { class: 'row' },
         h('button', { class: 'pill safe', onclick: () => session.enterSafety(), 'aria-label': 'I am not safe' }, 'Not safe'),
         leadBtn,
         h('button', { class: 'pill', onclick: () => session.onMiss(), title: 'Tell them they got it wrong' }, 'That missed'))),
-    h('div', { class: 'stage' }, h('div', { style: { position: 'relative', minHeight: 0, display: 'grid' } }, faceBox, ring), h('div', {}, caption, status)),
+    h('div', { class: 'stage' }, h('div', { style: { position: 'relative', minHeight: 0, display: 'grid' } }, faceBox, ring), h('div', {}, caption, status), logPanel),
     tilesEl,
     inputBar,
     sheet, video);
@@ -52,8 +57,27 @@ export function renderSession(root, nav, { mode = 'hold' } = {}) {
   });
   ring.style.display = s.breathPacer ? '' : 'none';
 
+  function logLine(who, text) {
+    logEmpty.remove();
+    const atBottom = logPanel.scrollHeight - logPanel.scrollTop - logPanel.clientHeight < 40;
+    const time = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    logList.append(h('div', { class: 'log-line ' + who },
+      who === 'tap' ? null : h('div', { class: 'log-who' }, who === 'parent' ? first : 'You', h('time', {}, time)),
+      h('div', { class: 'log-text' }, text)));
+    if (atBottom || who !== 'parent') logPanel.scrollTop = logPanel.scrollHeight;
+  }
+  function setLog(open, { remember = true } = {}) {
+    el.classList.toggle('log-open', open);
+    logBtn.classList.toggle('on', open);
+    logBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (open) logPanel.scrollTop = logPanel.scrollHeight;
+    if (remember) store.setSettings({ conversationLog: open });
+  }
+  logBtn.onclick = () => setLog(!el.classList.contains('log-open'));
+  setLog(!!s.conversationLog, { remember: false });
+
   const ui = {
-    onSay(text) { caption.classList.remove('fade'); caption.textContent = text; },
+    onSay(text) { caption.classList.remove('fade'); caption.textContent = text; logLine('parent', text); },
     onSpeakEnd() { setTimeout(() => caption.classList.add('fade'), 2500); },
     onMirror(affect) {
       el.style.background = matchMedia('(prefers-color-scheme: dark)').matches ? '' : (TINT[affect] || '');
@@ -79,7 +103,7 @@ export function renderSession(root, nav, { mode = 'hold' } = {}) {
   };
   const session = createSession({ archetype: a, presence, ui, mode });
 
-  for (const [k, l] of TILES) tilesEl.append(h('button', { class: 'tile', 'data-a': k, onclick: () => session.onTile(k) }, l));
+  for (const [k, l] of TILES) tilesEl.append(h('button', { class: 'tile', 'data-a': k, onclick: () => { logLine('tap', `You tapped “${l}”`); session.onTile(k); } }, l));
   if (mode !== 'hold') tilesEl.style.display = 'none';
 
   leadBtn.onclick = () => {
@@ -89,7 +113,7 @@ export function renderSession(root, nav, { mode = 'hold' } = {}) {
     toast(on ? `${first} will keep talking softly. You don't have to answer.` : `${first} will wait for you.`);
   };
 
-  const send = () => { const t = ta.value.trim(); if (!t) return; ta.value = ''; ta.style.height = ''; caption.textContent = ''; session.onText(t); };
+  const send = () => { const t = ta.value.trim(); if (!t) return; ta.value = ''; ta.style.height = ''; caption.textContent = ''; logLine('you', t); session.onText(t); };
   sendBtn.onclick = send;
   ta.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } });
   ta.addEventListener('input', () => { ta.style.height = ''; ta.style.height = Math.min(140, ta.scrollHeight) + 'px'; });
