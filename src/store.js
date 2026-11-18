@@ -5,7 +5,7 @@ const DATA = 'holding.data.v1';
 export const DEFAULT_SETTINGS = {
   userName: '',
   warmth: null,              // null = use archetype default; user-set dose 0..1
-  voiceOn: true, captions: true, breathPacer: false, reducedMotion: null,
+  voiceOn: true, captions: true, conversationLog: false, breathPacer: false, reducedMotion: null,
   camera: false,             // opt-in on-device mirroring from the camera
   endearments: true,
   safetyContact: { name: '', phone: '' },
