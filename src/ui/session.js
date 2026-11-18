@@ -250,7 +250,9 @@ export function renderSession(root, nav, { mode = 'hold' } = {}) {
   // conversation once the user starts typing (src/ui/suggestions.js). Hooked in
   // by wrapping the session's callbacks so the engine doesn't need to know.
   const suggest = createSuggestions({ session, input: ta, parentName: first, onSend: (t) => { ta.value = t; send(); } });
-  inputBar.prepend(suggest.el);
+  // Above both the folded "Type or talk" button and the open input, so the
+  // chips show from the start in Hold me too.
+  el.insertBefore(suggest.el, composeBtn);
   suggest.attach(ui);
   for (const k of ['onText', 'onTile']) {
     const orig = session[k];
