@@ -25,6 +25,17 @@ Very little. Storage is not the constraint. Compute on a shared GPU is.
 | Cost | Under a millisecond, no memory | ~250-token prompt + ≤48 tokens out, 6 s timeout (9 s for a server) |
 | Context-aware via | Feeling, tier, the parent's last move (question, repair, body check, words-back), the people/places the user named, and never repeating something already said | The same gist plus the last 4 turns' actual words |
 
+**Answering her last line.** When the parent's last line ends in a question, the rule chips answer *that* question. `questionKind()` sorts it into one of these kinds:
+- a check on a guess at the feeling ("Is that close?"): Yes / Not quite / It's more like…
+- a this-or-that ("tell me, or stay a bit longer?")
+- the day ("How's today treating you?")
+- sleep, or the body
+- what's going on
+- how it felt ("What was it like to have me stay?")
+- a yes/no question, or an open question
+
+"Yes, that's it." appears only after a check or the repair's check, never after an open question. In make-sense, her open questions are answered with the sentence starters.
+
 The rule chips show right away. A model result replaces them only if the talk hasn't moved on and the user isn't typing, so chips never jump under someone's finger. If the model is slow, fails, or every line it writes is rejected, the rule chips simply stay.
 
 ## Why the in-browser model is off for suggestions on phones (on "Automatic")

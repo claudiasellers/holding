@@ -59,6 +59,7 @@ export function gist(state = {}) {
     intensity: state.intensity || 0,
     lastKind: state.lastReplyKind || '',
     parentAsked: /\?\s*$/.test(lastParent),
+    question: questionKind(lastParent),
     lastParent: lastParent.slice(0, TURN_CHARS),
     userTurns: typed.length,
     topics: topicsFrom(userTexts),
@@ -85,7 +86,16 @@ const BANK = {
     hopeful: ['Maybe it will be okay.', 'I think I can talk now.', 'Can I tell you what happened?'],
     glad: ['That actually helped.', 'I feel a bit lighter.', 'Can I tell you something good?'],
   },
-  asked: ['Yes, that\'s it.', 'Not quite.', 'I\'m not sure.'],
+  // answers to the parent's last question, by what kind of question it was
+  check: ['Yes, that\'s it.', 'Not quite.', 'It\'s more like…'],       // "Is that close?" after a guess at the feeling
+  day: ['Pretty good, actually.', 'Honestly, kind of hard.', 'A mixed sort of day.'],   // "How's today treating you?"
+  sleep: ['Not great, honestly.', 'Pretty well.', 'On and off.'],
+  body: ['Tired, mostly.', 'A bit sore.', 'Okay, actually.'],
+  whatsUp: ['Something small went right.', 'Work is a lot right now.', 'Just checking in.'],
+  choice: ['I want to tell you.', 'Stay a bit longer.', 'I\'m not sure yet.'],    // "tell me, or stay a bit longer?"
+  reflect: ['It helped.', 'It felt strange, honestly.', 'I\'m not sure yet.'],     // "What was it like to have me stay?"
+  yesNo: ['Yes.', 'Not really.', 'I\'m not sure.'],
+  open: ['I\'m not sure.', 'Give me a second.', 'Let me think.'],
   // answers to the repair's check (§7.5); readCheckAnswer maps each to yes / else / stay
   repair: ['Yes, that\'s it.', 'Something else.', 'Just stay with me.'],
   wordsBack: ['Something happened today.', 'It started when…', 'I\'m not ready yet.'],
@@ -104,19 +114,41 @@ export function ruleSuggestions(g) {
   const pools = [];
   if (g.lastKind === 'wordsBack') pools.push(BANK.wordsBack);
   if (g.lastKind === 'bodyBudget') pools.push(BANK.bodyBudget);
-  if (g.parentAsked && g.tier !== 'bewith') pools.push(BANK.asked);
+  // Answer the line she just said: a question gets answers to *that* question.
+  // In make-sense, her open questions are about the old rule: the starters answer them.
+  const answers = g.question === 'open' && g.tier === 'makesense' ? BANK.makesense : g.question && BANK[g.question];
+  if (answers) {
+    // A question is the whole moment: its answers lead (all three for a check
+    // on a guess, which has exactly three honest answers; two otherwise).
+    const seen0 = new Set(g.sent || []);
+    const lead = answers.filter((x) => !seen0.has(norm(x))).slice(0, g.question === 'check' ? 3 : 2);
+    return fillFrom(lead, g, restPools(g));
+  }
+  return fillFrom([], g, [...pools, ...restPools(g)]);
+}
+
+/** The situation's pools: topic, tier, feeling, then gentle fallbacks that fit the tier. */
+function restPools(g) {
+  const pools = [];
   if (g.topics.length && g.userTurns) pools.push(BANK.topic(g.topics[0]));
   if (g.tier === 'makesense') pools.push(BANK.makesense);
   else if (g.tier === 'ordinary') pools.push(BANK.ordinary);
   else if (g.tier === 'name') pools.push(BANK.name);
   if (g.affect && BANK.affect[g.affect]) pools.push(BANK.affect[g.affect]);
   if (!g.userTurns && !g.affect && g.tier === 'bewith') pools.push(BANK.start);
-  pools.push(g.userTurns ? BANK.going : BANK.start, BANK.start);
+  // "Just stay with me" belongs to a hard moment, not an ordinary chat.
+  const calm = g.tier === 'ordinary' || g.tier === 'makesense';
+  if (g.userTurns) pools.push(BANK.going);
+  const fallback = g.tier === 'ordinary' ? BANK.ordinary : g.tier === 'makesense' ? BANK.open : BANK.start;
+  pools.push(fallback, calm ? BANK.going : BANK.start);
+  return pools;
+}
 
-  // Round-robin across pools so one situation can't take all three slots,
-  // rotating within each pool by turn count so the chips move as the talk does.
-  const out = [];
-  const seen = new Set(g.sent || []);
+// Round-robin across pools so one situation can't take all three slots,
+// rotating within each pool by turn count so the chips move as the talk does.
+function fillFrom(lead, g, pools) {
+  const out = [...lead];
+  const seen = new Set([...(g.sent || []), ...lead.map(norm)]);
   const turn = g.userTurns || 0;
   for (let round = 0; out.length < 3 && round < 3; round++) {
     for (const pool of pools) {
@@ -128,6 +160,27 @@ export function ruleSuggestions(g) {
     }
   }
   return out;
+}
+
+/**
+ * What kind of question the parent's last line ends with, so the chips answer
+ * it: a check on a guess at the feeling, a this-or-that, or an open question
+ * about the day, sleep, the body, what's going on, or how it felt. null when
+ * the line isn't a question.
+ */
+export function questionKind(line) {
+  const t = String(line || '').trim();
+  if (!/\?\s*$/.test(t)) return null;
+  const q = (t.match(/[^.!?…]*\?\s*$/) || [t])[0].toLowerCase();
+  if (/\b(is that (close|it|right)|does that (fit|sound right)|which is closer|am i close|or something else|have i got that)\b/.test(q)) return 'check';
+  if (/\b(tell me|want to tell)\b.*\bor\b.*\b(stay|longer|wait)\b/.test(q)) return 'choice';
+  if (/\b(sleep|slept)\b/.test(q)) return 'sleep';
+  if (/\b(your body|body today|rested|sore)\b/.test(q)) return 'body';
+  if (/\b(today|day)\b.*\b(treating|going|shaping|been|like)\b|\bhow('?s| is| was) (today|your day|the day|it going)\b|\bordinary day\b/.test(q)) return 'day';
+  if (/\bwhat was it like|how does it feel|what helped|surprising|shifted|what do you notice\b/.test(q)) return 'reflect';
+  if (/\b(what'?s going on|on your mind|what are we doing|tell me about|anything you want|plate|looking forward|went right)\b/.test(q)) return 'whatsUp';
+  if (/^\s*(are|is|do|did|have|has|can|could|would|will|anything|any)\b/.test(q)) return 'yesNo';
+  return 'open';
 }
 
 // ---------- guard for the user's side ----------
