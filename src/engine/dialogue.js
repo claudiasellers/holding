@@ -578,12 +578,23 @@ export function createSession({ archetype, presence, ui, mode = 'hold' }) {
     await sleep(900);
     await say(meta, { kind: 'metaprocess', final: true, tier: 'name' });
     presence.setOwn('holding');
+    // The goodbye is hers: anything the screen wants to ask waits until she has finished.
+    if (!state.destroyed) ui.onEndSpoken?.({ said: [...new Set(state.said)] });
   }
 
-  function destroy() { if (state.repairing) finishRepair('exit'); state.ended = true; clearInterval(watcher); ctrl.abort(); stopSpeaking(); }
+  // Say a line again (tap on the caption). Not a new turn: nothing is added to history.
+  function replay(text) {
+    if (!text) return Promise.resolve();
+    stopSpeaking();
+    const policy = policyFor(state.tier, store.warmthFor(archetype));
+    speakQueue = speakQueue.then(() => speakNow(text, policy, { kind: 'replay', replay: true, final: true }));
+    return speakQueue;
+  }
+
+  function destroy() { if (state.repairing) finishRepair('exit'); state.ended = true; state.destroyed = true; clearInterval(watcher); ctrl.abort(); stopSpeaking(); }
 
   return {
-    state, start, end, destroy, onTile, onText, onMiss, checkAnswer, chooseWordsBack,
+    state, start, end, destroy, onTile, onText, onMiss, checkAnswer, chooseWordsBack, replay,
     enterSafety, safetyStay, exitSafety, say, stopSpeaking,
     setLead(v) { state.lead = v; if (v) state.lastInputAt = 0; },
     useProvider,
