@@ -76,3 +76,16 @@ test('generator stays in the comforting range', () => {
     assert.ok(a.stance.warmth <= .6 && a.mirror.markedness >= .6 && a.face.age >= 38);
   }
 });
+
+test('end-of-conversation keep sheet is occasional, not every time', async () => {
+  const { shouldAskOnEnd } = await import('../src/engine/endprompt.js');
+  const now = Date.parse('2026-11-18T20:00:00Z'), day = 864e5;
+  const base = { now, minutes: 10, saidCount: 4, mode: 'hold' };
+  assert.equal(shouldAskOnEnd({ ...base, lastShown: null }), true, 'first time asks');
+  assert.equal(shouldAskOnEnd({ ...base, lastShown: now - day }), false, 'asked yesterday');
+  assert.equal(shouldAskOnEnd({ ...base, lastShown: now - 8 * day }), true, 'a week later');
+  assert.equal(shouldAskOnEnd({ ...base, lastShown: now - 8 * day, minutes: 1 }), false, 'quick check-in');
+  assert.equal(shouldAskOnEnd({ ...base, lastShown: null, saidCount: 0 }), false, 'nothing to keep');
+  assert.equal(shouldAskOnEnd({ ...base, lastShown: now - day, pref: 'always' }), true);
+  assert.equal(shouldAskOnEnd({ ...base, lastShown: null, pref: 'never' }), false);
+});

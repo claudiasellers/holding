@@ -36,6 +36,7 @@ export function renderSettings(root, nav) {
       toggle('Captions', S().captions, (v) => set({ captions: v })),
       toggle('Breathing pacer', S().breathPacer, (v) => set({ breathPacer: v }), 'A slow ring that breathes. Off by default: breath focus is not calming for everyone.'),
       toggle('Reduce motion', S().reducedMotion ?? matchMedia('(prefers-reduced-motion: reduce)').matches, (v) => set({ reducedMotion: v })),
+      select('After a conversation, ask to keep lines', S().endPrompt || 'sometimes', [['sometimes', 'Now and then'], ['always', 'Every time'], ['never', 'Never']], (v) => set({ endPrompt: v })),
       toggle('Mirror my face with the camera', S().camera, (v) => set({ camera: v }), 'Opt-in. Reads your expression on this device so the face can mirror it. No video is stored or sent. One-time model download.'),
     ));
 
