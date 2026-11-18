@@ -1,4 +1,5 @@
 import { h, clear, toast } from './dom.js';
+import { icon } from './icons.js';
 import { createSuggestions } from './suggestions.js';
 import { mountFace } from './faceview.js';
 import { createSession } from '../engine/dialogue.js';
@@ -17,53 +18,75 @@ const FALLBACK_NOTE = {
   rejected: 'The AI\'s reply broke one of the parent\'s rules, so a scripted line was used instead.',
 };
 
+// "Just stay" first: it asks the least of someone who can't name anything yet.
 const TILES = [
-  ['overwhelmed', 'Falling apart'], ['sad', 'Crying'], ['scared', 'Scared'], ['angry', 'Furious'],
-  ['ashamed', 'Ashamed'], ['lonely', 'So alone'], ['numb', 'Numb'], ['stay', 'Just stay'],
+  ['stay', 'Just stay'], ['overwhelmed', 'Falling apart'], ['sad', 'Crying'], ['scared', 'Scared'],
+  ['angry', 'Furious'], ['ashamed', 'Ashamed'], ['lonely', 'So alone'], ['numb', 'Numb'],
 ];
+
+// Lines that aren't offered as keepsakes: repair and safety lines answer a moment, and
+// the goodbye lines are said every time.
+const NOT_KEEPABLE = /^(repair|safety|close|metaprocess|replay)/;
 
 // Background tint follows the presence state slowly, on the same channel as the face (congruence).
 const TINT = { sad: '#e8ecef', scared: '#ecebf0', angry: '#f1e6e1', ashamed: '#efe8e6', lonely: '#e9ebee', numb: '#eceae6', overwhelmed: '#ebe8ee', glad: '#f6eedf', hopeful: '#f4eedf', calm: '#eef0ea' };
+// Dark mode keeps the same channel at low lightness, so it never glares at 3am.
+const TINT_DARK = { sad: '#1a1d21', scared: '#1d1b22', angry: '#231a17', ashamed: '#221a1a', lonely: '#1a1c20', numb: '#1e1d1a', overwhelmed: '#1e1a21', glad: '#231e16', hopeful: '#221f16', calm: '#1a1f1b' };
+const isDark = () => {
+  const t = document.documentElement.dataset.theme;
+  return t === 'dark' || (t !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
+};
 
 export function renderSession(root, nav, { mode = 'hold' } = {}) {
   const a = store.data.archetype;
   const s = store.settings;
   const first = a.name.length <= 10 ? a.name : a.name.split(' ').pop();
   const faceBox = h('div', { class: 'face-box' });
-  const caption = h('div', { class: 'caption' + (s.captions ? '' : ' hidden'), 'aria-live': 'polite' }, '');
+  const caption = h('div', { class: 'caption' + (s.captions ? '' : ' hidden'), 'aria-live': 'polite', title: 'Tap to hear it again' }, '');
+  let lastLine = '';
+  const kindOf = new Map();           // line text -> kind, so repair/safety lines aren't offered as keepsakes
   const ring = h('div', { class: 'breath-ring', 'aria-hidden': 'true' });
   const status = h('div', { class: 'status', style: { textAlign: 'center', minHeight: '1.2em' } }, '');
   // Always-visible note on what writes the parent's words; tap to change it.
-  const brainBtn = h('button', { class: 'brain-chip', type: 'button', onclick: () => openSheet(brainSheet()) }, '');
+  const brainBtn = h('button', { class: 'brain-chip', type: 'button', onclick: () => openSheet(brainSheet(), 'brain') }, '');
   let brain = { state: 'scripted' };
   const video = h('video', { class: 'hidden-video', playsinline: true, muted: true });
-  const leadBtn = h('button', { class: 'pill' + (mode === 'hold' ? ' on' : ''), 'aria-pressed': mode === 'hold' ? 'true' : 'false' }, `${first} leads`);
+  // Lives in the More sheet as a labelled switch; built once so its state survives reopening.
+  const leadBtn = h('button', { class: 'switch' + (mode === 'hold' ? ' on' : ''), type: 'button', role: 'switch', 'aria-checked': mode === 'hold' ? 'true' : 'false', 'aria-label': `${first} keeps talking softly` });
   const tilesEl = h('div', { class: 'tiles', role: 'group', 'aria-label': 'How it feels right now' });
   const ta = h('textarea', { rows: 1, placeholder: mode === 'hold' ? 'Type if you want to. You don\'t have to.' : 'Say anything…', 'aria-label': 'Message' });
-  const micBtn = h('button', { class: 'icon-btn', 'aria-label': 'Speak' }, 'Mic');
-  const sendBtn = h('button', { class: 'icon-btn', 'aria-label': 'Send' }, 'Send');
+  const micBtn = h('button', { class: 'icon-btn', 'aria-label': 'Speak' }, icon('mic'));
+  const sendBtn = h('button', { class: 'icon-btn', 'aria-label': 'Send' }, icon('send'));
   const inputBar = h('div', { class: 'inputbar' }, ta, micBtn, sendBtn);
+  // In hold mode typing is optional, so the input starts folded into one button:
+  // a stray tap can't pull the keyboard up over the face.
+  const composeBtn = h('button', { class: 'compose-open', type: 'button', onclick: () => openComposer() }, icon('keyboard'), 'Type or talk', icon('mic'));
   const sheet = h('div', { class: 'sheet', role: 'dialog', 'aria-modal': 'false' });
+  const scrim = h('div', { class: 'sheet-scrim', onclick: () => closeSheet() });
+  const endCard = h('div', { class: 'end-card', hidden: true });
   // Running text log of this conversation. Kept in memory for this session only; never saved.
   const logList = h('div', { class: 'log-list' });
   const logEmpty = h('p', { class: 'log-empty muted' }, 'Everything you and ' + first + ' say will show up here.');
   const logPanel = h('div', { class: 'log-panel', id: 'session-log', role: 'log', 'aria-label': 'Conversation so far', 'aria-live': 'off', tabindex: '-1' }, logEmpty, logList);
-  const logBtn = h('button', { class: 'pill', 'aria-controls': 'session-log', 'aria-expanded': 'false' }, 'Log');
+  const logHide = h('button', { class: 'log-hide', type: 'button', onclick: () => setLog(false) }, 'Hide');
+  logPanel.prepend(h('div', { class: 'log-head' }, h('b', {}, 'So far'), logHide));
   let stopCam = null, rec = null;
-  const endBtn = h('button', { class: 'pill', onclick: () => (session.state.ended ? nav('home') : session.end()) }, 'End');
-  const saveBtn = h('button', { class: 'pill', onclick: () => openSheet(keepSheet({ said: [...new Set(session.state.said)], ending: false })), title: 'Keep lines to play back later' }, 'Save lines');
+
+  // Top bar: two things only. More (everything else) and Not safe. Ending lives in More
+  // as "Say goodbye", away from the corner where Back usually is.
+  const moreBtn = h('button', { class: 'icon-btn more-btn', type: 'button', 'aria-label': 'More: log, save lines, who leads, goodbye', 'aria-haspopup': 'dialog', onclick: () => openSheet(moreSheet(), 'more') }, icon('more'));
+  const homeBtn = h('button', { class: 'pill home-btn', type: 'button', hidden: true, onclick: () => nav('home') }, icon('home'), 'Home');
+  const safeBtn = h('button', { class: 'pill safe', type: 'button', onclick: () => session.enterSafety(), 'aria-label': 'I am not safe' }, icon('heart'), 'Not safe');
+  const missedBtn = h('button', { class: 'missed-btn', type: 'button', onclick: () => session.onMiss(), 'aria-label': `That missed: tell ${first} that got it wrong` }, icon('undo'), 'That missed');
 
   const el = h('div', { class: 'session' },
-    h('div', { class: 'topbar' },
-      h('div', { class: 'row' }, endBtn, saveBtn, logBtn),
-      h('div', { class: 'row' },
-        h('button', { class: 'pill safe', onclick: () => session.enterSafety(), 'aria-label': 'I am not safe' }, 'Not safe'),
-        leadBtn,
-        h('button', { class: 'pill', onclick: () => session.onMiss(), title: 'Tell them they got it wrong' }, 'That missed'))),
-    h('div', { class: 'stage' }, h('div', { style: { position: 'relative', minHeight: 0, display: 'grid' } }, faceBox, ring), h('div', {}, caption, status, h('div', { class: 'brain-row' }, brainBtn)), logPanel),
+    h('div', { class: 'topbar' }, h('div', { class: 'row' }, moreBtn, homeBtn), brainBtn, safeBtn),
+    h('div', { class: 'stage' }, h('div', { class: 'face-area' }, faceBox, ring), h('div', { class: 'caption-area' }, caption, missedBtn, status), logPanel),
     tilesEl,
+    endCard,
+    composeBtn,
     inputBar,
-    sheet, video);
+    scrim, sheet, video);
   root.append(el);
 
   const presence = mountFace(faceBox, a, { bpm: s.breathPacer ? 5.5 : 6 });
@@ -83,50 +106,72 @@ export function renderSession(root, nav, { mode = 'hold' } = {}) {
   }
   function setLog(open, { remember = true } = {}) {
     el.classList.toggle('log-open', open);
-    logBtn.classList.toggle('on', open);
-    logBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
     if (open) logPanel.scrollTop = logPanel.scrollHeight;
     if (remember) store.setSettings({ conversationLog: open });
   }
-  logBtn.onclick = () => setLog(!el.classList.contains('log-open'));
   setLog(!!s.conversationLog, { remember: false });
+
+  caption.addEventListener('click', () => { if (lastLine && !session.state.safety) session.replay(lastLine); });
+
+  let composerOpen = mode !== 'hold';
+  function openComposer({ focus = true } = {}) {
+    composerOpen = true;
+    composeBtn.hidden = true; inputBar.hidden = false;
+    if (focus) ta.focus({ preventScroll: true });
+  }
+  composeBtn.hidden = composerOpen; inputBar.hidden = !composerOpen;
+
+  // Lines worth offering to keep, most recent last, without repair/safety/goodbye lines.
+  const keepable = (said) => said.filter((t) => !NOT_KEEPABLE.test(kindOf.get(t) || ''));
 
   const ui = {
     onSay(text, meta = {}) {
-      caption.classList.remove('fade'); caption.textContent = text; logLine('parent', text);
+      caption.classList.remove('fade'); caption.textContent = text;
+      if (meta.replay) return;
+      lastLine = text; kindOf.set(text, meta.kind || '');
+      logLine('parent', text);
       if (meta.typed && meta.source === 'script' && FALLBACK_NOTE[meta.fallback]) note(FALLBACK_NOTE[meta.fallback]);
     },
     onBrain(b) { brain = b; renderBrain(); },
     onSpeakEnd() { setTimeout(() => caption.classList.add('fade'), 2500); },
     onMirror(affect) {
-      el.style.background = matchMedia('(prefers-color-scheme: dark)').matches ? '' : (TINT[affect] || '');
+      el.style.background = (isDark() ? TINT_DARK : TINT)[affect] || '';
       tilesEl.querySelectorAll('.tile').forEach((t) => t.classList.toggle('on', t.dataset.a === affect));
     },
+    // Loading progress shows in the brain chip at the top; only a failure gets a line here.
     onModelProgress(p) {
-      status.className = 'status' + (p.error ? ' bad' : '');
-      status.textContent = p.progress >= 1 ? (p.error ? p.text : '') : `${p.text || 'Loading model'} ${Math.round((p.progress || 0) * 100)}%`;
-      if (p.error) setTimeout(() => (status.textContent = ''), 6000);
+      if (!p.error) return;
+      status.className = 'status bad'; status.textContent = p.text;
+      setTimeout(() => (status.textContent = ''), 6000);
     },
     onWordsBack() { openSheet(wordsBackSheet()); },
     // Repair (§7.5): the check is always answerable with one tap, even in Be-with.
     onRepair(r) {
-      if (r.phase === 'check') openSheet(repairSheet(r));
-      else if (r.phase === 'listen') { closeSheet(); if (mode === 'hold' || r.tier === 'bewith') tilesEl.style.display = ''; ta.focus({ preventScroll: true }); }
+      if (r.phase === 'check') openSheet(repairSheet(r), 'repair');
+      else if (r.phase === 'listen') { closeSheet(); if (mode === 'hold' || r.tier === 'bewith') tilesEl.style.display = ''; openComposer(); }
       else if (sheet.dataset.kind === 'repair') closeSheet();
     },
-    onLead(on) { leadBtn.classList.toggle('on', on); leadBtn.setAttribute('aria-pressed', on ? 'true' : 'false'); },
-    onSafety(on) { if (on) openSheet(safetySheet()); else closeSheet(); },
-    onTier(t) { if (t !== 'bewith') leadBtn.classList.remove('on'); },
+    onLead(on) { setLeadUI(on); },
+    onSafety(on) { moreBtn.disabled = on; if (on) openSheet(safetySheet(), 'safety'); else closeSheet(); },
+    onTier(t) { if (t !== 'bewith') setLeadUI(false); },
+    // Goodbye: the closing lines play over the whole face first. Nothing slides over the
+    // parent; if it's time to offer keepsakes, a small card appears below once they finish.
     onEnd(info) {
       const ep = store.data.episodes.at(-1);
-      const ask = shouldAskOnEnd({ pref: s.endPrompt, lastShown: store.data.endPromptShownAt, minutes: ep?.minutes ?? 0, saidCount: info.said.length, mode });
-      // No sheet: the closing words still play, the End button becomes the way home,
-      // and Save lines stays up top for anyone who wants it.
-      tilesEl.style.display = 'none'; inputBar.style.display = 'none';
-      endBtn.textContent = 'Home'; endBtn.classList.add('on');
-      if (ask) { store.setData({ endPromptShownAt: Date.now() }); setTimeout(() => openSheet(keepSheet({ ...info, ending: true })), 400); }
+      const lines = keepable(info.said);
+      endAsk = shouldAskOnEnd({ pref: s.endPrompt, lastShown: store.data.endPromptShownAt, minutes: ep?.minutes ?? 0, saidCount: lines.length, mode });
+      if (endAsk) store.setData({ endPromptShownAt: Date.now() });
+      closeSheet(); setLog(false, { remember: false });
+      el.classList.add('ended');
+      moreBtn.hidden = true; homeBtn.hidden = false;
+    },
+    onEndSpoken({ said }) {
+      if (!endAsk) return;
+      clear(endCard).append(endKeepCard(keepable(said)));
+      endCard.hidden = false;
     },
   };
+  let endAsk = false;
   const session = createSession({ archetype: a, presence, ui, mode });
 
   function note(text) {
@@ -136,11 +181,16 @@ export function renderSession(root, nav, { mode = 'hold' } = {}) {
   function renderBrain() {
     const b = brain;
     brainBtn.className = 'brain-chip ' + b.state;
-    brainBtn.textContent = b.state === 'scripted' ? 'Scripted lines: not reading your words. Turn on AI'
-      : b.state === 'loading' ? `${brainLabel(b.provider)}: loading${b.progress > 0 && b.progress < 1 ? ` ${Math.round(b.progress * 100)}%` : '…'}`
-      : b.state === 'error' ? 'AI couldn\'t start: using scripted lines. Fix'
-      : `${brainLabel(b.provider)}: reading your words`;
-    brainBtn.setAttribute('aria-label', brainBtn.textContent);
+    // Short at the top; the full sentence is the accessible name and is in More and the sheet.
+    const pct = b.progress > 0 && b.progress < 1 ? ` ${Math.round(b.progress * 100)}%` : '…';
+    brainBtn.textContent = b.state === 'scripted' ? 'Scripted lines'
+      : b.state === 'loading' ? `AI loading${pct}`
+      : b.state === 'error' ? 'AI couldn\'t start'
+      : 'AI on';
+    brainBtn.setAttribute('aria-label', b.state === 'scripted' ? `Scripted lines: ${first} isn't reading your words. Tap to turn on AI`
+      : b.state === 'loading' ? `${brainLabel(b.provider)} loading${pct}`
+      : b.state === 'error' ? 'AI couldn\'t start: using scripted lines. Tap to fix'
+      : `${brainLabel(b.provider)}: reading your words`);
   }
   function brainSheet() {
     const msg = h('p', { class: 'status' }, '');
@@ -178,11 +228,17 @@ export function renderSession(root, nav, { mode = 'hold' } = {}) {
   for (const [k, l] of TILES) tilesEl.append(h('button', { class: 'tile', 'data-a': k, onclick: () => { logLine('tap', `You tapped “${l}”`); session.onTile(k); } }, l));
   if (mode !== 'hold') tilesEl.style.display = 'none';
 
-  leadBtn.onclick = () => {
+  function setLeadUI(on) {
+    leadBtn.classList.toggle('on', on); leadBtn.setAttribute('aria-checked', on ? 'true' : 'false');
+    leadHint.textContent = on ? 'You don\'t have to answer.' : `Off: ${first} waits for you.`;
+  }
+  const leadHint = h('small', {}, '');
+  setLeadUI(mode === 'hold');
+  leadBtn.onclick = (e) => {
+    e.stopPropagation();
     const on = !leadBtn.classList.contains('on');
-    leadBtn.classList.toggle('on', on); leadBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    setLeadUI(on);
     session.setLead(on);
-    toast(on ? `${first} will keep talking softly. You don't have to answer.` : `${first} will wait for you.`);
   };
 
   const send = () => { const t = ta.value.trim(); if (!t) return; ta.value = ''; ta.style.height = ''; caption.textContent = ''; logLine('you', t); session.onText(t); };
@@ -206,25 +262,33 @@ export function renderSession(root, nav, { mode = 'hold' } = {}) {
 
   // dictation: browser speech recognition (may use the browser vendor's servers) or the local server
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if ((!SR && s.stt.provider !== 'server') || s.stt.provider === 'off') micBtn.style.display = 'none';
+  const noMic = (!SR && s.stt.provider !== 'server') || s.stt.provider === 'off';
+  if (noMic) { micBtn.style.display = 'none'; composeBtn.querySelector('.ico:last-child').remove(); composeBtn.lastChild.textContent = 'Type'; }
+  function setMic(on) {
+    clear(micBtn).append(icon(on ? 'stop' : 'mic'));
+    micBtn.setAttribute('aria-label', on ? 'Stop listening' : 'Speak');
+    micBtn.classList.toggle('on', on);
+  }
+  // The folded button's mic goes straight to dictation.
+  if (!noMic) composeBtn.querySelector('.ico:last-child').addEventListener('click', (e) => { e.stopPropagation(); openComposer({ focus: false }); micBtn.click(); });
   micBtn.onclick = async () => {
     if (rec) { rec.stop(); return; }
     if (s.stt.provider === 'server' && s.stt.baseUrl) return serverDictation();
     rec = new SR(); rec.lang = 'en-US'; rec.interimResults = true; rec.continuous = false;
-    micBtn.textContent = 'Stop';
+    setMic(true);
     rec.onresult = (e) => { ta.value = [...e.results].map((r) => r[0].transcript).join(' '); };
-    rec.onend = () => { rec = null; micBtn.textContent = 'Mic'; if (ta.value.trim()) send(); };
-    rec.onerror = () => { rec = null; micBtn.textContent = 'Mic'; };
+    rec.onend = () => { rec = null; setMic(false); if (ta.value.trim()) send(); };
+    rec.onerror = () => { rec = null; setMic(false); };
     rec.start();
   };
   async function serverDictation() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mr = new MediaRecorder(stream); const chunks = [];
-      rec = { stop: () => mr.stop() }; micBtn.textContent = 'Stop';
+      rec = { stop: () => mr.stop() }; setMic(true);
       mr.ondataavailable = (e) => chunks.push(e.data);
       mr.onstop = async () => {
-        stream.getTracks().forEach((t) => t.stop()); rec = null; micBtn.textContent = 'Mic';
+        stream.getTracks().forEach((t) => t.stop()); rec = null; setMic(false);
         const fd = new FormData(); fd.append('file', new Blob(chunks, { type: mr.mimeType }), 'speech.webm'); fd.append('model', 'whisper');
         const r = await fetch(`${s.stt.baseUrl.replace(/\/$/, '')}/audio/transcriptions`, { method: 'POST', body: fd, headers: s.stt.token ? { 'X-Pair-Token': s.stt.token, Authorization: `Bearer ${s.stt.token}` } : {} });
         const j = await r.json(); ta.value = j.text || ''; if (ta.value.trim()) send();
@@ -234,8 +298,29 @@ export function renderSession(root, nav, { mode = 'hold' } = {}) {
   }
 
   // sheets
-  function openSheet(content, kind = '') { clear(sheet).append(h('div', { class: 'grab' }), content); sheet.dataset.kind = kind || content.dataset?.kind || ''; sheet.classList.add('open'); }
-  function closeSheet() { sheet.classList.remove('open'); sheet.dataset.kind = ''; }
+  // Sheets that are a side trip (More, Save lines, the AI note) get a scrim you can tap to
+  // close; the safety and words-back sheets don't, so they can't be dismissed by accident.
+  const DISMISSABLE = new Set(['more', 'keep', 'brain']);
+  function openSheet(content, kind = '') {
+    clear(sheet).append(h('div', { class: 'grab' }), content);
+    sheet.dataset.kind = kind || content.dataset?.kind || ''; sheet.classList.add('open');
+    scrim.classList.toggle('open', DISMISSABLE.has(sheet.dataset.kind));
+  }
+  function closeSheet() { sheet.classList.remove('open'); sheet.dataset.kind = ''; scrim.classList.remove('open'); }
+  function moreSheet() {
+    const row = (ico, title, hint, onclick, trail = null, cls = '') => h('button', { class: 'more-row ' + cls, type: 'button', onclick },
+      icon(ico), h('span', { class: 'more-text' }, h('b', {}, title), hint ? (hint.nodeType ? hint : h('small', {}, hint)) : null), trail);
+    const logOpen = el.classList.contains('log-open');
+    const b = brain;
+    const aiTitle = b.state === 'scripted' ? 'Scripted lines' : b.state === 'error' ? 'AI couldn\'t start' : b.state === 'loading' ? `${brainLabel(b.provider)}: loading` : `${brainLabel(b.provider)} is on`;
+    const aiHint = b.state === 'ready' ? `${first} is reading your words.` : `${first} isn't reading your exact words.`;
+    return h('div', { class: 'more-list', role: 'menu', 'aria-label': 'More' },
+      row('log', logOpen ? 'Hide what\'s been said' : 'Show what\'s been said', `Opens under ${first}'s face. Not saved.`, () => { closeSheet(); setLog(!logOpen); }),
+      row('bookmark', 'Save a line', 'Keep one to hear again later.', () => openSheet(keepSheet({ said: keepable([...new Set(session.state.said)]), ending: false }), 'keep')),
+      row('talk', `${first} keeps talking softly`, leadHint, () => leadBtn.click(), leadBtn),
+      row('spark', aiTitle, aiHint, () => openSheet(brainSheet(), 'brain'), b.state === 'scripted' || b.state === 'error' ? h('span', { class: 'more-go' }, 'Turn on AI') : null),
+      row('door', 'Say goodbye', `${first} says goodbye, then you're done.`, () => { closeSheet(); session.end(); }, null, 'bye'));
+  }
   function repairSheet({ line }) {
     // The sheet sits over the caption, so it carries the spoken line itself.
     const el = h('div', { class: 'stack repair-check' },
@@ -251,7 +336,7 @@ export function renderSession(root, nav, { mode = 'hold' } = {}) {
     return h('div', { class: 'stack' },
       h('h3', {}, 'Words are coming back.'),
       h('div', { class: 'row wrap' },
-        h('button', { class: 'btn primary', onclick: () => { closeSheet(); tilesEl.style.display = 'none'; session.chooseWordsBack('tell'); ta.focus(); } }, 'Tell you what happened'),
+        h('button', { class: 'btn primary', onclick: () => { closeSheet(); tilesEl.style.display = 'none'; session.chooseWordsBack('tell'); openComposer(); } }, 'Tell you what happened'),
         h('button', { class: 'btn', onclick: () => { closeSheet(); session.chooseWordsBack('stay'); } }, 'Stay a bit longer')));
   }
   function safetySheet() {
@@ -268,43 +353,77 @@ export function renderSession(root, nav, { mode = 'hold' } = {}) {
         h('button', { class: 'btn ghost', onclick: () => session.safetyStay() }, `Stay with me, ${first}`),
         h('button', { class: 'btn ghost', onclick: () => session.exitSafety() }, 'I\'m safe right now')));
   }
-  // One sheet for both: the always-available "Save lines" button (ending: false) and the
-  // occasional end-of-conversation offer (ending: true, adds the how-big slider and an opt-out).
-  function keepSheet({ said, ending }) {
+  // Save lines, any time from More. Lines already saved show as saved.
+  function keepSheet({ said }) {
     const kept = new Set(store.data.keepsakes.filter((k) => k.archetype === a.id).map((k) => k.text));
     const chosen = new Set();
-    let distress = 5;
     const lines = said.slice(-10);
     const list = lines.length
-      ? h('div', { class: 'keep-list' }, lines.map((t) => {
-        if (kept.has(t)) return h('button', { class: 'on', disabled: true, 'aria-label': `${t} (saved)` }, t);
-        const b = h('button', { 'aria-pressed': 'false', onclick: () => { chosen.has(t) ? chosen.delete(t) : chosen.add(t); const on = b.classList.toggle('on'); b.setAttribute('aria-pressed', on ? 'true' : 'false'); } }, t);
-        return b;
-      }))
+      ? h('div', { class: 'keep-list' }, lines.map((t) => keepOption(t, kept, chosen)))
       : h('p', { class: 'muted', style: { margin: 0 } }, `Nothing yet. Lines ${first} says will show up here.`);
-    const rule = mode === 'makesense' ? h('label', { class: 'field' }, h('span', { class: 'lbl' }, 'Your new rule, in your words'), h('textarea', { placeholder: 'When I fall apart and reach out…' })) : null;
-    const out = h('output', {}, '5');
-    const save = () => {
-      for (const t of chosen) store.push('keepsakes', { text: t, archetype: a.id });
-      const rt = rule?.querySelector('textarea').value.trim();
-      if (rt) store.push('rules', { text: rt, evidence: [new Date().toISOString().slice(0, 10)] });
-      return chosen.size + (rt ? 1 : 0);
-    };
-    const finish = (n) => { if (!ending) { closeSheet(); if (n) toast(n === 1 ? 'Saved. It\'s in Memory.' : `Saved ${n}. They're in Memory.`); } else nav('home'); };
+    const rule = ruleField();
     return h('div', { class: 'stack' },
-      h('h3', {}, ending ? 'Keep a line that helped?' : 'Save lines'),
+      h('h3', {}, 'Save lines'),
       h('p', { class: 'muted', style: { margin: 0 } }, `Saved lines can be played back in ${first}'s voice any time, even offline.`),
       list,
       rule,
-      ending ? h('label', { class: 'field slider' }, h('span', { class: 'lbl' }, 'How big is it now?'), h('div', { class: 'row' }, h('input', { type: 'range', min: 0, max: 10, step: 1, value: 5, oninput: (e) => { distress = +e.target.value; out.textContent = e.target.value; } }), out)) : null,
       h('div', { class: 'row wrap', style: { justifyContent: 'flex-end' } },
-        ending ? h('button', { class: 'btn ghost', onclick: () => { store.setSettings({ endPrompt: 'never' }); toast('Won\'t ask again. Save lines is always up top.'); nav('home'); } }, 'Don\'t ask again') : null,
-        h('button', { class: 'btn ghost', onclick: () => (ending ? nav('home') : closeSheet()) }, ending ? 'Skip' : 'Cancel'),
+        h('button', { class: 'btn ghost', onclick: closeSheet }, 'Cancel'),
         h('button', { class: 'btn primary', onclick: () => {
-          const n = save();
-          if (ending) { const eps = [...store.data.episodes]; if (eps.length) { eps[eps.length - 1] = { ...eps[eps.length - 1], after: distress }; store.setData({ episodes: eps }); } }
-          finish(n);
-        } }, ending ? 'Done' : 'Save')));
+          const n = saveChosen(chosen, rule);
+          closeSheet();
+          if (n) toast(n === 1 ? 'Saved. It\'s in Memory.' : `Saved ${n}. They're in Memory.`);
+        } }, 'Save')));
+  }
+  function keepOption(t, kept, chosen, onChange = () => {}) {
+    if (kept.has(t)) return h('button', { class: 'on', disabled: true, 'aria-label': `${t} (saved)` }, h('span', { class: 'chk', 'aria-hidden': 'true' }), t);
+    const b = h('button', { 'aria-pressed': 'false', onclick: () => {
+      chosen.has(t) ? chosen.delete(t) : chosen.add(t);
+      const on = b.classList.toggle('on'); b.setAttribute('aria-pressed', on ? 'true' : 'false'); onChange();
+    } }, h('span', { class: 'chk', 'aria-hidden': 'true' }), t);
+    return b;
+  }
+  function ruleField() {
+    return mode === 'makesense' ? h('label', { class: 'field' }, h('span', { class: 'lbl' }, 'Your new rule, in your words'), h('textarea', { placeholder: 'When I fall apart and reach out…' })) : null;
+  }
+  function saveChosen(chosen, rule) {
+    for (const t of chosen) store.push('keepsakes', { text: t, archetype: a.id });
+    const rt = rule?.querySelector('textarea').value.trim();
+    if (rt) store.push('rules', { text: rt, evidence: [new Date().toISOString().slice(0, 10)] });
+    return chosen.size + (rt ? 1 : 0);
+  }
+  // The occasional end-of-conversation offer. It sits below the face, never over it.
+  // At most three lines; "Not now" weighs the same as "Keep"; the size question is
+  // optional and nothing is recorded unless one is tapped.
+  function endKeepCard(lines) {
+    const kept = new Set(store.data.keepsakes.filter((k) => k.archetype === a.id).map((k) => k.text));
+    const chosen = new Set();
+    let size = null;
+    const offer = lines.slice(-3);
+    const keepBtn = h('button', { class: 'btn primary' }, 'Done');
+    const label = () => { keepBtn.textContent = chosen.size ? `Keep ${chosen.size} line${chosen.size > 1 ? 's' : ''}` : 'Done'; };
+    const rule = ruleField();
+    const sizes = h('div', { class: 'size-chips', role: 'radiogroup', 'aria-label': 'Is it smaller now?' },
+      [['smaller', 'Smaller'], ['same', 'Same'], ['bigger', 'Bigger']].map(([v, l]) => {
+        const c = h('button', { type: 'button', role: 'radio', 'aria-checked': 'false', onclick: () => {
+          size = size === v ? null : v;
+          sizes.querySelectorAll('button').forEach((x) => x.setAttribute('aria-checked', x === c && size ? 'true' : 'false'));
+        } }, l);
+        return c;
+      }));
+    const finish = (keep) => {
+      if (keep) saveChosen(chosen, rule);
+      if (size) { const eps = [...store.data.episodes]; if (eps.length) { eps[eps.length - 1] = { ...eps[eps.length - 1], afterSize: size }; store.setData({ episodes: eps }); } }
+      nav('home');
+    };
+    keepBtn.onclick = () => finish(true);
+    return h('div', { class: 'stack' },
+      h('h3', {}, offer.length ? 'Keep a line to hear again?' : 'Before you go'),
+      offer.length ? h('div', { class: 'keep-list' }, offer.map((t) => keepOption(t, kept, chosen, label))) : null,
+      rule,
+      h('div', { class: 'size-row' }, h('span', {}, 'Is it smaller now?'), sizes),
+      h('div', { class: 'end-actions' }, h('button', { class: 'btn', onclick: () => finish(false) }, 'Not now'), keepBtn),
+      h('button', { class: 'link-btn', onclick: () => { store.setSettings({ endPrompt: 'never' }); finish(false); } }, 'Don\'t ask again'));
   }
 
   if (s.camera && mode === 'hold') {
@@ -314,8 +433,13 @@ export function renderSession(root, nav, { mode = 'hold' } = {}) {
   }
 
   // Once the conversation is over, putting the app in the background (home
-  // button, switching apps, locking the phone) silences the closing lines too.
-  const onHidden = (e) => { if ((e.type === 'pagehide' || document.visibilityState === 'hidden') && session.state.ended) session.destroy(); };
+  // button, switching apps, locking the phone) silences the goodbye too. The
+  // goodbye was cut short, so the keepsake card (if due) is waiting on return.
+  const onHidden = (e) => {
+    if (!(e.type === 'pagehide' || document.visibilityState === 'hidden') || !session.state.ended || session.state.destroyed) return;
+    session.destroy();
+    ui.onEndSpoken({ said: [...new Set(session.state.said)] });
+  };
   document.addEventListener('visibilitychange', onHidden);
   window.addEventListener('pagehide', onHidden);
 
