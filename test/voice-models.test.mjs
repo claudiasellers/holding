@@ -77,3 +77,12 @@ test('chatterbox core helpers', () => {
   assert.ok(t.length < 6000 && t.length >= 2000);
   assert.equal(resample(new Float32Array(48000), 48000).length, 24000);
 });
+
+test('peaks above full scale are scaled, not clipped', async () => {
+  const { limitPeak } = await import('../src/voice/chatterbox-core.js');
+  const a = Float32Array.from([0.1, -1.1, 0.5]);
+  const b = limitPeak(a);
+  assert.ok(Math.abs(Math.max(...b.map(Math.abs)) - 0.95) < 1e-6);
+  const quiet = Float32Array.from([0.1, 0.2]);
+  assert.equal(limitPeak(quiet), quiet);
+});

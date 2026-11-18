@@ -164,7 +164,13 @@ class Chatterbox:
             speech = np.concatenate([prompt_token, speech], axis=1)
             wav = self.decoder.run(None, {"speech_tokens": speech, "speaker_embeddings": speaker_embeddings,
                                           "speaker_features": speaker_features})[0]
-        return trim_silence(np.squeeze(wav, axis=0).astype(np.float32))
+        return limit_peak(trim_silence(np.squeeze(wav, axis=0).astype(np.float32)))
+
+
+def limit_peak(a: np.ndarray, ceiling: float = 0.95) -> np.ndarray:
+    """Chatterbox can overshoot full scale on emphatic lines; scale down instead of clipping."""
+    peak = float(np.abs(a).max()) if a.size else 0.0
+    return a * (ceiling / peak) if peak > ceiling else a
 
 
 def trim_silence(a: np.ndarray, threshold: float = 0.006, pad_ms: int = 60) -> np.ndarray:

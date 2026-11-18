@@ -34,7 +34,7 @@ export const VOICE_MODELS = Object.freeze([
     sizeMB: 1500,
     sizeNote: 'about 1.5 GB',
     feeling: true,
-    blurb: 'Warm and expressive, with a feeling dial. It copies each parent\'s own voice, so they keep sounding like themselves.',
+    blurb: 'Warm and expressive, with a feeling dial. It copies each parent\'s own voice, so they keep sounding like themselves. Slower: a line can take a few seconds to start.',
     needs: 'webgpu',
   },
 ]);

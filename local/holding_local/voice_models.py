@@ -39,7 +39,7 @@ MODELS = {
     "chatterbox": {
         "name": "Chatterbox",
         "blurb": "Warm and expressive, with a feeling dial. Keeps each parent's own voice. "
-                 "Slower: about real time on a Mac mini, so phrases take a moment to start.",
+                 "Much slower than Kokoro: a short line can take several seconds to start.",
         "size_note": "about 1.5 GB",
         "feeling": True,
         "deletable": True,

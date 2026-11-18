@@ -70,7 +70,7 @@ export function createChatterbox(lib, { device = 'webgpu', f16 = false, repo = C
       const inputs = await processor(String(text));
       const waveform = await model.generate({ ...inputs, ...cond, exaggeration, max_new_tokens: tokenBudget(text) });
       const data = waveform.data instanceof Float32Array ? waveform.data : Float32Array.from(waveform.data);
-      return trimSilence(data);
+      return limitPeak(trimSilence(data));
     },
 
     async dispose() {
@@ -79,6 +79,15 @@ export function createChatterbox(lib, { device = 'webgpu', f16 = false, repo = C
       model = null; processor = null;
     },
   };
+}
+
+/** Chatterbox can overshoot full scale on emphatic lines; scale down instead of clipping. */
+export function limitPeak(a, ceiling = 0.95) {
+  let peak = 0; for (let i = 0; i < a.length; i++) { const v = Math.abs(a[i]); if (v > peak) peak = v; }
+  if (peak <= ceiling) return a;
+  const k = ceiling / peak; const out = new Float32Array(a.length);
+  for (let i = 0; i < a.length; i++) out[i] = a[i] * k;
+  return out;
 }
 
 /** Drop leading and trailing near-silence so phrase gaps stay even. */
