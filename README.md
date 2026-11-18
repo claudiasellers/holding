@@ -24,6 +24,7 @@ Design basis: *Emotion-Coaching Parent App — Research-Grounded Design* (hostil
 | Voices: device voices (free), Kokoro neural voice in the browser, or Holding Local | `src/voice/` |
 | AI: scripts only, in-browser model (WebLLM/WebGPU), Ollama/LM Studio/any OpenAI-compatible local server, or the private RAG/fine-tune server | `src/ai/` |
 | Phone: installable PWA, offline, Android APK, pairing with your computer | `src/mobile/`, `android/`, `docs/MOBILE.md` |
+| Mac widget: the parent in a small floating window from the menu bar, no Apple license needed | `mac-widget/` |
 | Private RAG + fine-tuning skill for frontier-model-assisted setup without sharing your data | `tools/local-private-tuning/` |
 
 ## Run it
@@ -36,6 +37,12 @@ npm test             # guard, library, tuning, mirroring, provider tests
 ```
 
 `dist/` runs from any static host. GitHub Pages deploys from `.github/workflows/pages.yml`; the Android APK builds from `.github/workflows/android.yml`. See [docs/MOBILE.md](docs/MOBILE.md) for getting it on a phone without the App Store.
+
+On a Mac, put the parent on your desktop as a widget with one line in Terminal (details in [mac-widget/README.md](mac-widget/README.md)):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/claudiasellers/holding/main/mac-widget/install.sh | bash
+```
 
 ## Local AI choices
 

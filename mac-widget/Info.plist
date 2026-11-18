@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleName</key><string>Holding</string>
+  <key>CFBundleDisplayName</key><string>Holding</string>
+  <key>CFBundleIdentifier</key><string>app.holding.widget</string>
+  <key>CFBundleExecutable</key><string>HoldingWidget</string>
+  <key>CFBundlePackageType</key><string>APPL</string>
+  <key>CFBundleIconFile</key><string>AppIcon</string>
+  <key>CFBundleShortVersionString</key><string>__VERSION__</string>
+  <key>CFBundleVersion</key><string>__BUILD__</string>
+  <key>LSMinimumSystemVersion</key><string>12.0</string>
+  <key>LSUIElement</key><true/>
+  <key>NSHighResolutionCapable</key><true/>
+  <key>NSCameraUsageDescription</key><string>Holding can mirror your expression on the parent's face. The camera picture never leaves this Mac.</string>
+  <key>NSMicrophoneUsageDescription</key><string>Holding can listen when you choose to talk back instead of typing.</string>
+  <key>NSSpeechRecognitionUsageDescription</key><string>Holding can turn what you say into text when you choose to talk back.</string>
+  <key>NSAppTransportSecurity</key>
+  <dict>
+    <key>NSAllowsLocalNetworking</key><true/>
+    <key>NSAllowsArbitraryLoadsInWebContent</key><true/>
+  </dict>
+</dict>
+</plist>

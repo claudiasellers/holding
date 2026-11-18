@@ -1,0 +1,35 @@
+/* Widget mode (?widget=1, or inside the Mac widget). Everything is scoped to html[data-widget]
+   so the normal app is untouched. Sized for a ~300 x 420 window; scales up when resized. */
+html[data-widget] { font-size: 14px; }
+html[data-widget] body { overflow: hidden; }
+html[data-widget] #app { min-height: 100vh; padding: 0; }
+
+/* resting screen */
+.widget { height: 100vh; display: grid; grid-template-rows: minmax(0, 1fr) auto auto auto; justify-items: center; padding: 6px 12px 8px; gap: 4px; }
+.widget-face { height: 100%; max-height: 100%; aspect-ratio: 400/480; min-height: 0; }
+.widget-name { font-family: var(--serif); font-size: 1.05rem; }
+.widget-actions { display: flex; gap: 8px; width: 100%; max-width: 360px; }
+.widget-actions .btn { flex: 1; min-height: 40px; padding: 0 12px; }
+.widget-actions .btn.primary { flex: 1.6; }
+.widget-more { display: flex; gap: 14px; }
+.linkish { background: none; border: 0; padding: 4px 2px; color: var(--ink2); font-size: .82rem; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--line); }
+
+/* session, compressed */
+html[data-widget] .session .topbar { padding: 4px 8px; min-height: 0; gap: 4px; opacity: .55; transition: opacity .3s; }
+html[data-widget] .session:hover .topbar, html[data-widget] .session .topbar:focus-within { opacity: 1; }
+html[data-widget] .session .topbar .row { gap: 4px; }
+html[data-widget] .session .pill { font-size: .74rem; min-height: 26px; padding: 0 8px; }
+html[data-widget] .session .pill.safe { opacity: 1; }
+html[data-widget] .stage .face-box { max-height: 58vh; }
+html[data-widget] .caption { font-size: clamp(.95rem, 4.6vw, 1.3rem); min-height: 3.6em; padding: 2px 12px; }
+html[data-widget] .status { font-size: .75rem; }
+html[data-widget] .tiles { padding: 4px 8px; gap: 6px; }
+html[data-widget] .tile { min-width: 0; min-height: 32px; font-size: .8rem; padding: 0 10px; }
+html[data-widget] .inputbar { padding: 4px 8px 8px; gap: 6px; }
+html[data-widget] .inputbar textarea { min-height: 36px; padding: 8px 12px; border-radius: 18px; }
+html[data-widget] .inputbar .icon-btn { min-width: 36px; min-height: 36px; padding: 0 8px; font-size: .8rem; }
+html[data-widget] .log-panel { inset: 2px 6px 4px; padding: 8px 10px; }
+html[data-widget] .sheet { padding: 14px 12px 12px; max-height: 92vh; }
+/* the "large" screens get the normal layout, just tighter */
+html[data-widget] .screen { padding: 8px 12px 24px; }
+html[data-widget] .inputbar textarea::placeholder { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

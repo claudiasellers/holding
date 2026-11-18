@@ -24,6 +24,8 @@ The installer sets up everything it needs (uv for Python, Ollama, the voice and 
 
 Double-click **Start Holding Local** (`.command` on Mac, `.bat` on Windows, or `./start.sh`). Leave the window open while you use the app; close it to stop.
 
+**On a Mac, keep the parent on your desktop:** double-click **Install Holding Widget.command** once. It adds a small floating parent to the menu bar (Control-Option-H shows or hides it) that uses Holding Local whenever it's running. See the [Mac widget guide](https://github.com/claudiasellers/holding/blob/main/mac-widget/README.md).
+
 ## Use it from your phone
 
 Your phone can use your computer's AI while both are on.
