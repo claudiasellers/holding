@@ -4,6 +4,7 @@ import LINES from '../data/lines.json';
 import { guard } from './guard.js';
 import { policyFor } from './policy.js';
 import { fill } from './fill.js';
+import { mentionsTears } from './crying.js';
 export { fill };
 
 const recent = [];
@@ -19,6 +20,11 @@ export function getPath(path) {
 export function pick(path, archetype, ctx = {}) {
   let pool = getPath(path);
   if (!Array.isArray(pool) || !pool.length) pool = LINES.fallback;
+  // Never assume tears: lines about crying wait until the user has said so (crying.js).
+  if (!ctx.crying) {
+    const dry = pool.filter((l) => !mentionsTears(l.t));
+    pool = dry.length ? dry : LINES.fallback.filter((l) => !mentionsTears(l.t));
+  }
   const dose = ctx.warmth ?? archetype?.stance?.warmth ?? .5;
   const ipf = archetype?.ipf || {};
   const scored = pool.map((l) => {
@@ -28,7 +34,7 @@ export function pick(path, archetype, ctx = {}) {
     if (recent.includes(l.t)) w *= 0.03;
     return [l, Math.max(0.001, w)];
   });
-  const sigs = archetype?.lexicon?.signatures || [];
+  const sigs = (archetype?.lexicon?.signatures || []).filter((x) => ctx.crying || !mentionsTears(x));
   if (ctx.allowSignature && sigs.length && Math.random() < .12) {
     const s = sigs[Math.floor(Math.random() * sigs.length)];
     if (!recent.includes(s)) { remember(s); return fill(s, ctx); }
@@ -49,7 +55,8 @@ export function validateLibrary() {
   const walk = (o, p) => {
     if (Array.isArray(o)) o.forEach((l, i) => {
       const tier = l.tier || (/bewith|opening|stillHere|permission|selfTouch|orient|breath/.test(p) ? 'bewith' : /\.name$|wordsBack|bodyBudget|repair|roleReversal|tooMuch|angerAtCoach|critic|close|metaprocess|safety/.test(p) ? 'name' : /makesense/.test(p) ? 'makesense' : 'ordinary');
-      const g = guard(fill(l.t, { endearment: 'love', userName: 'Sam' }), policyFor(tier));
+      // crying: true here because tear lines are gated at pick() time, not banned
+      const g = guard(fill(l.t, { endearment: 'love', userName: 'Sam' }), policyFor(tier), { crying: true });
       if (!g.ok) bad.push({ path: `${p}[${i}]`, t: l.t, reasons: g.reasons });
     });
     else if (o && typeof o === 'object') for (const k in o) walk(o[k], p ? `${p}.${k}` : k);

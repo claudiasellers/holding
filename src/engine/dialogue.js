@@ -3,6 +3,7 @@
 import { policyFor, beat } from './policy.js';
 import { guard } from './guard.js';
 import { readText } from './affect.js';
+import { cryingSignal } from './crying.js';
 import { buildSystemPrompt } from './prompt.js';
 import { pick, getPath, fill } from './scripts.js';
 import { nameMiss, repairLine, listenLine, reattuneLine, readCheckAnswer, missSignals, withoutNegated, breaksPromise } from './repair.js';
@@ -51,6 +52,9 @@ export function createSession({ archetype, presence, ui, mode = 'hold' }) {
     lastInputAt: 0, startedAt: Date.now(), said: [], history: [], misses: 0,
     offeredWordsBack: false, safety: false, msStep: 0, lastReplyKind: '',
     entryDistress: null, bodyBudgetDone: false,
+    // Only true once the user has said they're crying (typed it, or tapped
+    // Crying). Never inferred from the camera or from "sad" (crying.js).
+    crying: false,
     // repair (§7.5): the live repair, the fix it put in place, and what the
     // parent's last real turn was (the thing a repair has to name)
     repairing: null, fix: null, lastTurn: null, lastRepairAt: 0, selfRepairs: 0,
@@ -68,6 +72,7 @@ export function createSession({ archetype, presence, ui, mode = 'hold' }) {
   const ctx = () => ({
     endearment: s.endearments ? (archetype.lexicon.endearments[0] || '') : '',
     userName: s.userName, warmth: store.warmthFor(archetype), allowSignature: true,
+    crying: state.crying,
   });
 
   // ---------- model ("brain") ----------
@@ -118,14 +123,14 @@ export function createSession({ archetype, presence, ui, mode = 'hold' }) {
       await Promise.race([modelPromise, sleep(8000, ctrl.signal)]);
     }
     if (!modelReady) { lastMiss = brain === 'error' ? 'error' : 'loading'; return null; }
-    const system = buildSystemPrompt(archetype, policy, { userName: s.userName, memory: memoryLine(), hint });
+    const system = buildSystemPrompt(archetype, policy, { userName: s.userName, memory: memoryLine(), hint, crying: state.crying });
     const messages = state.history.slice(-12);
     const timeout = typed ? (policy.tier === 'bewith' ? 20000 : 45000) : (policy.tier === 'bewith' ? 7000 : 25000);
     const ac = new AbortController();
     const timer = setTimeout(() => ac.abort(), timeout);
     try {
       const text = await provider.generate({ system, messages, maxTokens: policy.maxTokens, temperature: policy.temperature, archetype, signal: ac.signal });
-      const g = guard(text, policy);
+      const g = guard(text, policy, { crying: state.crying });
       if (!g.ok) { console.info('[holding] model reply rejected:', g.reasons, text); lastMiss = 'rejected'; return null; }
       lastMiss = null;
       return g.text;
@@ -240,7 +245,7 @@ export function createSession({ archetype, presence, ui, mode = 'hold' }) {
     }
     if (!text) text = scriptFor(kind, policy, opts);
     if (!REPAIR_KINDS.has(kind)) spendFix();
-    const g = guard(text, policy);
+    const g = guard(text, policy, { crying: state.crying });
     return say(g.text || text, { kind, tier: policy.tier, final: opts.final, source, typed: !!opts.typed, fallback: source === 'script' && opts.allowModel ? lastMiss : null });
   }
 
@@ -273,8 +278,11 @@ export function createSession({ archetype, presence, ui, mode = 'hold' }) {
       if (affect === 'stay') return checkAnswer('stay');
     }
     if (affect === 'stay') { presence.setOwn('holding'); return reply('stillHere'); }
+    const tapped = affect;
+    // The Crying tile is the user telling us they're crying; its feeling is sad.
+    if (affect === 'crying') { state.crying = true; affect = 'sad'; }
     state.affect = affect; state.intensity = intensity;
-    state.history.push({ role: 'user', content: `[tapped: ${affect}]` });
+    state.history.push({ role: 'user', content: `[tapped: ${tapped}]` });
     presence.mirror(affect, intensity);
     ui.onMirror?.(affect);
     if (affect === 'numb') return reply('orient');
@@ -288,6 +296,8 @@ export function createSession({ archetype, presence, ui, mode = 'hold' }) {
     state.history.push({ role: 'user', content: text });
     stopSpeaking();
     const r = readText(text);
+    const cry = cryingSignal(text);
+    if (cry !== null) state.crying = cry;
     if (r.risk) { if (state.repairing) finishRepair('safety'); return enterSafety(); }
     // (during a repair the correction is read with negations removed, below)
     if (r.affect && !state.repairing) { state.affect = r.affect; state.intensity = r.intensity; presence.mirror(r.affect, r.intensity); ui.onMirror?.(r.affect); }
@@ -361,7 +371,7 @@ export function createSession({ archetype, presence, ui, mode = 'hold' }) {
     state.missesNamed.push(miss.text);
     store.push('repairs', { id, archetype: archetype.id, miss: miss.text, missId: miss.id, line: t.text || '', tier: t.tier || state.tier, trigger, outcome: 'pending' });
     let line = repairLine(miss, { tier: state.tier, trigger, repeat, archetype, ctx: ctx() });
-    line = guard(line, null).text || line;
+    line = guard(line, null, { crying: state.crying }).text || line;
     ui.onRepair?.({ phase: 'check', miss: miss.text, line, tier: state.tier, trigger });
     // Fixed script, never generated: the owning has to be exact every time.
     return say(line, { kind: 'repair', tier: state.tier });

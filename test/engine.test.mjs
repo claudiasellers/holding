@@ -14,7 +14,7 @@ const tierFor = (p) => /affect\.\w+\.bewith|^(opening|stillHere|permission|selfT
 
 test('every scripted line passes the guard for its tier', () => {
   const bad = [];
-  const walk = (o, p) => Array.isArray(o) ? o.forEach((l, i) => { const g = guard(fill(l.t, { endearment: 'love', userName: 'Sam' }), policyFor(l.tier || tierFor(p))); if (!g.ok) bad.push(`${p}[${i}] ${l.t} :: ${g.reasons}`); })
+  const walk = (o, p) => Array.isArray(o) ? o.forEach((l, i) => { const g = guard(fill(l.t, { endearment: 'love', userName: 'Sam' }), policyFor(l.tier || tierFor(p)), { crying: true }); if (!g.ok) bad.push(`${p}[${i}] ${l.t} :: ${g.reasons}`); })
     : Object.entries(o).forEach(([k, v]) => walk(v, p ? `${p}.${k}` : k));
   walk(LINES, '');
   assert.deepEqual(bad, []);
