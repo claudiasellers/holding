@@ -5,13 +5,16 @@ const DATA = 'holding.data.v1';
 export const DEFAULT_SETTINGS = {
   userName: '',
   warmth: null,              // null = use archetype default; user-set dose 0..1
-  voiceOn: true, captions: true, breathPacer: false, reducedMotion: null,
+  voiceOn: true, captions: true, conversationLog: false, breathPacer: false, reducedMotion: null,
   camera: false,             // opt-in on-device mirroring from the camera
   endearments: true,
+  endPrompt: 'sometimes',    // ask to keep lines after a conversation: 'sometimes' | 'always' | 'never'
   safetyContact: { name: '', phone: '' },
   ai: { provider: 'scripted', webllm: {}, 'openai-local': {}, 'holding-rag': {} },
   tts: { provider: 'webspeech', voiceId: '', webspeech: {}, kokoro: {}, 'openai-speech': {} },
   stt: { provider: 'browser' },
+  suggestions: true,         // three tappable replies above the input
+  suggestionsAI: 'auto',     // let a local model write them: 'auto' (not the in-browser model on phones) | 'on' | 'off'
   debugTuning: false,
 };
 
