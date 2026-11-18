@@ -20,7 +20,7 @@ const FALLBACK_NOTE = {
 
 // "Just stay" first: it asks the least of someone who can't name anything yet.
 const TILES = [
-  ['stay', 'Just stay'], ['overwhelmed', 'Falling apart'], ['sad', 'Crying'], ['scared', 'Scared'],
+  ['stay', 'Just stay'], ['overwhelmed', 'Falling apart'], ['crying', 'Crying'], ['scared', 'Scared'],
   ['angry', 'Furious'], ['ashamed', 'Ashamed'], ['lonely', 'So alone'], ['numb', 'Numb'],
 ];
 
@@ -136,7 +136,9 @@ export function renderSession(root, nav, { mode = 'hold' } = {}) {
     onSpeakEnd() { setTimeout(() => caption.classList.add('fade'), 2500); },
     onMirror(affect) {
       el.style.background = (isDark() ? TINT_DARK : TINT)[affect] || '';
-      tilesEl.querySelectorAll('.tile').forEach((t) => t.classList.toggle('on', t.dataset.a === affect));
+      // The Crying tile lights only when the user said they're crying: a sad face
+      // or sad words light nothing, so the screen never claims tears it can't see.
+      tilesEl.querySelectorAll('.tile').forEach((t) => t.classList.toggle('on', t.dataset.a === affect || (t.dataset.a === 'crying' && affect === 'sad' && !!session?.state?.crying)));
     },
     // Loading progress shows in the brain chip at the top; only a failure gets a line here.
     onModelProgress(p) {

@@ -1,5 +1,6 @@
 // Output guard: every line the parent says, scripted or generated, passes here.
 // Encodes "What the parent never does" (research doc §6) and the turn policy.
+import { mentionsTears } from './crying.js';
 
 const BANNED = [
   [/\bcalm down\b/i, 'tells user to calm down'],
@@ -28,7 +29,10 @@ export function sentences(t) {
   return (t.match(/[^.!?…]+(?:[.!?…]+|$)/g) || []).map((s) => s.trim()).filter(Boolean);
 }
 
-/** @returns {{ok:boolean, text:string, reasons:string[]}} */
+/**
+ * @param {{crying?:boolean}} ctx crying: the user has said they are crying
+ * @returns {{ok:boolean, text:string, reasons:string[]}}
+ */
 export function guard(text, policy, ctx = {}) {
   const reasons = [];
   let t = String(text || '').replace(/\s+/g, ' ').replace(/^["“]|["”]$/g, '').trim();
@@ -36,6 +40,8 @@ export function guard(text, policy, ctx = {}) {
   if (!t) return { ok: false, text: '', reasons: ['empty'] };
   for (const [re, why] of BANNED) if (re.test(t)) reasons.push(why);
   if (MEANS.test(t)) reasons.push('means information');
+  // Tears only once the user has said they're crying (ctx.crying); see crying.js.
+  if (!ctx.crying && mentionsTears(t)) reasons.push('assumes the user is crying');
   if (/[\u{1F300}-\u{1FAFF}]/u.test(t)) t = t.replace(/[\u{1F300}-\u{1FAFF}]/gu, '').trim();
   if (policy) {
     let ss = sentences(t);
