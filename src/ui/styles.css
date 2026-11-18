@@ -171,3 +171,16 @@ details summary { cursor: pointer; min-height: 40px; display: flex; align-items:
   .session.log-open .caption { visibility: visible; }
   .session.log-open .caption.hidden { visibility: hidden; }
 }
+
+/* suggested replies above the input (session) */
+.inputbar { flex-wrap: wrap; }
+/* all three stay visible: they wrap onto a second line on a phone instead of scrolling away */
+.suggests { flex: 0 0 100%; display: flex; flex-wrap: wrap; gap: 6px 8px; padding: 2px 0 4px; }
+.suggests.hidden { display: none; }
+.suggest { flex: 0 1 auto; max-width: 100%; min-height: 40px; padding: 7px 13px; border-radius: 999px; border: 1px solid var(--line); background: color-mix(in srgb, var(--card) 88%, transparent); color: var(--ink); font-size: .92rem; line-height: 1.25; text-align: left; white-space: normal; animation: suggest-in .35s ease both; }
+.suggest:hover, .suggest:focus-visible { border-color: var(--accent); }
+.suggest.starter { border-style: dashed; color: var(--ink2); }
+@keyframes suggest-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .suggest { animation: none; } }
+@media (max-width: 440px) { .suggest { font-size: .84rem; padding: 5px 11px; min-height: 36px; } }
+@media (min-width: 900px) { .suggests { justify-content: center; } }

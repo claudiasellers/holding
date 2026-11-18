@@ -1,4 +1,5 @@
 import { h, clear, toast } from './dom.js';
+import { createSuggestions } from './suggestions.js';
 import { mountFace } from './faceview.js';
 import { createSession } from '../engine/dialogue.js';
 import { store } from '../store.js';
@@ -181,6 +182,20 @@ export function renderSession(root, nav, { mode = 'hold' } = {}) {
   sendBtn.onclick = send;
   ta.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } });
   ta.addEventListener('input', () => { ta.style.height = ''; ta.style.height = Math.min(140, ta.scrollHeight) + 'px'; });
+
+  // Three suggested replies above the input; tap to say one. They follow the
+  // conversation once the user starts typing (src/ui/suggestions.js). Hooked in
+  // by wrapping the session's callbacks so the engine doesn't need to know.
+  const suggest = createSuggestions({ session, input: ta, parentName: first, onSend: (t) => { ta.value = t; send(); } });
+  inputBar.prepend(suggest.el);
+  suggest.attach(ui);
+  for (const k of ['onText', 'onTile']) {
+    const orig = session[k];
+    session[k] = (...args) => { suggest.cancel(); const r = orig(...args); suggest.refresh(); return r; };
+  }
+  const destroySession = session.destroy;
+  session.destroy = () => { suggest.destroy(); destroySession(); };
+  suggest.refresh();
 
   // dictation: browser speech recognition (may use the browser vendor's servers) or the local server
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
