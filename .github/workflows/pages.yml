@@ -4,6 +4,7 @@ name: Web app (GitHub Pages)
 on:
   push:
     branches: [main]
+  pull_request:
   workflow_dispatch:
 
 permissions:
@@ -12,7 +13,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages
+  group: pages-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -40,13 +41,22 @@ jobs:
           if [ -f scripts/export-lines.mjs ]; then node scripts/export-lines.mjs; fi
           if [ -f src/content/scripted-lines.json ]; then node scripts/prerender-voice.mjs; else echo "No scripted lines file; skipping."; fi
       - run: npm run build
+      - run: npm test
+      - name: Mobile end-to-end (emulated iPhone and Pixel)
+        run: |
+          npm i --no-save playwright@1
+          npx playwright install --with-deps chromium
+          npm run test:mobile
       # Pages serves 404.html for unknown paths; make it the app so deep links still open it.
       - run: cp dist/index.html dist/404.html && touch dist/.nojekyll
       - uses: actions/configure-pages@v5
+        if: github.event_name != 'pull_request'
       - uses: actions/upload-pages-artifact@v3
+        if: github.event_name != 'pull_request'
         with:
           path: dist
   deploy:
+    if: github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-latest
     environment:
