@@ -14,7 +14,7 @@ async function webVoices() {
 
 export async function voiceFor(providerId, archetype) {
   const v = archetype.voice || {};
-  if (providerId === 'kokoro' || providerId === 'openai-speech') return v.kokoro || (v.gender === 'm' ? 'am_michael' : 'af_heart');
+  if (usesKokoroIds(providerId)) return v.kokoro || (v.gender === 'm' ? 'am_michael' : 'af_heart');
   if (v.voiceName) return v.voiceName;
   const voices = await webVoices();
   const best = pickVoice(voices, { gender: v.gender === 'n' ? undefined : v.gender, hints: v.hints || [], lang: 'en' });
@@ -22,7 +22,7 @@ export async function voiceFor(providerId, archetype) {
 }
 
 /** Providers whose voices are Kokoro voice ids (stored on archetype.voice.kokoro). */
-export function usesKokoroIds(providerId) { return providerId === 'kokoro' || providerId === 'openai-speech'; }
+export function usesKokoroIds(providerId) { return providerId === 'kokoro' || providerId === 'openai-speech' || providerId === 'chatterbox'; }
 
 /** The voice the user picked for this archetype on this provider ('' = automatic). */
 export function chosenVoice(providerId, archetype) {

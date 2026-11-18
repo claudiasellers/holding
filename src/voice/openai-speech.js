@@ -37,15 +37,26 @@ const provider = {
   async speak(text, opts = {}) {
     const c = cfgSaved;
     const phrases = String(text).split(/…|\.\.\./).map((p) => p.trim()).filter(Boolean);
-    for (const p of phrases) {
-      if (opts.signal?.aborted) return;
-      const r = await fetch(`${c.baseUrl.replace(/\/$/, '')}/audio/speech`, {
-        method: 'POST', signal: opts.signal,
-        headers: { 'Content-Type': 'application/json', ...(c.token ? { Authorization: `Bearer ${c.token}`, 'X-Pair-Token': c.token } : {}) },
-        body: JSON.stringify({ model: c.model, input: p, voice: opts.voiceId || opts.archetype?.voice?.kokoro || 'af_heart', speed: opts.rate ?? 1, response_format: 'wav' }),
+    const base = c.baseUrl.replace(/\/$/, '');
+    const headers = { 'Content-Type': 'application/json', ...(c.token ? { Authorization: `Bearer ${c.token}`, 'X-Pair-Token': c.token } : {}) };
+    // "exaggeration" is a Holding Local extension (Chatterbox's feeling dial); other servers ignore it.
+    const fetchAudio = async (p) => {
+      const r = await fetch(`${base}/audio/speech`, {
+        method: 'POST', signal: opts.signal, headers,
+        body: JSON.stringify({ model: c.model || 'kokoro', input: p, voice: opts.voiceId || opts.archetype?.voice?.kokoro || 'af_heart', speed: opts.rate ?? 1, response_format: 'wav', ...(Number.isFinite(opts.feeling) ? { exaggeration: opts.feeling } : {}) }),
       });
       if (!r.ok) throw new Error(`speech server ${r.status}`);
-      const buf = await audioCtx().decodeAudioData(await r.arrayBuffer());
+      return audioCtx().decodeAudioData(await r.arrayBuffer());
+    };
+    // Ask for the next phrase while this one plays: slower voices then flow without gaps.
+    let next = phrases.length ? fetchAudio(phrases[0]) : null;
+    for (let i = 0; i < phrases.length; i++) {
+      if (opts.signal?.aborted) return;
+      const buf = await next;
+      next = i + 1 < phrases.length ? fetchAudio(phrases[i + 1]) : null;
+      next?.catch(() => {});
+      if (i > 0) await new Promise((r2) => setTimeout(r2, 650));
+      if (opts.signal?.aborted) return;
       await new Promise((resolve) => {
         const src = ctx.createBufferSource(); src.buffer = buf;
         const an = ctx.createAnalyser(); an.fftSize = 512; src.connect(an); an.connect(ctx.destination);
@@ -55,7 +66,6 @@ const provider = {
         src.onended = fin; opts.signal?.addEventListener('abort', () => { try { src.stop(); } catch {} fin(); }, { once: true });
         src.start();
       });
-      await new Promise((r2) => setTimeout(r2, 650));
     }
   },
   stop() { try { current?.stop(); } catch {} },

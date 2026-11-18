@@ -7,6 +7,8 @@ import { listModels } from '../ai/openai-local.js';
 import { brainLabel, canUseDeviceAI, useDeviceAI, connectHoldingLocal } from '../ai/brain.js';
 import { voiceFor, chosenVoice, withVoice } from '../voice/resolve.js';
 import { PRESETS } from '../data/archetypes.js';
+import { voiceModelsPanel } from './voice-models.js';
+import { feelingFor } from '../voice/feeling.js';
 import { validateLibrary } from '../engine/scripts.js';
 
 const AI_HELP = {
@@ -58,9 +60,10 @@ export function renderSettings(root, nav, params = {}) {
     // figure, so each figure keeps its own voice. Picking one plays a preview.
     const preview = async (arch = store.data.archetype) => {
       try {
-        const c = S().tts[ttsP.id] || {}; await ttsP.init?.(c);
+        const c = S().tts[ttsP.id] || {};
+        await ttsP.init?.(c, (p) => { ttsProg.style.display = p.progress >= 1 ? 'none' : ''; ttsProg.firstChild.style.width = Math.round((p.progress || 0) * 100) + '%'; ttsStatus.className = 'status'; ttsStatus.textContent = p.progress >= 1 ? '' : (p.text || ''); });
         ttsP.stop?.();
-        await ttsP.speak(`Hello. I'm ${arch.name}. I'm here.`, { voiceId: await voiceFor(ttsP.id, arch), rate: arch.voice.rate, pitch: arch.voice.pitch, archetype: arch });
+        await ttsP.speak(`Hello. I'm ${arch.name}. I'm here.`, { voiceId: await voiceFor(ttsP.id, arch), rate: arch.voice.rate, pitch: arch.voice.pitch, archetype: arch, feeling: feelingFor(arch) });
       } catch (e) { ttsStatus.className = 'status bad'; ttsStatus.textContent = e.message || String(e); }
     };
     const voicePick = h('div', { class: 'stack' });
@@ -83,16 +86,13 @@ export function renderSettings(root, nav, params = {}) {
     body.append(card('Voice',
       toggle('Speak lines out loud', S().voiceOn, (v) => set({ voiceOn: v })),
       select('Voice engine', ttsP.id, listTTSProviders().filter((p) => p.id !== 'prerecorded').map((p) => [p.id, p.label]), (v) => { set({ tts: { provider: v } }); render(); }),
+      ttsCfg,
+      voiceModelsPanel({ rerender: render, preview }),
       voicePick,
-      ttsCfg, ttsProg, ttsStatus,
+      ttsProg, ttsStatus,
       h('div', { class: 'row wrap' },
-        ttsP.id === 'kokoro' ? h('button', { class: 'btn', onclick: async () => {
-          ttsProg.style.display = ''; ttsStatus.textContent = 'Downloading the voice (about 90 MB, once)…';
-          try { await ttsP.init(S().tts.kokoro || {}, (p) => { ttsProg.firstChild.style.width = Math.round((p.progress || 0) * 100) + '%'; if (p.text) ttsStatus.textContent = p.text; }); ttsStatus.className = 'status ok'; ttsStatus.textContent = 'Voice ready. Works offline now.'; }
-          catch (e) { ttsStatus.className = 'status bad'; ttsStatus.textContent = e.message; }
-        } }, 'Download voice') : null,
         h('button', { class: 'btn', onclick: () => preview() }, 'Test voice')),
-      h('p', { class: 'muted', style: { fontSize: '.88rem', margin: 0 } }, 'Device voices are free and built in. Kokoro is a neural voice that runs inside the browser after a one-time download. "Voice from my computer" uses the Holding local server.'),
+      h('p', { class: 'muted', style: { fontSize: '.88rem', margin: 0 } }, 'Device voices are free and built in. Kokoro and Chatterbox run inside this browser after a one-time download. "Voice from my computer" uses Holding Local, which can run Chatterbox for your phone too.'),
     ));
 
     // --- AI
