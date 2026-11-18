@@ -68,9 +68,12 @@ jobs:
       - name: Restore model cache
         uses: actions/cache@v4
         with:
-          path: node_modules/@huggingface/transformers/.cache
-          key: chatterbox-js-v1
+          path: .tjs-cache
+          key: chatterbox-js-v2-${{ hashFiles('src/voice/chatterbox-version.js', 'src/voice/chatterbox-core.js') }}
+          restore-keys: chatterbox-js-v2-
       - name: Real Chatterbox in Transformers.js (CPU)
+        env:
+          TJS_CACHE_DIR: ${{ github.workspace }}/.tjs-cache
         run: node test/voice/chatterbox.smoke.mjs --out samples
       - name: Install the ONNX Runtime the Turbo test runs on
         run: npm i --no-save "@huggingface/transformers@$(node -p "require('fs').readFileSync('src/voice/chatterbox-version.js','utf8').match(/'([^']+)'/)[1]")" onnxruntime-node@1.30.0

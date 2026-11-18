@@ -6,7 +6,7 @@
 //
 //   npm i --no-save @huggingface/transformers@4.3.2 onnxruntime-node@1.30.0
 //   node test/voice/chatterbox-turbo.smoke.mjs [--out samples/] [--cache .turbo]
-import { writeFile, mkdir, stat } from 'node:fs/promises';
+import { writeFile, mkdir, stat, rename } from 'node:fs/promises';
 import { createWriteStream } from 'node:fs';
 import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
@@ -25,10 +25,19 @@ async function fetchTo(path) {
   const dest = join(dir, path);
   try { if ((await stat(dest)).size > 0) return dest; } catch { /* download */ }
   await mkdir(dirname(dest), { recursive: true });
-  const r = await fetch(turboUrl(path));
-  assert.ok(r.ok, `${path}: ${r.status}`);
-  await pipeline(Readable.fromWeb(r.body), createWriteStream(dest));
-  return dest;
+  // Hugging Face sometimes drops a long download; write to .part and try up to three times.
+  for (let attempt = 1; ; attempt++) {
+    try {
+      const r = await fetch(turboUrl(path));
+      assert.ok(r.ok, `${path}: ${r.status}`);
+      await pipeline(Readable.fromWeb(r.body), createWriteStream(`${dest}.part`));
+      await rename(`${dest}.part`, dest);
+      return dest;
+    } catch (e) {
+      if (attempt >= 3) throw e;
+      console.warn(`[turbo] ${path}: ${e.message}; retrying (${attempt + 1}/3)`);
+    }
+  }
 }
 
 function parseWav(buf) {

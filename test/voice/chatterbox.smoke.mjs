@@ -13,6 +13,8 @@ import { TRANSFORMERS_VERSION } from '../../src/voice/chatterbox-version.js';
 
 const out = process.argv.includes('--out') ? process.argv[process.argv.indexOf('--out') + 1] : null;
 const lib = await import('@huggingface/transformers');
+// A cache folder CI keeps between runs, so the 1.5 GB comes down once, not every run.
+if (process.env.TJS_CACHE_DIR) lib.env.cacheDir = process.env.TJS_CACHE_DIR;
 if (lib.env?.version && lib.env.version !== TRANSFORMERS_VERSION) console.warn(`[voice] testing Transformers.js ${lib.env.version}; the browser loads ${TRANSFORMERS_VERSION}`);
 
 function parseWav(buf) {
@@ -44,7 +46,13 @@ function toWav(a, rate) {
 
 const t0 = Date.now();
 const engine = createChatterbox(lib, { device: 'cpu' });
-await engine.load();
+// Hugging Face sometimes drops a long download; try twice before calling it a failure.
+for (let attempt = 1; ; attempt++) {
+  try { await engine.load(); break; } catch (e) {
+    if (attempt >= 3 || !/terminated|socket|ECONNRESET|fetch failed/i.test(String(e?.message || e) + String(e?.cause?.code || ''))) throw e;
+    console.warn(`[voice] download interrupted (${e.message}); retrying (${attempt + 1}/3)`);
+  }
+}
 console.log(`[voice] loaded in ${((Date.now() - t0) / 1000).toFixed(1)}s`);
 
 const res = await fetch(DEFAULT_VOICE_URL);
