@@ -37,7 +37,24 @@ export const VOICE_MODELS = Object.freeze([
     blurb: 'Warm and expressive, with a feeling dial. It copies each parent\'s own voice, so they keep sounding like themselves. Slower: a line can take a few seconds to start.',
     needs: 'webgpu',
   },
+  {
+    id: 'chatterbox-turbo',
+    provider: 'chatterbox-turbo',
+    name: 'Chatterbox Turbo',
+    repo: 'ResembleAI/chatterbox-turbo-ONNX',
+    sizeMB: 960,
+    sizeNote: 'about 960 MB',
+    feeling: false,
+    blurb: 'Chatterbox\'s faster sibling. Keeps each parent\'s own voice and understands [sigh] and [chuckle], but has no feeling dial. About twice as fast.',
+    needs: 'webgpu',
+  },
 ]);
+
+/**
+ * Voice models on Holding Local that take the feeling dial (see local/holding_local/voice_models.py).
+ * The rest of its non-Kokoro models are still expressive, just without a dial.
+ */
+export const SERVER_FEELING_MODELS = Object.freeze(['chatterbox', 'chatterbox-mac', 'qwen3-tts', 'qwen3-tts-small']);
 
 export function modelById(id) { return VOICE_MODELS.find((m) => m.id === id) || null; }
 export function modelForProvider(providerId) { return VOICE_MODELS.find((m) => m.provider === providerId) || null; }
@@ -110,7 +127,7 @@ export async function canRun(model) {
   if (!m) return { ok: false, reason: 'Unknown voice model.' };
   if (m.needs !== 'webgpu') return { ok: true };
   const mobile = typeof navigator !== 'undefined' && /iPhone|iPad|Android/i.test(navigator.userAgent || '');
-  if (mobile) return { ok: false, reason: 'Too big for a phone. On your phone, connect to Holding Local on your computer and pick Chatterbox there.' };
+  if (mobile) return { ok: false, reason: `Too big for a phone. On your phone, connect to Holding Local on your computer and pick ${m.name} there.` };
   const mem = typeof navigator !== 'undefined' ? navigator.deviceMemory : undefined;
   if (mem && mem < 8) return { ok: false, reason: 'Needs a computer with at least 8 GB of memory.' };
   try {
@@ -121,9 +138,19 @@ export async function canRun(model) {
   return { ok: true };
 }
 
+const serverModel = (ttsSettings) => ttsSettings?.['openai-speech']?.model || '';
+
 /** Does this engine (as configured) put feeling into lines? Used to prefer it over flat recordings. */
 export function isExpressive(provider, ttsSettings = {}) {
   if (!provider) return false;
   if (provider.expressive) return true;
-  return provider.id === 'openai-speech' && (ttsSettings['openai-speech']?.model || '') === 'chatterbox';
+  const m = serverModel(ttsSettings);
+  return provider.id === 'openai-speech' && !!m && m !== 'kokoro';
+}
+
+/** Does this engine (as configured) have a feeling dial? */
+export function hasFeelingDial(provider, ttsSettings = {}) {
+  if (!provider) return false;
+  if (provider.id === 'openai-speech') return SERVER_FEELING_MODELS.includes(serverModel(ttsSettings));
+  return !!(provider.expressive && provider.feeling);
 }

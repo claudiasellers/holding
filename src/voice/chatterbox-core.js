@@ -18,6 +18,11 @@ export function tokenBudget(text) {
   return Math.min(1000, 80 + Math.ceil(String(text).length * 3));
 }
 
+/** No stop before this many speech tokens (one per character: faster than anyone talks). */
+export function minTokens(text) {
+  return String(text).split(/\s+/).filter(Boolean).join(' ').length;
+}
+
 /** Per-file precision. The language model is the only part with 4-bit builds. */
 export function dtypesFor(device, { f16 = false } = {}) {
   return {
@@ -68,7 +73,7 @@ export function createChatterbox(lib, { device = 'webgpu', f16 = false, repo = C
     /** Text to 24 kHz mono audio in a voice from voice(). */
     async synthesize(text, cond, { exaggeration = 0.5 } = {}) {
       const inputs = await processor(String(text));
-      const waveform = await model.generate({ ...inputs, ...cond, exaggeration, max_new_tokens: tokenBudget(text) });
+      const waveform = await model.generate({ ...inputs, ...cond, exaggeration, max_new_tokens: tokenBudget(text), min_new_tokens: Math.min(minTokens(text), tokenBudget(text) - 1) });
       const data = waveform.data instanceof Float32Array ? waveform.data : Float32Array.from(waveform.data);
       return limitPeak(trimSilence(data));
     },

@@ -39,7 +39,7 @@ fi
 
 # 3. Python environment with the voice and listening engines
 say "Setting up the voice and listening engines"
-uv sync --extra stt --quiet
+uv sync --extra stt --inexact --quiet  # --inexact keeps the Mac voice engine if it was installed from Settings
 
 # 4. Launchers
 chmod +x "Start Holding Local.command" "Start with phone access.command" start.sh 2>/dev/null || true

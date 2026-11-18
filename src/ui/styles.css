@@ -206,6 +206,8 @@ details summary { cursor: pointer; min-height: 40px; display: flex; align-items:
 @media (prefers-reduced-motion: reduce) { .suggest { animation: none; } }
 @media (max-width: 440px) { .suggest { font-size: .84rem; padding: 5px 11px; min-height: 36px; } }
 @media (min-width: 900px) { .suggests { justify-content: center; } }
+.vm-group{display:flex;flex-direction:column;gap:2px;margin-top:6px}
+.vm-group small{font-size:.8rem;line-height:1.35}
 
 /* ---------- session: two controls at the top, the rest one tap away ---------- */
 .ico { display: inline-grid; place-items: center; width: 22px; height: 22px; flex: 0 0 auto; }

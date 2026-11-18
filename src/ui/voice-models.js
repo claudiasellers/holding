@@ -1,11 +1,11 @@
 // Settings → Voice → Voice models: download, use and delete voice models, and
 // see the space each one takes. Two places a model can live:
-//   - this browser (Kokoro, Chatterbox), kept in its model cache;
+//   - this browser (Kokoro, Chatterbox, Chatterbox Turbo), kept in its model cache;
 //   - Holding Local on your computer, when "Voice from my computer" is the engine.
 import { h, clear, toast, slider } from './dom.js';
 import { store } from '../store.js';
 import { getTTSProvider } from '../voice/providers.js';
-import { VOICE_MODELS, cachedSize, deleteCached, storageEstimate, formatBytes, canRun, isExpressive } from '../voice/models.js';
+import { VOICE_MODELS, cachedSize, deleteCached, storageEstimate, formatBytes, canRun, hasFeelingDial } from '../voice/models.js';
 import { listServerModels, downloadServerModel, deleteServerModel, selectServerModel, startPrerender, prerenderStatus, stopPrerender } from '../voice/server-models.js';
 import { scriptedTexts } from '../voice/scripted-texts.js';
 import { voiceFor } from '../voice/resolve.js';
@@ -52,7 +52,7 @@ export function voiceModelsPanel({ rerender, preview }) {
 
 function feelingDial(preview) {
   const p = getTTSProvider(S().tts.provider);
-  if (!isExpressive(p, S().tts)) return null;
+  if (!hasFeelingDial(p, S().tts)) return null;
   const a = store.data.archetype;
   const field = slider(`${a.name}'s feeling`, feelingFor(a), (v) => {
     const arch = store.data.archetype;
@@ -127,36 +127,62 @@ function serverPanel(list, foot, rerender) {
     clear(list);
     const selected = cfg().model || data.selected || 'kokoro';
     let downloading = false;
-    for (const m of data.models || []) {
-      if (m.downloading) downloading = true;
-      const inUse = selected === m.id && m.downloaded;
-      const pct = m.total_bytes ? Math.round((m.done_bytes || 0) / m.total_bytes * 100) : 0;
-      const prog = m.downloading ? h('div', { class: 'progress' }, h('i', { style: { width: pct + '%' } })) : null;
-      const buttons = [];
-      if (!m.downloaded && !m.downloading) buttons.push(h('button', { class: 'btn primary', onclick: async (e) => { e.target.disabled = true; try { await downloadServerModel(cfg(), m.id); } catch (err) { toast(err.message); } refresh(); } }, m.bytes ? 'Finish download' : 'Download'));
-      if (m.downloaded && !inUse) buttons.push(h('button', { class: 'btn', onclick: async () => { try { await selectServerModel(cfg(), m.id); set({ tts: { 'openai-speech': { ...cfg(), model: m.id } } }); toast(`${m.name} is now the voice.`); if (m.feeling) await prerenderFor(cfg()).catch(() => {}); } catch (err) { toast(err.message); } rerender(); } }, 'Use'));
-      if (m.bytes && m.deletable && !m.downloading) buttons.push(h('button', { class: 'btn ghost', style: { color: 'var(--danger)' }, onclick: async () => {
-        if (!confirmTap('srv-' + m.id, m.name)) return;
-        try {
-          const r = await deleteServerModel(cfg(), m.id);
-          if (inUse) set({ tts: { 'openai-speech': { ...cfg(), model: r?.selected || 'kokoro' } } });
-          toast(`${m.name} deleted from your computer. ${formatBytes(r?.freed_bytes || m.bytes)} freed.`);
-        } catch (err) { toast(err.message); }
-        rerender();
-      } }, 'Delete'));
-      list.append(row(m, {
-        inUse,
-        status: m.downloading ? `Downloading · ${formatBytes(m.done_bytes)} of ${formatBytes(m.total_bytes)}` : m.downloaded ? `On your computer · ${formatBytes(m.bytes)}` : m.bytes ? `Partly downloaded · ${formatBytes(m.bytes)} of ${m.size_note}` : `Not downloaded · ${m.size_note}`,
-        note: m.error ? `Last download failed: ${m.error}` : (!m.deletable && m.downloaded ? m.keep_reason : null),
-        buttons, prog,
-      }));
+    const models = data.models || [];
+    const groups = [
+      ['any', 'Run on any computer', null],
+      ['mac', 'Mac only', 'These run on the graphics chip of a Mac with Apple silicon, through mlx-audio. The first one you download also installs that engine (about 300 MB, once).'],
+    ];
+    for (const [g, title, hint] of groups) {
+      const ms = models.filter((m) => (m.group || 'any') === g);
+      if (!ms.length) continue;
+      if (g !== 'any' || models.some((m) => m.group === 'mac')) {
+        list.append(h('div', { class: 'vm-group' }, h('b', {}, title), hint ? h('small', { class: 'muted' }, hint) : null));
+      }
+      if (g === 'mac' && ms.every((m) => m.runs_here === false)) {
+        list.append(h('p', { class: 'muted vm-note' }, `${ms[0].why_not} This computer can't run them: ${ms.map((m) => m.name).join(', ')}.`));
+        continue;
+      }
+      for (const m of ms) {
+        if (m.downloading) downloading = true;
+        list.append(serverRow(m, selected));
+      }
     }
-    const cb = (data.models || []).find((m) => m.id === 'chatterbox');
-    if (cb?.downloaded && selected === 'chatterbox') list.append(prerenderBlock(cfg, cb));
-    const used = (data.models || []).reduce((n, m) => n + (m.bytes || 0) + (m.lines_bytes || 0), 0);
+    const cur = models.find((m) => m.id === selected);
+    if (cur?.downloaded && cur.id !== 'kokoro') list.append(prerenderBlock(cfg, cur));
+    const used = models.reduce((n, m) => n + (m.bytes || 0) + (m.lines_bytes || 0), 0);
     foot.textContent = `Voices on your computer use ${formatBytes(used)}.` + (data.disk?.free_bytes != null ? ` It has ${formatBytes(data.disk.free_bytes)} free.` : '');
     clearTimeout(timer);
     if (downloading && document.body.contains(list)) timer = setTimeout(refresh, 1000);
+  };
+  const serverRow = (m, selected) => {
+    const inUse = selected === m.id && m.downloaded;
+    const pct = m.total_bytes ? Math.round((m.done_bytes || 0) / m.total_bytes * 100) : 0;
+    const prog = m.downloading ? h('div', { class: 'progress' }, h('i', { style: { width: (m.phase === 'downloading' ? pct : m.phase === 'preparing' ? 100 : 3) + '%' } })) : null;
+    const buttons = [];
+    if (m.runs_here !== false) {
+      if (!m.downloaded && !m.downloading) buttons.push(h('button', { class: 'btn primary', onclick: async (e) => { e.target.disabled = true; try { await downloadServerModel(cfg(), m.id); } catch (err) { toast(err.message); } refresh(); } }, m.bytes ? 'Finish download' : 'Download'));
+      if (m.downloaded && !inUse) buttons.push(h('button', { class: 'btn', onclick: async () => { try { await selectServerModel(cfg(), m.id); set({ tts: { 'openai-speech': { ...cfg(), model: m.id } } }); toast(`${m.name} is now the voice.`); if (m.id !== 'kokoro') await prerenderFor(cfg(), m.id).catch(() => {}); } catch (err) { toast(err.message); } rerender(); } }, 'Use'));
+    }
+    if (m.bytes && m.deletable && !m.downloading) buttons.push(h('button', { class: 'btn ghost', style: { color: 'var(--danger)' }, onclick: async () => {
+      if (!confirmTap('srv-' + m.id, m.name)) return;
+      try {
+        const r = await deleteServerModel(cfg(), m.id);
+        if (inUse) set({ tts: { 'openai-speech': { ...cfg(), model: r?.selected || 'kokoro' } } });
+        toast(`${m.name} deleted from your computer. ${formatBytes(r?.freed_bytes || m.bytes)} freed.`);
+      } catch (err) { toast(err.message); }
+      rerender();
+    } }, 'Delete'));
+    const status = m.downloading
+      ? (m.phase === 'installing' ? 'Installing the Mac voice engine (once)…'
+        : m.phase === 'preparing' ? 'Getting it ready: loading it and speaking a first line…'
+          : `Downloading · ${formatBytes(m.done_bytes)} of ${formatBytes(m.total_bytes)}`)
+      : m.runs_here === false ? `Mac only · ${m.size_note}`
+        : m.downloaded ? `On your computer · ${formatBytes(m.bytes)}`
+          : m.bytes ? `Partly downloaded · ${formatBytes(m.bytes)} of ${m.size_note}` : `Not downloaded · ${m.size_note}`;
+    return row(m, {
+      inUse, status, buttons, prog,
+      note: m.error ? `Last download failed: ${m.error}` : m.runs_here === false ? m.why_not : (!m.deletable && m.downloaded ? m.keep_reason : null),
+    });
   };
   const refresh = () => listServerModels(cfg()).then(draw).catch((err) => {
     clear(list); list.append(h('p', { class: 'status bad', style: { margin: 0 } }, err.message || String(err)));
@@ -165,9 +191,9 @@ function serverPanel(list, foot, rerender) {
 }
 
 // ---------- pre-recording scripted lines on Holding Local ----------
-async function prerenderFor(cfg) {
+async function prerenderFor(cfg, model) {
   const a = store.data.archetype;
-  return startPrerender(cfg, { texts: scriptedTexts(a, S()), voice: await voiceFor('openai-speech', a), exaggeration: feelingFor(a) });
+  return startPrerender(cfg, { model, texts: scriptedTexts(a, S()), voice: await voiceFor('openai-speech', a), exaggeration: feelingFor(a) });
 }
 
 function prerenderBlock(cfg, model) {
@@ -177,10 +203,12 @@ function prerenderBlock(cfg, model) {
   const btns = h('div', { class: 'row wrap' });
   const box = h('div', { class: 'vm-row' },
     h('div', { class: 'vm-head' }, h('b', {}, `${a.name}'s lines, recorded ahead`)),
-    h('p', { class: 'muted vm-blurb' }, 'Chatterbox is slow to speak live. Your computer can record every scripted line once, in the background, so they play at once with feeling. Your typed conversations are still spoken live.'),
+    h('p', { class: 'muted vm-blurb' }, `${model.name} takes a moment to speak live. Your computer can record every scripted line once, in the background, so they play at once${model.feeling ? ' with feeling' : ''}. Your typed conversations are still spoken live.`),
     status, prog, btns);
   let timer = 0;
-  const draw = (j) => {
+  const draw = (job) => {
+    // A finished job for another model says nothing about this one.
+    const j = job.model && job.model !== model.id && !job.running ? { running: false, done: 0, total: 0, lines_bytes: model.lines_bytes } : job;
     clear(btns);
     const pct = j.total ? Math.round(j.done / j.total * 100) : 0;
     prog.style.display = j.running ? '' : 'none';
@@ -192,7 +220,7 @@ function prerenderBlock(cfg, model) {
         : j.total && j.done === j.total ? `All ${j.total} lines recorded · ${formatBytes(j.lines_bytes || model.lines_bytes)}`
           : j.total ? `Stopped at ${j.done} of ${j.total} lines.` : `Not recorded yet${model.lines_bytes ? ` · ${formatBytes(model.lines_bytes)} of lines kept` : ''}.`;
     if (j.running) btns.append(h('button', { class: 'btn ghost', onclick: async () => { await stopPrerender(cfg()).catch(() => {}); refresh(); } }, 'Stop'));
-    else btns.append(h('button', { class: 'btn', onclick: async (e) => { e.target.disabled = true; try { await prerenderFor(cfg()); } catch (err) { toast(err.message); } refresh(); } }, j.total && j.done === j.total ? 'Record again with this feeling' : 'Record the lines'));
+    else btns.append(h('button', { class: 'btn', onclick: async (e) => { e.target.disabled = true; try { await prerenderFor(cfg(), model.id); } catch (err) { toast(err.message); } refresh(); } }, j.total && j.done === j.total && j.model === model.id ? (model.feeling ? 'Record again with this feeling' : 'Record again') : 'Record the lines'));
     clearTimeout(timer);
     if (j.running && document.body.contains(box)) timer = setTimeout(refresh, 2000);
   };
