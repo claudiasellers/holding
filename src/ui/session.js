@@ -145,6 +145,13 @@ export function renderSession(root, nav, { mode = 'hold' } = {}) {
       setTimeout(() => (status.textContent = ''), 6000);
     },
     onWordsBack() { openSheet(wordsBackSheet()); },
+    // Repair (§7.5): the check is always answerable with one tap, even in Be-with.
+    onRepair(r) {
+      if (r.phase === 'check') openSheet(repairSheet(r), 'repair');
+      else if (r.phase === 'listen') { closeSheet(); if (mode === 'hold' || r.tier === 'bewith') tilesEl.style.display = ''; openComposer(); }
+      else if (sheet.dataset.kind === 'repair') closeSheet();
+    },
+    onLead(on) { setLeadUI(on); },
     onSafety(on) { moreBtn.disabled = on; if (on) openSheet(safetySheet(), 'safety'); else closeSheet(); },
     onTier(t) { if (t !== 'bewith') setLeadUI(false); },
     // Goodbye: the closing lines play over the whole face first. Nothing slides over the
@@ -296,8 +303,8 @@ export function renderSession(root, nav, { mode = 'hold' } = {}) {
   const DISMISSABLE = new Set(['more', 'keep', 'brain']);
   function openSheet(content, kind = '') {
     clear(sheet).append(h('div', { class: 'grab' }), content);
-    sheet.dataset.kind = kind; sheet.classList.add('open');
-    scrim.classList.toggle('open', DISMISSABLE.has(kind));
+    sheet.dataset.kind = kind || content.dataset?.kind || ''; sheet.classList.add('open');
+    scrim.classList.toggle('open', DISMISSABLE.has(sheet.dataset.kind));
   }
   function closeSheet() { sheet.classList.remove('open'); sheet.dataset.kind = ''; scrim.classList.remove('open'); }
   function moreSheet() {
@@ -313,6 +320,17 @@ export function renderSession(root, nav, { mode = 'hold' } = {}) {
       row('talk', `${first} keeps talking softly`, leadHint, () => leadBtn.click(), leadBtn),
       row('spark', aiTitle, aiHint, () => openSheet(brainSheet(), 'brain'), b.state === 'scripted' || b.state === 'error' ? h('span', { class: 'more-go' }, 'Turn on AI') : null),
       row('door', 'Say goodbye', `${first} says goodbye, then you're done.`, () => { closeSheet(); session.end(); }, null, 'bye'));
+  }
+  function repairSheet({ line }) {
+    // The sheet sits over the caption, so it carries the spoken line itself.
+    const el = h('div', { class: 'stack repair-check' },
+      h('p', { style: { margin: 0, fontSize: '1.05rem' } }, line),
+      h('div', { class: 'row wrap' },
+        h('button', { class: 'btn primary', onclick: () => { closeSheet(); session.checkAnswer('yes'); } }, 'That\'s it'),
+        h('button', { class: 'btn', onclick: () => { closeSheet(); session.checkAnswer('else'); } }, 'Something else'),
+        h('button', { class: 'btn ghost', onclick: () => { closeSheet(); session.checkAnswer('stay'); } }, 'Just stay with me')));
+    el.dataset.kind = 'repair';
+    return el;
   }
   function wordsBackSheet() {
     return h('div', { class: 'stack' },

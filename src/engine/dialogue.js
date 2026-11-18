@@ -5,6 +5,7 @@ import { guard } from './guard.js';
 import { readText } from './affect.js';
 import { buildSystemPrompt } from './prompt.js';
 import { pick, getPath, fill } from './scripts.js';
+import { nameMiss, repairLine, listenLine, reattuneLine, readCheckAnswer, missSignals, withoutNegated, breaksPromise } from './repair.js';
 import { getLLMProvider } from '../ai/providers.js';
 import { getTTSProvider } from '../voice/providers.js';
 import { store } from '../store.js';
@@ -22,6 +23,9 @@ const sleep = (ms, signal) => new Promise((res) => {
   const t = setTimeout(res, ms);
   signal?.addEventListener('abort', () => { clearTimeout(t); res(); }, { once: true });
 });
+
+// Lines that are part of a repair: they never count as "the parent's last turn".
+const REPAIR_KINDS = new Set(['repair', 'repairListen']);
 
 const MAKESENSE_STEPS = [0, 2, 3, 4, 5, 7, 11, 15];
 
@@ -45,6 +49,10 @@ export function createSession({ archetype, presence, ui, mode = 'hold' }) {
     lastInputAt: 0, startedAt: Date.now(), said: [], history: [], misses: 0,
     offeredWordsBack: false, safety: false, msStep: 0, lastReplyKind: '',
     entryDistress: null, bodyBudgetDone: false,
+    // repair (§7.5): the live repair, the fix it put in place, and what the
+    // parent's last real turn was (the thing a repair has to name)
+    repairing: null, fix: null, lastTurn: null, lastRepairAt: 0, selfRepairs: 0,
+    replyDoneAt: 0, silenceChecked: 0, missesNamed: [],
   };
   const ctrl = new AbortController();
   let speaking = null;              // AbortController for current speech
@@ -143,6 +151,7 @@ export function createSession({ archetype, presence, ui, mode = 'hold' }) {
     state.said.push(text);
     state.history.push({ role: 'assistant', content: text });
     state.lastReplyKind = meta.kind || '';
+    if (!REPAIR_KINDS.has(meta.kind) && !meta.final) state.lastTurn = { text, kind: meta.kind || '', tier: meta.tier || state.tier, answeredUser: !!meta.typed, at: Date.now() };
     speakQueue = speakQueue.then(() => speakNow(text, policy, meta));
     return speakQueue;
   }
@@ -154,7 +163,7 @@ export function createSession({ archetype, presence, ui, mode = 'hold' }) {
     const tts = getTTSProvider(s.tts.provider) || getTTSProvider('webspeech');
     const voiceId = await voiceFor(tts?.id, archetype).catch(() => undefined);
     speaking = new AbortController();
-    const done = () => { presence.setSpeaking(0); presence.setOwn(state.lead ? 'holding' : 'listening'); ui.onSpeakEnd?.(); };
+    const done = () => { presence.setSpeaking(0); presence.setOwn(state.lead ? 'holding' : 'listening'); if (meta.typed) state.replyDoneAt = Date.now(); ui.onSpeakEnd?.(); };
     const pre = typeof window !== 'undefined' ? window.HoldingMobile?.prerecorded : null;
     if (s.voiceOn && pre?.has && recordedVoiceMatches(archetype) && await Promise.resolve(pre.has(archetype.id, text)).catch(() => false)) {
       try { await pre.play(archetype.id, text, { onLevel: (l) => presence.setSpeaking(l), signal: speaking.signal }); done(); return; } catch { /* fall through to live voice */ }
@@ -185,28 +194,30 @@ export function createSession({ archetype, presence, ui, mode = 'hold' }) {
 
   // ---------- replies ----------
   async function reply(kind, opts = {}) {
-    const policy = policyFor(opts.tier || state.tier, store.warmthFor(archetype));
+    const policy = withFix(policyFor(opts.tier || state.tier, store.warmthFor(archetype)));
     await sleep(opts.immediate ? 0 : beat(policy), ctrl.signal);
     if (state.ended && !opts.final) return;
     let text = null, source = 'script';
     if (opts.allowModel && !String(kind).startsWith('safety')) {
-      text = await generate(policy, { typed: !!opts.typed, hint: HINTS[kind] || '' });
+      text = await generate(policy, { typed: !!opts.typed, hint: [opts.hint || HINTS[kind] || '', fixHint()].filter(Boolean).join(' ') });
+      if (text && breaksPromise(text, state.fix)) { console.info('[holding] model reply broke the repair promise:', text); text = null; lastMiss = 'rejected'; }
       if (text) source = 'model';
       if (state.ended && !opts.final) return;
     }
     if (!text) text = scriptFor(kind, policy, opts);
+    if (!REPAIR_KINDS.has(kind)) spendFix();
     const g = guard(text, policy);
     return say(g.text || text, { kind, tier: policy.tier, final: opts.final, source, typed: !!opts.typed, fallback: source === 'script' && opts.allowModel ? lastMiss : null });
   }
 
   function scriptFor(kind, policy, opts) {
+    if (opts.line) return opts.line;
     const c = ctx();
     const a = state.affect;
     switch (kind) {
       case 'affect':
         if (a && getPath(`affect.${a}.${policy.tier === 'bewith' ? 'bewith' : 'name'}`)) return pick(`affect.${a}.${policy.tier === 'bewith' ? 'bewith' : 'name'}`, archetype, c);
         return pick(policy.tier === 'bewith' ? 'permission' : 'fallback', archetype, c);
-      case 'repair': return pick('repair', archetype, { ...c, miss: opts.miss });
       case 'makesense': {
         const i = MAKESENSE_STEPS[Math.min(state.msStep, MAKESENSE_STEPS.length - 1)];
         state.msStep++;
@@ -222,6 +233,11 @@ export function createSession({ archetype, presence, ui, mode = 'hold' }) {
   async function onTile(affect, intensity = .85) {
     state.lastInputAt = Date.now();
     if (state.ended) return;
+    if (state.repairing) {
+      // a tap while repairing is the user showing what it actually was
+      finishRepair(affect === 'stay' ? 'stayed' : 'corrected', affect === 'stay' ? '' : `[tapped: ${affect}]`);
+      if (affect === 'stay') return checkAnswer('stay');
+    }
     if (affect === 'stay') { presence.setOwn('holding'); return reply('stillHere'); }
     state.affect = affect; state.intensity = intensity;
     state.history.push({ role: 'user', content: `[tapped: ${affect}]` });
@@ -238,9 +254,20 @@ export function createSession({ archetype, presence, ui, mode = 'hold' }) {
     state.history.push({ role: 'user', content: text });
     stopSpeaking();
     const r = readText(text);
-    if (r.risk) return enterSafety();
-    if (r.affect) { state.affect = r.affect; state.intensity = r.intensity; presence.mirror(r.affect, r.intensity); ui.onMirror?.(r.affect); }
+    if (r.risk) { if (state.repairing) finishRepair('safety'); return enterSafety(); }
+    // (during a repair the correction is read with negations removed, below)
+    if (r.affect && !state.repairing) { state.affect = r.affect; state.intensity = r.intensity; presence.mirror(r.affect, r.intensity); ui.onMirror?.(r.affect); }
     else presence.setOwn('listening');
+
+    // An answer to the repair's check, or the correction after "something else".
+    if (state.repairing) return repairInput(text, r);
+    // Self-detected likely miss (§7.5): sharp language, or the user apologizing
+    // right after the parent spoke.
+    const prev = state.history[state.history.length - 2];
+    if (prev?.role === 'assistant' && !state.safety && !r.intents.roleReversal) {
+      const sig = missSignals(text, { lastWasQuestion: /\?\s*$/.test(prev.content) });
+      if (sig.sharp || (sig.apology && !r.intents.tooMuch && !r.intents.critic)) return onMiss(sig.sharp ? 'sharp' : 'apology');
+    }
 
     // Every typed message gets a model attempt when an AI is on; the intent only
     // steers it (and picks the scripted line if the model can't answer).
@@ -258,7 +285,7 @@ export function createSession({ archetype, presence, ui, mode = 'hold' }) {
       return reply('wordsBack', typed);
     }
     if (state.tier === 'bewith') return reply('affect', typed);
-    if (state.tier === 'name' && !state.bodyBudgetDone && state.history.filter((h) => h.role === 'user').length >= 3) {
+    if (state.tier === 'name' && !state.bodyBudgetDone && !state.fix && state.history.filter((h) => h.role === 'user').length >= 3) {
       state.bodyBudgetDone = true; return reply('bodyBudget', typed);
     }
     return reply(state.tier === 'ordinary' ? 'ordinary' : 'affect', typed);
@@ -270,16 +297,193 @@ export function createSession({ archetype, presence, ui, mode = 'hold' }) {
     return reply('stillHere');
   }
 
-  function onMiss() {
+  // ---------- repair (§7.5) ----------
+  // name the specific miss -> own it -> check -> re-attune at the right tier.
+  // trigger: 'button' (the "That missed" control) | 'sharp' | 'apology' | 'silence'
+  function onMiss(trigger = 'button') {
+    if (state.ended) return;
+    const self = trigger !== 'button';
+    const now = Date.now();
+    if (self && (state.safety || state.repairing)) return;
+    // Silence and apologies are weak signals: don't keep repairing on them. Sharp words are not.
+    if ((trigger === 'silence' || trigger === 'apology') && now - state.lastRepairAt < 60000) return;
+    // a miss on the re-attune itself (or a second tap mid-repair) is a second miss in a row
+    const again = !!state.repairing || (state.lastTurn?.kind === 'reattune' && now - state.lastRepairAt < 180000);
+    if (state.repairing) finishRepair('missed-again');
     state.misses++;
+    if (self) state.selfRepairs++;
+    state.lastRepairAt = now;
     stopSpeaking();
     presence.setOwn('listening');
-    const last = state.said[state.said.length - 1] || '';
-    const miss = /\?$/.test(last) ? 'asked you something when you needed me to just stay'
-      : state.lastReplyKind === 'affect' && state.tier === 'name' ? 'jumped to naming it before I really heard you'
-      : state.tier === 'bewith' ? 'said more than you needed' : 'moved too fast';
-    store.push('repairs', { archetype: archetype.id, miss, line: last, tier: state.tier });
-    return reply('repair', { miss, immediate: true });
+    const t = state.lastTurn || {};
+    const miss = nameMiss({
+      last: t.text || '', kind: t.kind || '', tier: t.tier || state.tier, affect: state.affect,
+      answeredUser: !!t.answeredUser, again, maxWords: policyFor(t.tier || state.tier).maxWords,
+    });
+    const id = `r${now.toString(36)}`;
+    const lastUser = [...state.history].reverse().find((m) => m.role === 'user' && !m.content.startsWith('['))?.content || '';
+    state.repairing = { id, miss, trigger, phase: 'check', at: now, fromTier: state.tier, lastUser };
+    const repeat = state.missesNamed.includes(miss.text);
+    state.missesNamed.push(miss.text);
+    store.push('repairs', { id, archetype: archetype.id, miss: miss.text, missId: miss.id, line: t.text || '', tier: t.tier || state.tier, trigger, outcome: 'pending' });
+    let line = repairLine(miss, { tier: state.tier, trigger, repeat, archetype, ctx: ctx() });
+    line = guard(line, null).text || line;
+    ui.onRepair?.({ phase: 'check', miss: miss.text, line, tier: state.tier, trigger });
+    // Fixed script, never generated: the owning has to be exact every time.
+    return say(line, { kind: 'repair', tier: state.tier });
+  }
+
+  /** The user's answer to the check: 'yes' (that's it) | 'else' (something else) | 'stay' (just stay). */
+  function checkAnswer(choice, extra = '') {
+    if (state.ended) return;
+    state.lastInputAt = Date.now();
+    stopSpeaking();
+    const rp = state.repairing;
+    const miss = rp?.miss || nameMiss({ last: '', tier: state.tier });
+    if (choice === 'stay') {
+      if (rp) finishRepair('stayed');
+      applyFix({ ...miss, fix: { ...miss.fix, noAdvice: true, quietMs: 120000 }, tier: 'bewith' });
+      state.lead = true; ui.onLead?.(true);
+      return reply('reattune', { line: reattuneLine('stay', archetype, ctx()), tier: 'bewith' });
+    }
+    if (!rp) return;
+    if (choice === 'else') {
+      if (extra) return correction(extra);
+      rp.phase = 'listen';
+      applyFix({ ...miss, fix: { short: 2, noQuestions: 2 }, tier: state.tier });
+      ui.onRepair?.({ phase: 'listen', miss: miss.text, tier: state.tier });
+      return say(listenLine(state.tier, archetype, ctx()), { kind: 'repairListen', tier: state.tier });
+    }
+    // 'yes': the named miss was it. Do the opposite of it, at the right tier.
+    applyFix(miss);
+    if (miss.reattune === 'listen') {
+      rp.phase = 'listen';
+      ui.onRepair?.({ phase: 'listen', miss: miss.text, tier: state.tier });
+      return say(listenLine(state.tier, archetype, ctx()), { kind: 'repairListen', tier: state.tier });
+    }
+    finishRepair('confirmed', extra);
+    return reattune(miss, extra);
+  }
+
+  function repairInput(text, r) {
+    const rp = state.repairing;
+    if (rp.phase === 'listen') {
+      const a = readCheckAnswer(text);
+      if (a.answer === 'stay') return checkAnswer('stay');
+      if (!a.rest) { finishRepair('confirmed'); return reply('reattune', { line: reattuneLine('heard', archetype, ctx()), tier: state.tier }); }
+      return correction(text);
+    }
+    const a = readCheckAnswer(text);
+    return checkAnswer(a.answer, a.rest);
+  }
+
+  /** The user told us what it actually was: reflect that, in their words. */
+  function correction(text) {
+    const r = readText(withoutNegated(text));
+    const rp = state.repairing;
+    const miss = rp?.miss;
+    finishRepair('corrected', text);
+    stopSpeaking();
+    if (r.affect) { state.affect = r.affect; state.intensity = r.intensity; presence.mirror(r.affect, r.intensity); ui.onMirror?.(r.affect); }
+    // Right tier: a real feeling named in an ordinary-day chat moves it into Name.
+    if (state.tier === 'ordinary' && r.affect && !['calm', 'hopeful', 'glad'].includes(r.affect)) { state.tier = 'name'; ui.onTier?.('name'); }
+    const c = { ...ctx(), allowSignature: false };
+    const tier = state.tier;
+    // Scripted re-attune = accurate marked mirroring of what they just said; the
+    // model, when on, reflects their actual words instead.
+    const slot = `affect.${r.affect}.bewith`;   // plain marked mirroring, no interpretation
+    const line = r.affect && getPath(slot) ? pick(slot, archetype, c) : reattuneLine('heard', archetype, c);
+    return reply('reattune', {
+      allowModel: true, typed: true, immediate: false, line,
+      tier: tier === 'bewith' ? 'bewith' : 'name',
+      hint: `You just missed${miss ? ` (you ${miss.text})` : ''} and owned it. The user has now told you what it actually was: "${text}". Reflect that back first, in their words, so they know you have it now. Do not apologize again or mention the miss. ${miss?.instruction || ''}`,
+    });
+  }
+
+  function reattune(miss, extra = '') {
+    const tier = state.tier;
+    const lastUser = state.repairing?.lastUser || [...state.history].reverse().find((m) => m.role === 'user' && !m.content.startsWith('['))?.content || '';
+    return reply('reattune', {
+      // the model only re-attunes when the user has words on the table to answer
+      allowModel: !!lastUser, typed: !!lastUser, line: reattuneLine(miss.reattune, archetype, ctx()), tier,
+      hint: `You just named a miss (you ${miss.text}), owned it, and the user confirmed that was it${extra ? `, adding: "${extra}"` : ''}. Now re-attune: ${miss.instruction} Do not apologize again or mention the miss.`,
+    });
+  }
+
+  function applyFix(miss) {
+    const f = miss.fix || {};
+    const now = Date.now();
+    const prev = state.fix || {};
+    state.fix = {
+      noQuestions: Math.max(prev.noQuestions || 0, f.noQuestions || 0),
+      short: Math.max(prev.short || 0, f.short || 0),
+      noAdviceUntil: f.noAdvice ? now + 180000 : prev.noAdviceUntil || 0,
+      quietUntil: f.quietMs ? now + f.quietMs : prev.quietUntil || 0,
+      instruction: miss.instruction || prev.instruction || '',
+      turns: Math.max(f.noQuestions || 0, f.short || 0, 3),
+    };
+    if (f.clearAffect) state.affect = null;
+    if (miss.tier && miss.tier !== state.tier && state.mode !== 'makesense') { state.tier = miss.tier; ui.onTier?.(miss.tier); }
+  }
+
+  /** The turn policy, tightened by whatever the last repair promised. */
+  function withFix(policy) {
+    const f = state.fix;
+    if (!f) return policy;
+    const p = { ...policy };
+    if (f.noQuestions > 0) p.question = false;
+    if (f.short > 0) { p.maxSentences = Math.min(p.maxSentences, 2); p.maxWords = Math.min(p.maxWords, 24); p.maxTokens = Math.min(p.maxTokens, 70); }
+    return p;
+  }
+  function fixHint() {
+    const f = state.fix;
+    const parts = [];
+    if (f && f.turns > 0 && f.instruction) parts.push(`You recently missed and repaired it; keep the promise: ${f.instruction}`);
+    if (state.missesNamed.length) parts.push(`Earlier in this conversation you missed by: ${[...new Set(state.missesNamed)].slice(-3).join('; ')}. Don't repeat it.`);
+    return parts.join(' ');
+  }
+  function spendFix() {
+    const f = state.fix;
+    if (!f) return;
+    f.noQuestions = Math.max(0, f.noQuestions - 1); f.short = Math.max(0, f.short - 1); f.turns = Math.max(0, f.turns - 1);
+    if (!f.noQuestions && !f.short && !f.turns && Date.now() > f.noAdviceUntil && Date.now() > f.quietUntil) state.fix = null;
+  }
+
+  /** Close the live repair and record how it ended (the running record in Memory). */
+  function finishRepair(outcome, correctionText = '') {
+    const rp = state.repairing;
+    if (!rp) return;
+    state.repairing = null;
+    const repairs = [...store.data.repairs];
+    const i = repairs.findIndex((x) => x.id === rp.id);
+    if (i >= 0) { repairs[i] = { ...repairs[i], outcome, ...(correctionText ? { correction: correctionText.slice(0, 280) } : {}) }; store.setData({ repairs }); }
+    ui.onRepair?.({ phase: 'done', outcome });
+  }
+
+  // Silence after a parent turn (§7.5), and an unanswered check.
+  function watchRepair() {
+    if (state.ended || state.safety) return;
+    const now = Date.now();
+    const rp = state.repairing;
+    if (rp) {
+      const quiet = now - Math.max(rp.at, state.lastInputAt);
+      if (rp.phase === 'check' && quiet > (state.tier === 'bewith' ? 25000 : 45000)) {
+        // No answer: take the named miss as it, and do the opposite quietly.
+        const miss = rp.miss;
+        finishRepair('silent');
+        applyFix(miss);
+        reply('reattune', { line: reattuneLine(['listen', 'heard'].includes(miss.reattune) ? 'quiet' : miss.reattune, archetype, ctx()), tier: state.tier });
+      } else if (rp.phase === 'listen' && quiet > 90000) {
+        finishRepair('silent');
+        reply('stillHere');
+      }
+      return;
+    }
+    // Contingent conversation only: in Be-with and while the parent leads, silence is the point.
+    if (state.lead || state.tier === 'bewith' || state.selfRepairs >= 2) return;
+    if (!state.replyDoneAt || state.replyDoneAt <= state.lastInputAt || state.silenceChecked === state.replyDoneAt) return;
+    if (state.history.filter((m) => m.role === 'user').length < 2) return;
+    if (now - state.replyDoneAt > 60000) { state.silenceChecked = state.replyDoneAt; onMiss('silence'); }
   }
 
   function enterSafety() {
@@ -304,7 +508,8 @@ export function createSession({ archetype, presence, ui, mode = 'hold' }) {
       await sleep(gap * 1000, ctrl.signal);
       await speakQueue;
       if (ctrl.signal.aborted || state.ended) break;
-      if (!state.lead) { await sleep(2000, ctrl.signal); continue; }
+      if (!state.lead || state.repairing) { await sleep(2000, ctrl.signal); continue; }
+      if (state.fix?.quietUntil > Date.now() && Math.random() < .5) { await sleep(gap * 1000, ctrl.signal); continue; }   // promised fewer words
       if (quiet < 14) { await sleep(4000, ctrl.signal); continue; }   // user is engaging: let contingent replies lead
       if (state.safety) { await reply('safety.stay', { immediate: true }); i++; continue; }
       const kind = nextAuto(i, elapsed);
@@ -313,6 +518,12 @@ export function createSession({ archetype, presence, ui, mode = 'hold' }) {
     }
   }
   function nextAuto(i, elapsed) {
+    const k = nextAutoRaw(i, elapsed);
+    // after a "fixing" miss, no techniques for a while: just presence
+    if (state.fix?.noAdviceUntil > Date.now() && ['selfTouch', 'orient', 'breath', 'bodyBudget'].includes(k)) return 'stillHere';
+    return k;
+  }
+  function nextAutoRaw(i, elapsed) {
     if (i === 0) return 'opening';
     if (i === 1) return 'permission';
     if (i === 3) return 'selfTouch';
@@ -324,8 +535,10 @@ export function createSession({ archetype, presence, ui, mode = 'hold' }) {
   }
 
   // ---------- lifecycle ----------
+  let watcher = null;
   function start() {
     useProvider();
+    watcher = setInterval(watchRepair, 3000);
     if (state.mode === 'hold') autoplay();
     else if (state.mode === 'makesense') reply('makesense', { immediate: true });
     else {
@@ -337,6 +550,8 @@ export function createSession({ archetype, presence, ui, mode = 'hold' }) {
   async function end() {
     if (state.ended) return;
     state.lead = false;
+    clearInterval(watcher);
+    if (state.repairing) finishRepair('exit');
     stopSpeaking();
     await sleep(200);
     presence.setOwn('delight');
@@ -365,10 +580,10 @@ export function createSession({ archetype, presence, ui, mode = 'hold' }) {
     return speakQueue;
   }
 
-  function destroy() { state.ended = true; state.destroyed = true; ctrl.abort(); stopSpeaking(); }
+  function destroy() { if (state.repairing) finishRepair('exit'); state.ended = true; state.destroyed = true; clearInterval(watcher); ctrl.abort(); stopSpeaking(); }
 
   return {
-    state, start, end, destroy, onTile, onText, onMiss, chooseWordsBack, replay,
+    state, start, end, destroy, onTile, onText, onMiss, checkAnswer, chooseWordsBack, replay,
     enterSafety, safetyStay, exitSafety, say, stopSpeaking,
     setLead(v) { state.lead = v; if (v) state.lastInputAt = 0; },
     useProvider,

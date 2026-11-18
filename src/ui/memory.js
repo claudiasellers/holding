@@ -3,6 +3,17 @@ import { store } from '../store.js';
 import { getTTSProvider } from '../voice/providers.js';
 import { voiceFor } from '../voice/resolve.js';
 
+// How each repair came back (research doc §7.5: "misses happened, and every one was come back from").
+const REPAIR_OUTCOME = {
+  confirmed: (n) => `Came back: you said that was it, and ${n} changed course.`,
+  corrected: () => 'Came back: you said what it really was, and were heard.',
+  stayed: (n) => `Came back: ${n} stopped and just stayed.`,
+  silent: (n) => `Came back: ${n} went quieter.`,
+  'missed-again': (n) => `Missed again right after, and ${n} tried again.`,
+  safety: (n) => `${n} turned to keeping you safe.`,
+  exit: () => 'The session ended before it was repaired.',
+};
+
 export function renderMemory(root, nav) {
   const a = store.data.archetype;
   const body = h('div', { class: 'stack' });
@@ -31,7 +42,7 @@ export function renderMemory(root, nav) {
       section('Keepsakes', 'Lines that helped. Play them any time.', d.keepsakes, (k, i) => h('div', { class: 'item' }, h('p', {}, k.text), h('div', { class: 'row' }, h('button', { class: 'pill', onclick: () => play(k.text) }, 'Play'), del('keepsakes', i)))),
       section('Your new rules', 'Written after hard nights. Each one is evidence against the old rule.', d.rules, (r, i) => h('div', { class: 'item' }, h('div', {}, h('p', {}, r.text), h('small', {}, `Evidence: ${(r.evidence || []).join(', ')}`)), h('div', { class: 'row' },
         h('button', { class: 'pill', onclick: () => { const rules = [...store.data.rules]; rules[i] = { ...r, evidence: [...(r.evidence || []), new Date().toISOString().slice(0, 10)] }; store.setData({ rules }); render(); toast('Another night of evidence.'); } }, '+ Evidence'), del('rules', i)))),
-      section('Repairs', `Every time ${a.name} missed, and came back. Misses happen; repair is the point.`, [...d.repairs].reverse(), (r, i) => h('div', { class: 'item' }, h('div', {}, h('p', {}, `Missed: ${r.miss}`), h('small', {}, new Date(r.at).toLocaleString())), del('repairs', d.repairs.length - 1 - i))),
+      section('Repairs', `Every time ${a.name} missed, and came back. Misses happen; repair is the point.`, [...d.repairs].reverse(), (r, i) => h('div', { class: 'item' }, h('div', {}, h('p', {}, `Missed: ${r.miss}`), REPAIR_OUTCOME[r.outcome] ? h('p', { class: 'muted', style: { margin: 0 } }, REPAIR_OUTCOME[r.outcome](a.name)) : null, h('small', {}, [new Date(r.at).toLocaleString(), r.trigger && r.trigger !== 'button' ? `${a.name} noticed it first` : ''].filter(Boolean).join(' · '))), del('repairs', d.repairs.length - 1 - i))),
       section('Hard moments', 'Times you came here. No streaks, no scores.', [...d.episodes].reverse().slice(0, 30), (e, i) => h('div', { class: 'item' }, h('div', {}, h('p', {}, `${new Date(e.at).toLocaleDateString()} · ${e.mode === 'hold' ? 'Held' : e.mode === 'makesense' ? 'Made sense' : 'Talked'}${e.minutes ? ` · ${e.minutes} min` : ''}`), h('small', {}, [e.affect, e.afterSize ? `after: ${e.afterSize}` : e.after != null ? `after: ${e.after}/10` : ''].filter(Boolean).join(' · '))), del('episodes', d.episodes.length - 1 - i))),
     );
   }
