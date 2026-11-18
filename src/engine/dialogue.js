@@ -369,6 +369,7 @@ export function createSession({ archetype, presence, ui, mode = 'hold' }) {
     const rp = state.repairing;
     if (rp.phase === 'listen') {
       const a = readCheckAnswer(text);
+      if (a.answer === 'stay') return checkAnswer('stay');
       if (!a.rest) { finishRepair('confirmed'); return reply('reattune', { line: reattuneLine('heard', archetype, ctx()), tier: state.tier }); }
       return correction(text);
     }

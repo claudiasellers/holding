@@ -130,13 +130,17 @@ export function reattuneLine(key, archetype, ctx = {}) {
 const YES = /^(yes|yeah|yep|yup|ya|mm+|mhm|exactly|right|true|kind of|kinda|sort of|a bit|that'?s (it|right)|that was it|pretty much)\b/i;
 const NO = /^(no|nope|nah|not (really|quite|it|exactly)|something else|that'?s not it|it'?s not that|wrong)\b/i;
 
+const STAY = /^(please,?\s*)?(just\s+)?stay(\s+with\s+me)?(,?\s*please)?[\s.!]*$/i;
+const BARE = /^(that'?s it|that was it|exactly|it|that|it'?s something else|something else)?[\s.!]*$/i;
+
 /**
- * Read the user's typed answer to the check.
- * @returns {{ answer: 'yes'|'else', rest: string }} rest = anything they said beyond yes/no (a correction)
+ * Read the user's typed (or chip-tapped) answer to the check.
+ * @returns {{ answer: 'yes'|'else'|'stay', rest: string }} rest = anything they said beyond the answer (a correction)
  */
 export function readCheckAnswer(text) {
   const t = String(text || '').trim();
-  const strip = (re) => t.replace(re, '').replace(/^[\s,.!-]+/, '').trim();
+  if (STAY.test(t)) return { answer: 'stay', rest: '' };
+  const strip = (re) => { const r = t.replace(re, '').replace(/^[\s,.!-]+/, '').trim(); return BARE.test(r) ? '' : r; };
   if (YES.test(t)) return { answer: 'yes', rest: strip(YES) };
   if (NO.test(t)) return { answer: 'else', rest: strip(NO) };
   return { answer: 'else', rest: t };   // anything else is them telling us what it was

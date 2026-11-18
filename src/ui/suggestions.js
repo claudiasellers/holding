@@ -82,6 +82,7 @@ export function createSuggestions({ session, input, onSend, parentName }) {
     // Only once the user is running their own conversation; before that the
     // rules already know everything there is to know.
     if (!provider || !session.modelReady || !g.userTurns || g.safety || g.ended) return;
+    if (g.lastKind === 'repair') return;                 // the repair's check has fixed answers
     if (input.value.trim()) return;                       // don't move chips under someone typing
     if (g.recent.at(-1)?.role !== 'assistant') return;   // a reply is still coming; don't hold up the model
     const key = g.recent.map((m) => m.text).join('|');

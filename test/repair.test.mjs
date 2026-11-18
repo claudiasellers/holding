@@ -122,3 +122,15 @@ test('the same miss twice is owned as a repeat; generated replies cannot break t
   assert.equal(breaksPromise('Furious at her. I am staying right here.', fix), false);
   assert.equal(breaksPromise('Maybe you could try writing her a calm message.', null), false);
 });
+
+test('each suggested-reply chip shown after a repair maps to its check answer', async () => {
+  const chips = ["Yes, that's it.", 'Something else.', 'Just stay with me.'];
+  assert.deepEqual(chips.map(readCheckAnswer), [
+    { answer: 'yes', rest: '' }, { answer: 'else', rest: '' }, { answer: 'stay', rest: '' },
+  ]);
+  assert.deepEqual(readCheckAnswer('stay'), { answer: 'stay', rest: '' });
+  assert.deepEqual(readCheckAnswer("yes that's it, I just wanted quiet"), { answer: 'yes', rest: "that's it, I just wanted quiet" });
+  // the chips in the suggestion bank are exactly these
+  const src = (await import('node:fs')).readFileSync(new URL('../src/engine/suggest.js', import.meta.url), 'utf8');
+  for (const c of chips) assert.ok(src.includes(c.replace("'", "\\'")), c);
+});
