@@ -280,3 +280,8 @@ details summary { cursor: pointer; min-height: 40px; display: flex; align-items:
 .end-actions .btn { padding: 0 12px; }
 .link-btn { justify-self: center; min-height: 40px; border: 0; background: none; color: var(--ink2); text-decoration: underline; text-underline-offset: 3px; font-size: .85rem; }
 @media (prefers-reduced-motion: reduce) { .end-card { animation: none; } .switch::after { transition: none; } }
+.get-local { border: 1px dashed var(--line); border-radius: 14px; padding: 12px; display: grid; gap: 8px; }
+.get-local[hidden] { display: none; }
+.get-local p { margin: 0; font-size: .9rem; }
+.get-local .small { font-size: .82rem; }
+.get-local a.btn { text-decoration: none; display: inline-flex; align-items: center; }

@@ -9,6 +9,7 @@ import { voiceFor, chosenVoice, withVoice } from '../voice/resolve.js';
 import { PRESETS } from '../data/archetypes.js';
 import { voiceModelsPanel } from './voice-models.js';
 import { chatModelsPanel } from './chat-models.js';
+import { getLocalPanel } from './get-local.js';
 import { feelingFor } from '../voice/feeling.js';
 import { validateLibrary } from '../engine/scripts.js';
 
@@ -132,6 +133,7 @@ export function renderSettings(root, nav, params = {}) {
     const compTok = h('input', { type: 'password', placeholder: 'Pairing code (only from a phone)', value: S().ai['openai-local']?.token || '' });
     body.append(card('Use my computer (Holding Local)',
       h('p', { class: 'muted', style: { margin: 0 } }, 'If Holding Local is running on your computer, this points the parent\'s words, voice and listening at it in one step. Free, private, no accounts.'),
+      getLocalPanel(),
       h('label', { class: 'field' }, h('span', { class: 'lbl' }, 'Address'), compUrl),
       h('label', { class: 'field' }, h('span', { class: 'lbl' }, 'Pairing code'), compTok),
       h('div', { class: 'row wrap' }, h('button', { class: 'btn primary', onclick: async () => {
@@ -140,7 +142,7 @@ export function renderSettings(root, nav, params = {}) {
           await connectHoldingLocal(compUrl.value || 'http://127.0.0.1:8787/v1', compTok.value);
           comp.className = 'status ok'; comp.textContent = 'Connected. Words, voice and listening now run on your computer.';
           setTimeout(render, 1200);
-        } catch (e) { comp.className = 'status bad'; comp.textContent = e.message; }
+        } catch (e) { comp.className = 'status bad'; comp.textContent = e.message; if (!comp.nextSibling?.classList?.contains('get-local')) comp.after(getLocalPanel({ always: true })); }
       } }, 'Connect')),
       comp,
       (() => { const panel = h('div'); try { window.HoldingMobile?.renderPairingPanel?.(panel); } catch {} return panel.childNodes.length ? h('details', { open: /iPhone|iPad|Android/i.test(navigator.userAgent) }, h('summary', {}, 'Pair this phone with a code or QR'), panel) : null; })()));
@@ -152,7 +154,7 @@ export function renderSettings(root, nav, params = {}) {
 
     const quick = aiId === 'scripted' ? h('div', { class: 'row wrap' },
       canUseDeviceAI() ? h('button', { class: 'btn primary', onclick: () => { useDeviceAI(); render(); setTimeout(() => document.getElementById('ai-card')?.scrollIntoView({ block: 'start' }), 50); } }, 'Use the AI on this device') : null,
-      h('button', { class: 'btn', onclick: async (e) => { e.target.disabled = true; try { await connectHoldingLocal(); render(); } catch (err) { aiStatus.className = 'status bad'; aiStatus.textContent = err.message; } finally { e.target.disabled = false; } } }, 'Use Holding Local on my computer')) : null;
+      h('button', { class: 'btn', onclick: async (e) => { e.target.disabled = true; try { await connectHoldingLocal(); render(); } catch (err) { aiStatus.className = 'status bad'; aiStatus.textContent = err.message; if (!aiStatus.nextSibling?.classList?.contains('get-local')) aiStatus.after(getLocalPanel({ always: true })); } finally { e.target.disabled = false; } } }, 'Use Holding Local on my computer')) : null;
     const aiCard = card('AI: what writes the parent\'s words',
       h('p', { class: 'status ' + (aiId === 'scripted' ? 'bad' : 'ok'), style: { margin: 0 } }, aiId === 'scripted' ? 'Right now: scripted lines. The parent is not reading what you type.' : `Right now: ${brainLabel(aiId)}.`),
       quick,
