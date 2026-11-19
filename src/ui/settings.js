@@ -9,6 +9,7 @@ import { voiceFor, chosenVoice, withVoice } from '../voice/resolve.js';
 import { PRESETS } from '../data/archetypes.js';
 import { voiceModelsPanel } from './voice-models.js';
 import { chatModelsPanel } from './chat-models.js';
+import { browserModelsPanel } from './browser-models.js';
 import { getLocalPanel } from './get-local.js';
 import { feelingFor } from '../voice/feeling.js';
 import { validateLibrary } from '../engine/scripts.js';
@@ -161,6 +162,7 @@ export function renderSettings(root, nav, params = {}) {
       select('What writes the parent\'s words', aiId, listLLMProviders().map((p) => [p.id, p.label]), (v) => { set({ ai: { provider: v } }); render(); }),
       h('p', { class: 'muted', style: { margin: 0, fontSize: '.92rem' } }, AI_HELP[aiId] || ''),
       cfgBox, aiProg, aiStatus,
+      browserModelsPanel({ provider: aiId, model: S().ai.webllm?.model }),
       aiId !== 'scripted' ? h('div', { class: 'row wrap' },
         h('button', { class: 'btn', onclick: async () => {
           aiStatus.className = 'status'; aiStatus.textContent = 'Checking…';

@@ -178,6 +178,13 @@ enum SelfTest {
             try check(e.setupError == nil, "setup finished \(e.setupError ?? "")")
             try check(e.phase == .running, "engine running after setup (\(e.phase))")
             try check(e.model == "all-minilm" && e.modelDownloaded, "health reports the chosen model as downloaded")
+            // A second setup (say after reinstalling the app) finds everything and downloads nothing big.
+            let again = SetupPlan.scan()
+            print("     plan: \(again.summary)")
+            try check(again.model == "all-minilm" && again.haveModel, "setup plan finds the chat model already downloaded")
+            try check(again.found.contains { $0.what == "the memory model" } && again.found.contains { $0.what == "the parent's voice" },
+                      "setup plan finds the memory model and the voice")
+            try check(again.downloadHigh < 0.5, "setup plan has almost nothing left to download (\(again.downloadText))")
             let (page, _) = try await URLSession.shared.data(from: Pins.local)
             try check(String(decoding: page, as: UTF8.self).contains("<"), "serves the web app")
 

@@ -122,16 +122,16 @@ struct SetupView: View {
     }
 
     var intro: some View {
-        let est = setupEstimate()
+        let plan = SetupPlan.scan()
         let free = (try? Paths.home.resourceValues(forKeys: [.volumeAvailableCapacityForImportantUsageKey]))?
             .volumeAvailableCapacityForImportantUsage
         return VStack(alignment: .leading, spacing: 12) {
             Text("This lets Holding's parent understand what you write, answer in her own words, speak and listen, using AI that runs entirely on this Mac. Nothing you say leaves it. No account and nothing to pay.")
                 .fixedSize(horizontal: false, vertical: true)
-            Text("Setting up downloads about \(est.gb) once, mostly the chat model (\(est.model), picked for this Mac's memory). On slow Wi-Fi that can take a while; you can keep using your Mac.")
+            Text(plan.summary)
                 .foregroundColor(.secondary).fixedSize(horizontal: false, vertical: true)
-            if let free, free < 25_000_000_000 {
-                Label("This Mac has \(formatBytes(free)) free. Setup needs about \(est.gb) plus room to spare.", systemImage: "exclamationmark.triangle")
+            if let free, Double(free) < (plan.downloadHigh + 6) * 1e9 {
+                Label("This Mac has \(formatBytes(free)) free. Setup needs \(plan.downloadText) plus room to spare.", systemImage: "exclamationmark.triangle")
                     .foregroundColor(.orange).fixedSize(horizontal: false, vertical: true)
             }
             HStack {

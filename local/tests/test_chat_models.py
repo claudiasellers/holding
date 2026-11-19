@@ -1,6 +1,8 @@
 """Chat model manager and the Mac app's JSON setup progress. No Ollama needed."""
 import json
 
+import pytest
+
 import httpx
 from fastapi.testclient import TestClient
 
@@ -116,3 +118,39 @@ def test_setup_json_events(monkeypatch, capsys):
     assert kinds[0] == "plan" and events[0]["model"] == "gemma4:e4b"
     assert {"event": "progress", "label": "kokoro-v1.0.int8.onnx", "done": 5, "total": 10} in events
     assert kinds[-1] == "error" and "Ollama" in events[-1]["message"]
+
+
+def test_setup_reuses_models_already_downloaded(monkeypatch, capsys, tmp_path):
+    """Models from an earlier install (or plain Ollama) are used, not downloaded again."""
+    saved = {}
+    monkeypatch.setattr(state, "save", lambda c: saved.update(c))
+    monkeypatch.setattr(state, "load", lambda: dict(state.DEFAULTS))
+    monkeypatch.setattr(state, "MODELS", tmp_path)
+    for name in ("kokoro-v1.0.int8.onnx", "voices-v1.0.bin"):
+        (tmp_path / name).write_bytes(b"x")
+    monkeypatch.setattr(setup, "detect_hardware", lambda: {"ram_gb": 16.0, "vram_gb": 0, "gpu": None})
+    monkeypatch.setattr(setup, "start_ollama_if_needed", lambda url: True)
+    # A 16 GB machine would pick gemma4:e4b, but qwen3.5:4b is already here, plus a bigger one that doesn't fit.
+    monkeypatch.setattr(setup, "installed_models", lambda url: ["qwen3.5:4b", "gemma4:26b", "nomic-embed-text:latest"])
+    pulled = []
+    monkeypatch.setattr(setup, "pull", lambda url, tag: pulled.append(tag))
+    monkeypatch.setattr(setup, "download", lambda *a: pytest.fail("voice was downloaded again"))
+    try:
+        cli.main(["setup", "--json", "--no-start"])
+    finally:
+        setup.JSON = False
+    events = [json.loads(l) for l in capsys.readouterr().out.splitlines() if l.startswith("{")]
+    plan = events[0]
+    assert plan["event"] == "plan" and plan["model"] == "qwen3.5:4b" and plan["have"] and plan["download"] is None
+    steps = {e["id"]: e for e in events if e["event"] == "step"}
+    assert steps["voice"]["have"] and steps["model"]["have"] and steps["embed"]["have"]
+    assert pulled == [] and saved["llm_model"] == "qwen3.5:4b"
+    assert events[-1]["event"] == "done"
+
+
+def test_pick_model_order():
+    hw = {"ram_gb": 32.0, "vram_gb": 0}
+    assert setup.pick_model("x:1", {"llm_model": "y"}, hw, []) == ("x:1", "chosen")
+    assert setup.pick_model(None, {"llm_model": "y"}, hw, ["gemma4:12b"])[0] == "y"
+    assert setup.pick_model(None, {}, hw, ["gemma4:e4b", "gemma4:12b"])[0] == "gemma4:12b"
+    assert setup.pick_model(None, {}, hw, ["llama3:8b"])[0] == "gemma4:12b"
