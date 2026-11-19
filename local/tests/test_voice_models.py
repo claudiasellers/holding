@@ -336,6 +336,42 @@ def test_mac_voice_delete_keeps_shared_helpers(home, monkeypatch, tmp_path):
     assert not mlx_voices.repo_dir("mlx-community/S3TokenizerV2").exists()
 
 
+def test_mac_delete_removes_fetched_helpers_and_the_engine_last(home, monkeypatch, tmp_path):
+    import json
+    hub = tmp_path / "hub"
+    monkeypatch.setattr(mlx_voices, "hub_cache", lambda: hub)
+
+    def fake_repo(repo, n):
+        d = mlx_voices.repo_dir(repo) / "blobs"
+        d.mkdir(parents=True, exist_ok=True)
+        (d / "x").write_bytes(b"x" * n)
+
+    assert mlx_voices._hub_repos() == set()
+    fake_repo("someone/unrelated", 10)  # was already in the cache: never touched
+    for mid in ("qwen3-tts", "orpheus"):
+        fake_repo(mlx_voices.CATALOG[mid]["repo"], 1000)
+        mlx_voices._marker(mid).parent.mkdir(parents=True, exist_ok=True)
+    fake_repo("acme/snac-codec", 300)  # fetched by Orpheus's first line, not in the catalogue
+    mlx_voices._marker("qwen3-tts").write_text(json.dumps({"fetched": []}))
+    mlx_voices._marker("orpheus").write_text(json.dumps({"fetched": ["acme/snac-codec"]}))
+    assert "acme/snac-codec" in mlx_voices.helpers("orpheus")
+    assert mlx_voices.bytes_on_disk("orpheus") >= 1300
+    mlx_voices._engine_record().write_text(json.dumps({"packages": ["mlx-audio", "mlx"]}))
+    calls = []
+    monkeypatch.setattr(mlx_voices, "engine_bytes", lambda: 7000)
+    monkeypatch.setattr(mlx_voices.subprocess, "run",
+                        lambda cmd, **k: calls.append(cmd) or type("R", (), {"returncode": 0})())
+
+    assert mlx_voices.delete("orpheus") >= 1300
+    assert not mlx_voices.repo_dir("acme/snac-codec").exists()
+    assert calls == []  # Qwen is still here, so the engine stays
+    freed = mlx_voices.delete("qwen3-tts")
+    assert freed == 1000 + 7000
+    assert len(calls) == 1 and "uninstall" in calls[0] and calls[0][-2:] == ["mlx-audio", "mlx"]
+    assert not mlx_voices._engine_record().exists()
+    assert mlx_voices.repo_dir("someone/unrelated").exists()
+
+
 @pytest.mark.skipif(mlx_voices.supported(), reason="checks the non-Mac path")
 def test_mac_voices_say_why_off_mac(home):
     c, cfg = client(home)

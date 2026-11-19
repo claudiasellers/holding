@@ -5,6 +5,7 @@ downloaded, Holding Local installs mlx-audio into its own environment (about
 300 MB of Python packages, once). Model files live in the Hugging Face cache
 (~/.cache/huggingface/hub), one folder per repository, so deleting a voice
 removes exactly its folders and any helper folder no other downloaded voice needs.
+Deleting the last Mac voice also uninstalls the packages that installing mlx-audio added.
 
 How each model gets a parent's voice and feeling:
 - clone:    copies the parent's voice from a Kokoro rendering of REF_TEXT
@@ -14,6 +15,7 @@ How each model gets a parent's voice and feeling:
 - feeling:  Chatterbox takes the dial as `exaggeration`; Qwen3-TTS takes a
             spoken-style instruction written from the dial.
 """
+import json
 import os
 import platform
 import shutil
@@ -28,6 +30,10 @@ import numpy as np
 from . import state
 
 MLX_AUDIO = "mlx-audio==0.6.6"
+
+# The Hugging Face downloader can keep a second copy of what it fetches in a chunk
+# cache (~/.cache/huggingface/xet) that Delete would not see. Keep it off.
+os.environ.setdefault("HF_XET_CHUNK_CACHE_SIZE_BYTES", "0")
 WARMUP_TEXT = "I'm here."
 
 CATALOG = {
@@ -130,10 +136,21 @@ def _uv() -> str | None:
     return None
 
 
+def _installed_dists() -> set[str]:
+    from importlib import metadata
+    return {(d.metadata["Name"] or "").lower() for d in metadata.distributions() if d.metadata["Name"]}
+
+
+def _engine_record() -> Path:
+    return state.MODELS / "mac-voices" / "engine.json"
+
+
 def install_engine():
-    """Install mlx-audio into the Python that runs Holding Local."""
+    """Install mlx-audio into the Python that runs Holding Local, and note which packages
+    that added, so deleting the last Mac voice can take them out again."""
     if engine_installed():
         return
+    before = _installed_dists()
     if sys.version_info < (3, 11):
         raise RuntimeError("The Mac voices need Python 3.11 or newer. Reinstall Holding Local to update it.")
     uv = _uv()
@@ -145,6 +162,58 @@ def install_engine():
         raise RuntimeError("Could not install the Mac voice engine: " + " ".join(tail))
     import importlib
     importlib.invalidate_caches()
+    added = sorted(_installed_dists() - before)
+    _engine_record().parent.mkdir(parents=True, exist_ok=True)
+    _engine_record().write_text(json.dumps({"packages": added}))
+
+
+_engine_size: dict = {}
+
+
+def engine_bytes() -> int:
+    """Disk used by the packages Holding Local added for the Mac voices."""
+    from importlib import metadata
+    try:
+        rec = _engine_record()
+        key = rec.stat().st_mtime
+        if _engine_size.get("key") == key:
+            return _engine_size["n"]
+        names = set(json.loads(rec.read_text())["packages"])
+    except (OSError, ValueError, KeyError):
+        return 0
+    n = 0
+    for d in metadata.distributions():
+        if (d.metadata["Name"] or "").lower() in names:
+            for f in d.files or []:
+                try:
+                    n += Path(d.locate_file(f)).stat().st_size
+                except OSError:
+                    pass
+    _engine_size.update(key=key, n=n)
+    return n
+
+
+def uninstall_engine() -> int:
+    """Remove the packages install_engine added. Only the ones it added: anything that was
+    already here stays. Returns bytes freed."""
+    try:
+        names = json.loads(_engine_record().read_text())["packages"]
+    except (OSError, ValueError, KeyError):
+        return 0
+    freed = engine_bytes()
+    if names:
+        uv = _uv()
+        cmd = ([uv, "pip", "uninstall", "--python", sys.executable, *names] if uv
+               else [sys.executable, "-m", "pip", "uninstall", "-y", *names])
+        r = subprocess.run(cmd, capture_output=True, text=True)
+        if r.returncode != 0:
+            return 0  # keep the record so the next delete tries again
+    for k in [k for k in sys.modules if k == "mlx_audio" or k.startswith(("mlx_audio.", "mlx.", "mlx_lm"))]:
+        sys.modules.pop(k, None)
+    import importlib
+    importlib.invalidate_caches()
+    _engine_record().unlink(missing_ok=True)
+    return freed
 
 
 # ---------- files ----------
@@ -182,16 +251,33 @@ def downloaded(mid: str) -> bool:
     return _marker(mid).exists() and repo_dir(CATALOG[mid]["repo"]).exists()
 
 
+def helpers(mid: str) -> list[str]:
+    """Helper repositories a voice uses: the known ones, plus any its first line fetched."""
+    found = []
+    try:
+        found = json.loads(_marker(mid).read_text()).get("fetched", [])
+    except (OSError, ValueError, AttributeError):
+        pass
+    return list(dict.fromkeys([*CATALOG[mid]["helpers"], *(r for r in found if r != CATALOG[mid]["repo"])]))
+
+
 def _helper_owners(repo: str, exclude: str) -> list[str]:
-    return [k for k, m in CATALOG.items() if k != exclude and repo in m["helpers"] and downloaded(k)]
+    return [k for k in CATALOG if k != exclude and downloaded(k) and (repo in helpers(k) or repo == CATALOG[k]["repo"])]
+
+
+def _hub_repos() -> set[str]:
+    d = hub_cache()
+    if not d.exists():
+        return set()
+    return {p.name[len("models--"):].replace("--", "/", 1) for p in d.glob("models--*") if p.is_dir()}
 
 
 def bytes_on_disk(mid: str) -> int:
     m = CATALOG[mid]
     n = _dir_bytes(repo_dir(m["repo"]))
-    for h in m["helpers"]:
+    for h in helpers(mid):
         # A helper shared with another downloaded voice is counted once, on the first voice that has it.
-        owners = [k for k in CATALOG if h in CATALOG[k]["helpers"] and downloaded(k)]
+        owners = [k for k in CATALOG if h in helpers(k) and downloaded(k)]
         if not owners or owners[0] == mid:
             n += _dir_bytes(repo_dir(h))
     return n
@@ -303,6 +389,7 @@ def download(mid: str, job: dict, reference_wav_fn):
         raise RuntimeError(unsupported_reason())
     job["phase"] = "installing"
     install_engine()
+    seen_before = _hub_repos()
     from huggingface_hub import snapshot_download
     from mlx_audio.utils import DEFAULT_ALLOW_PATTERNS
     job["phase"] = "downloading"
@@ -324,23 +411,32 @@ def download(mid: str, job: dict, reference_wav_fn):
         raise RuntimeError("cancelled")
     job["phase"] = "preparing"
     _marker(mid).parent.mkdir(parents=True, exist_ok=True)
-    _marker(mid).write_text(str(time.time()))
+    _marker(mid).write_text(json.dumps({"at": time.time(), "fetched": []}))
     try:
         from .chatterbox import REF_TEXT
         generate(mid, WARMUP_TEXT, "af_heart", 0.55, reference_wav_fn(), REF_TEXT)
     except Exception:
         _marker(mid).unlink(missing_ok=True)
         raise
+    finally:
+        # Whatever the download and first line pulled into the cache belongs to this voice,
+        # so Delete removes it even if it isn't in the catalogue's helper list.
+        fetched = sorted(_hub_repos() - seen_before - {m["repo"]})
+        if _marker(mid).exists():
+            _marker(mid).write_text(json.dumps({"at": time.time(), "fetched": fetched}))
 
 
 def delete(mid: str) -> int:
     m = CATALOG[mid]
     unload(mid)
     freed = 0
-    repos = [m["repo"]] + [h for h in m["helpers"] if not _helper_owners(h, mid)]
+    repos = [r for r in [m["repo"], *helpers(mid)] if not _helper_owners(r, mid)]
     for r in repos:
         d = repo_dir(r)
         freed += _dir_bytes(d)
         shutil.rmtree(d, ignore_errors=True)
     _marker(mid).unlink(missing_ok=True)
+    if not any(downloaded(k) for k in CATALOG):
+        unload()
+        freed += uninstall_engine()
     return freed

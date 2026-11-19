@@ -149,7 +149,7 @@ function serverPanel(list, foot, rerender) {
     }
     const cur = models.find((m) => m.id === selected);
     if (cur?.downloaded && cur.id !== 'kokoro') list.append(prerenderBlock(cfg, cur));
-    const used = models.reduce((n, m) => n + (m.bytes || 0) + (m.lines_bytes || 0), 0);
+    const used = models.reduce((n, m) => n + (m.bytes || 0) + (m.lines_bytes || 0), 0) + (data.engine_bytes || 0);
     foot.textContent = `Voices on your computer use ${formatBytes(used)}.` + (data.disk?.free_bytes != null ? ` It has ${formatBytes(data.disk.free_bytes)} free.` : '');
     clearTimeout(timer);
     if (downloading && document.body.contains(list)) timer = setTimeout(refresh, 1000);
