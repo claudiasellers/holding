@@ -103,6 +103,16 @@ def kokoro_from_hf(quality: str):
         np.savez(out, **styles)
 
 
+def fetch_voice(quality: str):
+    try:
+        for key in (quality, "voices"):
+            name, url = catalog.KOKORO_FILES[key]
+            download(url, state.MODELS / name, name)
+    except Exception as e:
+        print(f"\n  GitHub download failed ({e}); trying the Hugging Face mirror.")
+        kokoro_from_hf(quality)
+
+
 def wait_for_ollama(url: str, seconds: int = 60) -> bool:
     for _ in range(seconds):
         try:
@@ -151,46 +161,78 @@ def have_model(url: str, tag: str) -> bool:
     return tag in names or f"{tag}:latest" in names
 
 
+def installed_models(url: str) -> list[str]:
+    try:
+        return [m["name"] for m in httpx.get(f"{url}/api/tags", timeout=5).json().get("models", [])]
+    except Exception:
+        return []
+
+
+def _has(names: list[str], tag: str) -> bool:
+    return tag in names or f"{tag}:latest" in names
+
+
+def pick_model(model: str | None, cfg: dict, hw: dict, names: list[str]) -> tuple[str, str]:
+    """The chat model setup uses, and why. Prefers what's already on this computer:
+    an explicit choice, then the earlier setup's pick, then the biggest model tier that's
+    already downloaded and fits, and only then the tier for this hardware (a download)."""
+    tier = catalog.pick_tier(hw["ram_gb"], hw["vram_gb"])
+    if model:
+        return model, "chosen"
+    if cfg.get("llm_model"):
+        return cfg["llm_model"], "from your earlier setup"
+    fitting = [t for t in catalog.LLM_TIERS if t["min_gb"] <= tier["min_gb"]]
+    for t in reversed(fitting):
+        if _has(names, t["tag"]):
+            return t["tag"], "already on this computer"
+    return tier["tag"], f"picked for this hardware: {tier['note']}"
+
+
 def run(model: str | None = None, quality: str | None = None, embed: bool = True, warm: bool = True) -> dict:
     cfg = state.load()
     hw = detect_hardware()
     print(f"This computer: {hw['ram_gb']} GB memory" + (f", {hw['gpu']}" if hw["gpu"] else "")
           + (f" ({hw['vram_gb']} GB)" if hw["vram_gb"] else ""))
     tier = catalog.pick_tier(hw["ram_gb"], hw["vram_gb"])
-    cfg["llm_model"] = model or cfg.get("llm_model") or tier["tag"]
+    ollama_up = start_ollama_if_needed(cfg["ollama_url"])
+    names = installed_models(cfg["ollama_url"]) if ollama_up else []
+    cfg["llm_model"], why = pick_model(model, cfg, hw, names)
+    have_chat = _has(names, cfg["llm_model"])
     if hw["ram_gb"] < 12:
         cfg["whisper_model"] = "base"
     if quality:
         cfg["tts_quality"] = quality
     state.save(cfg)
-    print(f"Chat model: {cfg['llm_model']}" + ("" if model else f"  (picked for this hardware: {tier['note']})"))
-    emit(event="plan", model=cfg["llm_model"], download=tier["download"] if cfg["llm_model"] == tier["tag"] else None,
+    print(f"Chat model: {cfg['llm_model']}  ({why})")
+    emit(event="plan", model=cfg["llm_model"], reason=why, have=have_chat,
+         download=None if have_chat else tier["download"] if cfg["llm_model"] == tier["tag"] else None,
          ram_gb=hw["ram_gb"], gpu=hw["gpu"])
 
     print("\n1/3 Voice (Kokoro)")
-    emit(event="step", id="voice", title="Voice")
-    try:
-        for key in (cfg["tts_quality"], "voices"):
-            name, url = catalog.KOKORO_FILES[key]
-            download(url, state.MODELS / name, name)
-    except Exception as e:
-        print(f"\n  GitHub download failed ({e}); trying the Hugging Face mirror.")
-        kokoro_from_hf(cfg["tts_quality"])
+    voice_files = [state.MODELS / catalog.KOKORO_FILES[k][0] for k in (cfg["tts_quality"], "voices")]
+    have_voice = all(f.exists() and f.stat().st_size > 0 for f in voice_files)
+    emit(event="step", id="voice", title="Voice", have=have_voice)
+    if have_voice:
+        print("  already downloaded")
+    else:
+        fetch_voice(cfg["tts_quality"])
 
     print("\n2/3 Chat model (Ollama)")
-    emit(event="step", id="model", title="Chat model", model=cfg["llm_model"])
-    if not start_ollama_if_needed(cfg["ollama_url"]):
+    emit(event="step", id="model", title="Chat model", model=cfg["llm_model"], have=have_chat)
+    if not ollama_up:
         print("  Ollama is not installed or not running. Install it from https://ollama.com/download "
               "and run setup again.")
         emit(event="error", message="Ollama isn't running, so the chat model can't be downloaded.")
         return cfg
-    if not have_model(cfg["ollama_url"], cfg["llm_model"]):
+    if not have_chat:
         pull(cfg["ollama_url"], cfg["llm_model"])
     else:
         print(f"  {cfg['llm_model']}: already downloaded")
-    if embed and not have_model(cfg["ollama_url"], catalog.EMBED_TAG):
-        emit(event="step", id="embed", title="Memory model", model=catalog.EMBED_TAG)
-        pull(cfg["ollama_url"], catalog.EMBED_TAG)
+    if embed:
+        have_embed = _has(names, catalog.EMBED_TAG)
+        emit(event="step", id="embed", title="Memory model", model=catalog.EMBED_TAG, have=have_embed)
+        if not have_embed:
+            pull(cfg["ollama_url"], catalog.EMBED_TAG)
 
     print("\n3/3 Listening (Whisper)")
     emit(event="step", id="listening", title="Listening")
