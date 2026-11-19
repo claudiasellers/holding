@@ -86,8 +86,15 @@ export function createSession({ archetype, presence, ui, mode = 'hold' }) {
   async function prepareModel() {
     const id = providerId, p = provider;
     try {
-      const av = await p.isAvailable(s.ai[id] || {});
-      if (!av.ok) throw new Error(av.reason || 'not available');
+      // The in-browser model stays in memory between sessions (and may already
+      // be warming up from when the app opened). If it's loaded or loading, the
+      // availability check already passed once: skip it and just join.
+      const cfg = s.ai[id] || {};
+      const warm = (await p.isLoaded?.(cfg).catch(() => false)) || (await p.isLoading?.(cfg).catch(() => false));
+      if (!warm) {
+        const av = await p.isAvailable(cfg);
+        if (!av.ok) throw new Error(av.reason || 'not available');
+      }
       await p.init(s.ai[id] || {}, (pr) => {
         if (id !== providerId) return;
         modelProgress = pr.progress || 0;
