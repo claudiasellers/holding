@@ -11,7 +11,17 @@ from . import catalog, net, state
 
 def cmd_setup(a):
     from . import setup
-    setup.run(model=a.model, quality=a.voice_quality, embed=not a.no_embed)
+    if a.json:
+        setup.JSON = True
+        try:
+            setup.run(model=a.model, quality=a.voice_quality, embed=not a.no_embed)
+        except Exception as e:  # the app shows this message; the log has the rest
+            setup.emit(event="error", message=str(e) or e.__class__.__name__)
+            raise SystemExit(1)
+        if a.no_start:
+            return
+    else:
+        setup.run(model=a.model, quality=a.voice_quality, embed=not a.no_embed)
     if not a.no_start:
         a.lan = a.tailscale = False
         a.port = a.app_dir = None
@@ -145,6 +155,38 @@ def cmd_voice(a):
         print(f"Deleted {a.id}; {fmt(freed)} freed.")
 
 
+def cmd_models(a):
+    """List the chat models on this computer, or delete one: holding-local models [rm TAG]."""
+    import asyncio
+    import httpx
+    from . import chat_models, setup
+    cfg = state.load()
+    fmt = lambda n: f"{n / 1e9:.1f} GB" if n >= 1e8 else f"{n / 1e6:.0f} MB"
+    if not setup.start_ollama_if_needed(cfg["ollama_url"]):
+        sys.exit("Ollama isn't running.")
+
+    async def go():
+        async with httpx.AsyncClient() as http:
+            if a.action == "rm":
+                if not a.tag:
+                    sys.exit("Which one? holding-local models rm TAG")
+                try:
+                    r = await chat_models.delete(http, cfg["ollama_url"], a.tag, cfg)
+                except PermissionError as e:
+                    sys.exit(str(e))
+                except KeyError:
+                    sys.exit(f"{a.tag} isn't on this computer.")
+                print(f"Deleted {r['deleted']}; about {fmt(r['freed_bytes'])} freed.")
+                return
+            data = chat_models.describe(await chat_models.tags(http, cfg["ollama_url"]), cfg)
+            for m in data["models"]:
+                mark = "*" if m["in_use"] else " "
+                print(f" {mark} {m['name']:<28} {fmt(m['bytes']):>8}  {m['kind']}")
+            print(f"   {fmt(data['total_bytes'])} in all. * = the model the parent uses."
+                  + (f" {fmt(data['disk']['free_bytes'])} free." if data["disk"]["free_bytes"] else ""))
+    asyncio.run(go())
+
+
 def cmd_catalog(a):
     print(json.dumps({"llm_tiers": catalog.LLM_TIERS, "webllm": catalog.WEBLLM,
                       "archetype_voices": catalog.ARCHETYPE_VOICES}, indent=2))
@@ -159,6 +201,7 @@ def main(argv=None):
     s.add_argument("--voice-quality", choices=["int8", "fp32"])
     s.add_argument("--no-embed", action="store_true", help="skip the embedding model used by RAG")
     s.add_argument("--no-start", action="store_true")
+    s.add_argument("--json", action="store_true", help="progress as JSON lines (used by the Mac app)")
     s.set_defaults(fn=cmd_setup)
 
     st = sub.add_parser("start", help="run the app and local API")
@@ -174,6 +217,10 @@ def main(argv=None):
     m = sub.add_parser("model", help="switch the chat model, e.g. gemma4:12b")
     m.add_argument("tag")
     m.set_defaults(fn=cmd_model)
+    ms = sub.add_parser("models", help="chat models on this computer: list | rm TAG")
+    ms.add_argument("action", nargs="?", choices=["list", "rm"], default="list")
+    ms.add_argument("tag", nargs="?")
+    ms.set_defaults(fn=cmd_models)
     sub.add_parser("catalog", help="print the recommended models and voices").set_defaults(fn=cmd_catalog)
     v = sub.add_parser("voice", help="voice models: list | download ID | use ID | delete ID")
     v.add_argument("action", choices=["list", "download", "use", "delete"])

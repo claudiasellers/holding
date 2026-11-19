@@ -1,3 +1,4 @@
+import { getLocalPanel } from './get-local.js';
 import { h, clear, toast } from './dom.js';
 import { icon } from './icons.js';
 import { createSuggestions } from './suggestions.js';
@@ -207,7 +208,12 @@ export function renderSession(root, nav, { mode = 'hold' } = {}) {
     const localBtn = h('button', { class: 'btn' + (deviceBtn ? '' : ' primary') }, 'Use Holding Local on my computer');
     localBtn.onclick = busy(localBtn, async () => {
       msg.className = 'status'; msg.textContent = 'Connecting…';
-      await connectHoldingLocal(); session.useProvider(); closeSheet();
+      try { await connectHoldingLocal(); } catch (e) {
+        // Not running here: offer the app right in the sheet.
+        if (!msg.nextSibling?.classList?.contains('get-local')) msg.after(getLocalPanel({ always: true }));
+        throw e;
+      }
+      session.useProvider(); closeSheet();
       toast(`Connected. ${first}'s words, voice and listening now run on your computer.`, 4000);
     });
     const b = brain;

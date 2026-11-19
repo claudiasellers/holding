@@ -12,7 +12,7 @@ from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse, Response, StreamingResponse
 from starlette.concurrency import run_in_threadpool
 
-from . import __version__, catalog, chatterbox, expressive, llm, net, state, stt, tts, voice_models
+from . import __version__, catalog, chat_models, chatterbox, expressive, llm, net, state, stt, tts, voice_models
 
 API_PREFIXES = ("/v1/", "/health")
 HIDDEN_DIRS = {"node_modules", "local", "android", "ios", "tools", "scripts", "__pycache__"}
@@ -140,7 +140,7 @@ def create_app(cfg: dict | None = None) -> FastAPI:
                     "ready": [k for k in voice_models.MODELS if k == "kokoro" or expressive.ready(k)]},
             "stt": {"engine": "faster-whisper", "installed": stt.installed(), "model": cfg["whisper_model"]},
             "endpoints": ["/v1/chat/completions", "/v1/audio/speech", "/v1/audio/transcriptions",
-                          "/v1/models", "/v1/voices", "/v1/catalog", "/v1/voice-models"],
+                          "/v1/models", "/v1/voices", "/v1/catalog", "/v1/voice-models", "/v1/chat-models"],
         }
 
     @app.get("/v1/models")
@@ -278,6 +278,56 @@ def create_app(cfg: dict | None = None) -> FastAPI:
         except PermissionError as e:
             raise HTTPException(409, str(e))
         return {"freed_bytes": freed, "selected": voice_models.selected(cfg)}
+
+    # ---- chat models (Ollama): list, pick, download, delete
+    def ollama_down():
+        return HTTPException(503, "Ollama isn't running, so the chat models can't be listed. Start Holding Local again.")
+
+    @app.get("/v1/chat-models")
+    async def list_chat_models():
+        try:
+            raw = await chat_models.tags(app.state.http, cfg["ollama_url"])
+        except Exception:
+            raise ollama_down()
+        import psutil
+        return chat_models.describe(raw, cfg, psutil.virtual_memory().total / 2**30)
+
+    @app.post("/v1/chat-models/select")
+    async def select_chat_model(request: Request):
+        name = str((await request.json()).get("name", "")).strip()
+        try:
+            return {"selected": await chat_models.select(app.state.http, cfg["ollama_url"], name, cfg)}
+        except FileNotFoundError as e:
+            raise HTTPException(409, str(e))
+        except httpx.HTTPError:
+            raise ollama_down()
+
+    @app.post("/v1/chat-models/pull")
+    async def pull_chat_model(request: Request):
+        name = str((await request.json()).get("name", "")).strip()
+        if not name:
+            raise HTTPException(400, "Which model? Send {\"name\": \"gemma4:e4b\"}.")
+        try:
+            return chat_models.start_pull(app.state.http, cfg["ollama_url"], name)
+        except PermissionError as e:
+            raise HTTPException(409, str(e))
+
+    @app.delete("/v1/chat-models/pull")
+    async def stop_chat_pull():
+        return chat_models.stop_pull()
+
+    @app.delete("/v1/chat-models/{name:path}")
+    async def delete_chat_model(name: str):
+        try:
+            return await chat_models.delete(app.state.http, cfg["ollama_url"], name, cfg)
+        except PermissionError as e:
+            raise HTTPException(409, str(e))
+        except KeyError:
+            raise HTTPException(404, f"{name} isn't on this computer.")
+        except httpx.HTTPError:
+            raise ollama_down()
+        except RuntimeError as e:
+            raise HTTPException(502, f"Ollama couldn't delete it: {e}")
 
     @app.post("/v1/audio/transcriptions")
     async def transcriptions(file: UploadFile = File(...), model: str = Form("whisper-1"),

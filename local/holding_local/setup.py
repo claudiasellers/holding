@@ -32,7 +32,21 @@ def detect_hardware() -> dict:
             "os": platform.system(), "arch": platform.machine()}
 
 
+# When the Mac app runs setup it passes --json: progress then comes as one JSON
+# object per line ({"event": "step" | "plan" | "progress" | "done" | "error", ...})
+# so the app can draw real progress bars. Other printed lines are just log text.
+JSON = False
+
+
+def emit(**ev):
+    if JSON:
+        print(json.dumps(ev), flush=True)
+
+
 def _bar(done: int, total: int, label: str):
+    if JSON:
+        emit(event="progress", label=label, done=done, total=total)
+        return
     if not total:
         sys.stdout.write(f"\r  {label}: {done / 2**20:,.0f} MB")
     else:
@@ -150,8 +164,11 @@ def run(model: str | None = None, quality: str | None = None, embed: bool = True
         cfg["tts_quality"] = quality
     state.save(cfg)
     print(f"Chat model: {cfg['llm_model']}" + ("" if model else f"  (picked for this hardware: {tier['note']})"))
+    emit(event="plan", model=cfg["llm_model"], download=tier["download"] if cfg["llm_model"] == tier["tag"] else None,
+         ram_gb=hw["ram_gb"], gpu=hw["gpu"])
 
     print("\n1/3 Voice (Kokoro)")
+    emit(event="step", id="voice", title="Voice")
     try:
         for key in (cfg["tts_quality"], "voices"):
             name, url = catalog.KOKORO_FILES[key]
@@ -161,18 +178,22 @@ def run(model: str | None = None, quality: str | None = None, embed: bool = True
         kokoro_from_hf(cfg["tts_quality"])
 
     print("\n2/3 Chat model (Ollama)")
+    emit(event="step", id="model", title="Chat model", model=cfg["llm_model"])
     if not start_ollama_if_needed(cfg["ollama_url"]):
         print("  Ollama is not installed or not running. Install it from https://ollama.com/download "
               "and run setup again.")
+        emit(event="error", message="Ollama isn't running, so the chat model can't be downloaded.")
         return cfg
     if not have_model(cfg["ollama_url"], cfg["llm_model"]):
         pull(cfg["ollama_url"], cfg["llm_model"])
     else:
         print(f"  {cfg['llm_model']}: already downloaded")
     if embed and not have_model(cfg["ollama_url"], catalog.EMBED_TAG):
+        emit(event="step", id="embed", title="Memory model", model=catalog.EMBED_TAG)
         pull(cfg["ollama_url"], catalog.EMBED_TAG)
 
     print("\n3/3 Listening (Whisper)")
+    emit(event="step", id="listening", title="Listening")
     from . import stt
     if stt.installed():
         print(f"  faster-whisper installed; the '{cfg['whisper_model']}' model downloads the first time you speak.")
@@ -180,10 +201,12 @@ def run(model: str | None = None, quality: str | None = None, embed: bool = True
         print("  Not installed (optional). The app works without it; you never have to speak.")
 
     if warm:
+        emit(event="step", id="warm", title="Waking the parent up")
         try:
             httpx.post(f"{cfg['ollama_url']}/api/generate", json={"model": cfg["llm_model"], "prompt": "",
                                                                    "keep_alive": "30m"}, timeout=120)
         except Exception:
             pass
     print("\nSetup complete.")
+    emit(event="done", model=cfg["llm_model"])
     return cfg
