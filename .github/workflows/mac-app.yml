@@ -77,7 +77,8 @@ jobs:
         working-directory: mac-app
         run: |
           APP="build/Holding Local.app"
-          lipo -archs "$APP/Contents/MacOS/HoldingLocal" "$APP/Contents/Resources/bin/uv"
+          lipo -archs "$APP/Contents/MacOS/HoldingLocal"
+          lipo -archs "$APP/Contents/Resources/bin/uv"
           plutil -lint "$APP/Contents/Info.plist"
           test -f "$APP/Contents/Resources/engine/uv.lock"
           test -f "$APP/Contents/Resources/app/index.html"

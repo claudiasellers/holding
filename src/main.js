@@ -19,6 +19,7 @@ import { renderBuilder } from './ui/builder.js';
 import { renderSession } from './ui/session.js';
 import { renderMemory } from './ui/memory.js';
 import { renderSettings } from './ui/settings.js';
+import { connectHoldingLocal } from './ai/brain.js';
 
 // Optional mobile layer (PWA, install, pairing, prerecorded voice). Present when built from the full repo.
 const mobile = import.meta.glob('./mobile/register.js');
@@ -55,7 +56,7 @@ const q = new URLSearchParams(location.search);
 // Opened from the Holding Local Mac app (?local=1): use this computer's AI, voice and
 // listening right away instead of the scripted lines, so nobody has to find Settings.
 if (q.get('local') === '1' && store.settings.ai?.provider !== 'openai-local') {
-  import('./ai/brain.js').then(({ connectHoldingLocal }) => connectHoldingLocal(`${location.origin}/v1`)).catch(() => {});
+  connectHoldingLocal(`${location.origin}/v1`).catch(() => {});
 }
 const wanted = q.get('mode');
 if (wanted === 'hold' || wanted === 'talk' || wanted === 'makesense') {
