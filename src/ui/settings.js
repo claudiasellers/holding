@@ -8,6 +8,7 @@ import { brainLabel, canUseDeviceAI, useDeviceAI, connectHoldingLocal } from '..
 import { voiceFor, chosenVoice, withVoice } from '../voice/resolve.js';
 import { PRESETS } from '../data/archetypes.js';
 import { voiceModelsPanel } from './voice-models.js';
+import { chatModelsPanel } from './chat-models.js';
 import { feelingFor } from '../voice/feeling.js';
 import { validateLibrary } from '../engine/scripts.js';
 
@@ -119,6 +120,10 @@ export function renderSettings(root, nav, params = {}) {
         modelSel,
         h('label', { class: 'field' }, h('span', { class: 'lbl' }, 'Pairing token', h('small', {}, 'Only needed when connecting from another device on your Wi-Fi.')), h('input', { type: 'password', value: cfg.token || '', onchange: (e) => setCfg({ token: e.target.value.trim() }) })),
         aiId === 'holding-rag' ? toggle('Use my private notes (RAG)', cfg.useRag ?? true, (v) => setCfg({ useRag: v })) : null);
+      // Holding Local can also list, switch and delete the chat models it keeps.
+      if (aiId === 'openai-local' && /:8787(\/|$)/.test(cfg.baseUrl || '')) {
+        cfgBox.append(chatModelsPanel({ cfg: () => S().ai['openai-local'] || {}, setModel: (name) => setCfg({ model: name }), rerender: render }));
+      }
       if (aiId === 'openai-local') listModels({ ...cfg, baseUrl: cfg.baseUrl || defUrl }).then((ms) => { if (ms?.length) modelSel.append(select('Models found on the server', cfg.model || '', [['', 'Pick one…'], ...ms.map((m) => [m.id || m, m.id || m])], (v) => { if (v) { setCfg({ model: v }); render(); } })); }).catch(() => {});
     }
     // --- one-tap companion setup

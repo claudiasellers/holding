@@ -52,6 +52,11 @@ document.addEventListener('pointerdown', () => { if (unlocked && window.HoldingM
 if (store.data.archetype) store.setData({ archetype: normalizeArchetype(store.data.archetype) });
 
 const q = new URLSearchParams(location.search);
+// Opened from the Holding Local Mac app (?local=1): use this computer's AI, voice and
+// listening right away instead of the scripted lines, so nobody has to find Settings.
+if (q.get('local') === '1' && store.settings.ai?.provider !== 'openai-local') {
+  import('./ai/brain.js').then(({ connectHoldingLocal }) => connectHoldingLocal(`${location.origin}/v1`)).catch(() => {});
+}
 const wanted = q.get('mode');
 if (wanted === 'hold' || wanted === 'talk' || wanted === 'makesense') {
   // Home-screen "Hold me" shortcut: go straight in. If no figure was chosen yet, use the first preset.

@@ -12,6 +12,10 @@ It also serves the app itself, so you just open `http://127.0.0.1:8787`.
 
 ## Install (one time)
 
+**Easiest on a Mac:** download `Holding-Local-mac.dmg` from the [latest release](https://github.com/claudiasellers/holding/releases/latest), drag Holding Local to Applications, open it and press **Set up**. It does everything below with progress bars, lives in the menu bar, pairs your phone with a QR code and manages chat models. See `../mac-app/README.md`.
+
+Or with this folder:
+
 | Computer | Do this |
 |---|---|
 | **Mac** | Double-click **Install Holding Local.command**. If macOS says it can't be opened, right-click it, choose **Open**, then **Open** again. |
@@ -53,7 +57,7 @@ uv run holding-local model gemma4:12b
 | 32 GB Mac, or 12–16 GB graphics card | `gemma4:12b` | ~8 GB |
 | 48 GB+ Mac, or 24 GB graphics card | `gemma4:26b` | ~17 GB |
 
-Others worth trying: `qwen3.5:9b`, `qwen3.5:27b`. `uv run holding-local status` shows what's running and what's downloaded; `uv run holding-local catalog` lists the recommendations.
+Others worth trying: `qwen3.5:9b`, `qwen3.5:27b`. To free space, `uv run holding-local models` lists the chat models with their sizes and `uv run holding-local models rm TAG` deletes one (not the one in use). Settings → AI in the app, and the Mac app's **Chat models…**, do the same with buttons. `uv run holding-local status` shows what's running and what's downloaded; `uv run holding-local catalog` lists the recommendations.
 
 ## For developers: the API
 
@@ -66,6 +70,7 @@ Everything is under `http://127.0.0.1:8787/v1` and is OpenAI-compatible, so any 
 | `POST /v1/audio/transcriptions` | Multipart `file` (+ optional `language`, `prompt`, `response_format` = `json`/`text`/`verbose_json`). Whisper `small` by default (`base` on 8 GB machines); `501` if listening isn't installed. |
 | `POST /v1/embeddings` | `nomic-embed-text` through Ollama, for the RAG skill. Remember its `search_query: ` / `search_document: ` prefixes. |
 | `GET /v1/models` | Installed models. `401` without the pairing code from another device, which is how a phone detects "needs pairing". |
+| `GET /v1/chat-models` | Chat models in Ollama with sizes, which one is in use, recommended downloads, free disk, download progress. `POST /v1/chat-models/select {name}` switches, `POST /v1/chat-models/pull {name}` downloads in the background (`DELETE /v1/chat-models/pull` stops it), `DELETE /v1/chat-models/{name}` deletes one and returns `freed_bytes` (`409` for the model in use). |
 | `GET /v1/voices` | Kokoro voices, archetype presets, OpenAI aliases. |
 | `GET /v1/catalog` | Recommended model tiers, exact WebLLM ids for the browser/phone path, archetype voices. |
 | `GET /health` | Open to all (no secrets): is Ollama up, is the model downloaded, is the voice ready. |
