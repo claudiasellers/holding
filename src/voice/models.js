@@ -121,15 +121,25 @@ export function formatBytes(n) {
   return `${Math.max(1, Math.round(n / 1e6))} MB`;
 }
 
-/** Can this device run the model at all? { ok, reason } */
+/**
+ * A note when the browser hints this computer may be short of memory, or null.
+ * Browsers can't tell how much memory a computer really has: Chrome rounds it down
+ * and stops at 8 (often lower to resist fingerprinting), and Safari and Firefox say
+ * nothing. So this only ever warns; it never stops a download.
+ */
+export function memoryWarning(model, mem = typeof navigator !== 'undefined' ? navigator.deviceMemory : undefined) {
+  const m = typeof model === 'string' ? modelById(model) : model;
+  if (!m || m.needs !== 'webgpu' || typeof mem !== 'number' || mem >= 8) return null;
+  return `Your browser reports about ${mem} GB of memory, but browsers often report less than a computer has. ${m.name} works best with 8 GB or more; if it struggles, close other tabs or use Holding Local.`;
+}
+
+/** Can this device run the model at all? { ok, reason }. Memory is never a reason: see memoryWarning. */
 export async function canRun(model) {
   const m = typeof model === 'string' ? modelById(model) : model;
   if (!m) return { ok: false, reason: 'Unknown voice model.' };
   if (m.needs !== 'webgpu') return { ok: true };
   const mobile = typeof navigator !== 'undefined' && /iPhone|iPad|Android/i.test(navigator.userAgent || '');
   if (mobile) return { ok: false, reason: `Too big for a phone. On your phone, connect to Holding Local on your computer and pick ${m.name} there.` };
-  const mem = typeof navigator !== 'undefined' ? navigator.deviceMemory : undefined;
-  if (mem && mem < 8) return { ok: false, reason: 'Needs a computer with at least 8 GB of memory.' };
   try {
     if (!navigator.gpu) return { ok: false, reason: 'Needs WebGPU, which this browser does not have. Recent Chrome, Edge or Safari 26 on a computer have it, or use Holding Local.' };
     const a = await Promise.race([navigator.gpu.requestAdapter(), new Promise((r) => setTimeout(() => r(null), 2500))]);

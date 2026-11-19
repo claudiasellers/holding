@@ -5,7 +5,7 @@
 import { h, clear, toast, slider } from './dom.js';
 import { store } from '../store.js';
 import { getTTSProvider } from '../voice/providers.js';
-import { VOICE_MODELS, cachedSize, deleteCached, storageEstimate, formatBytes, canRun, hasFeelingDial } from '../voice/models.js';
+import { VOICE_MODELS, cachedSize, deleteCached, storageEstimate, formatBytes, canRun, memoryWarning, hasFeelingDial } from '../voice/models.js';
 import { listServerModels, downloadServerModel, deleteServerModel, selectServerModel, startPrerender, prerenderStatus, stopPrerender } from '../voice/server-models.js';
 import { scriptedTexts } from '../voice/scripted-texts.js';
 import { voiceFor } from '../voice/resolve.js';
@@ -106,7 +106,7 @@ function browserPanel(list, foot, ttsId, rerender) {
     slot.replaceWith(row(m, {
       inUse,
       status: have ? `On this device · ${formatBytes(bytes)}` : partial(bytes) ? `Partly downloaded · ${formatBytes(bytes)} of ${m.sizeNote}` : `Not downloaded · ${m.sizeNote}`,
-      note: can.ok ? null : can.reason,
+      note: can.ok ? (have ? null : memoryWarning(m)) : can.reason,
       buttons, prog: h('div', { class: 'stack' }, prog, msg),
     }));
   });
@@ -149,7 +149,7 @@ function serverPanel(list, foot, rerender) {
     }
     const cur = models.find((m) => m.id === selected);
     if (cur?.downloaded && cur.id !== 'kokoro') list.append(prerenderBlock(cfg, cur));
-    const used = models.reduce((n, m) => n + (m.bytes || 0) + (m.lines_bytes || 0), 0);
+    const used = models.reduce((n, m) => n + (m.bytes || 0) + (m.lines_bytes || 0), 0) + (data.engine_bytes || 0);
     foot.textContent = `Voices on your computer use ${formatBytes(used)}.` + (data.disk?.free_bytes != null ? ` It has ${formatBytes(data.disk.free_bytes)} free.` : '');
     clearTimeout(timer);
     if (downloading && document.body.contains(list)) timer = setTimeout(refresh, 1000);

@@ -111,7 +111,8 @@ def listing(cfg: dict) -> dict:
         free = shutil.disk_usage(state.MODELS).free
     except OSError:
         free = None
-    return {"models": [info(k, cfg) for k in MODELS], "selected": selected(cfg), "disk": {"free_bytes": free}}
+    return {"models": [info(k, cfg) for k in MODELS], "selected": selected(cfg), "disk": {"free_bytes": free},
+            "engine_bytes": mlx_voices.engine_bytes()}
 
 
 def _size(client: httpx.Client, url: str, fallback: int) -> int:

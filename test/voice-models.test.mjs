@@ -142,3 +142,18 @@ test('turbo loop: positions, cache, silence padding (stand-in sessions)', async 
   assert.equal(seen.lm.length, 3);
   assert.ok(a.length > 0 && START_SPEECH_TOKEN === 6561);
 });
+
+test('memory never blocks a download: low reported memory only warns', async () => {
+  const { memoryWarning, canRun } = await import('../src/voice/models.js');
+  assert.equal(memoryWarning('chatterbox', 8), null);
+  assert.equal(memoryWarning('chatterbox', undefined), null);
+  assert.equal(memoryWarning('kokoro', 2), null);
+  assert.match(memoryWarning('chatterbox', 4), /often report less/);
+  const prev = Object.getOwnPropertyDescriptor(globalThis, 'navigator');
+  Object.defineProperty(globalThis, 'navigator', { value: { userAgent: 'Mozilla/5.0 (Macintosh)', deviceMemory: 4, gpu: { requestAdapter: async () => ({}) } }, configurable: true });
+  try {
+    assert.deepEqual(await canRun('chatterbox'), { ok: true });
+  } finally {
+    if (prev) Object.defineProperty(globalThis, 'navigator', prev); else delete globalThis.navigator;
+  }
+});

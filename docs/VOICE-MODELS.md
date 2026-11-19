@@ -95,7 +95,18 @@ API (same pairing token as the rest of `/v1`):
 Files:
 
 - Chatterbox and Turbo live in `~/.holding-local/models/chatterbox/` and `.../chatterbox-turbo/`. Chatterbox uses the 4-bit language model with the encoder and decoder at fp32. Turbo uses the 4-bit language model with the 8-bit encoder, embeddings and decoder.
-- **Mac voices.** The first Mac voice you download installs `mlx-audio` 0.6.6 into Holding Local's own Python, about 300 MB once, and needs Python 3.11 or newer. Each model then downloads into the Hugging Face cache (`~/.cache/huggingface/hub`), and Holding Local speaks one short line to fetch any helper files and confirm the model works. Deleting a voice removes its folders, plus any helper folder no other downloaded voice still needs. For example, Chatterbox and Turbo on the GPU share the S3 tokenizer. The installer keeps `mlx-audio` when you update (`uv sync --inexact`), and Holding Local reinstalls it if it ever goes missing.
+- **Mac voices.** The first Mac voice you download installs `mlx-audio` 0.6.6 into Holding Local's own Python, about 300 MB once, and needs Python 3.11 or newer. Each model then downloads into the Hugging Face cache (`~/.cache/huggingface/hub`), and Holding Local speaks one short line to fetch any helper files and confirm the model works. Deleting a voice removes its folders, plus any helper folder no other downloaded voice still needs. For example, Chatterbox and Turbo on the GPU share the S3 tokenizer. Any other repository a voice pulled into the cache while downloading or speaking its first line is recorded with it and removed with it. Deleting the last Mac voice also uninstalls the packages that installing `mlx-audio` added (recorded in `~/.holding-local/models/mac-voices/engine.json`), and leaves alone anything that was installed before. Holding Local turns off the Hugging Face chunk cache (`~/.cache/huggingface/xet`) so no second copy is kept. The installer keeps `mlx-audio` when you update (`uv sync --inexact`), and Holding Local reinstalls it if it ever goes missing.
+
+## Where each download lives
+
+| Where you downloaded it | Voice | Folder | Delete removes |
+|---|---|---|---|
+| Holding Local | Kokoro | `~/.holding-local/models/` (`kokoro-*.onnx`, `voices-*.bin`) | Can't be deleted (it's the fallback voice) |
+| Holding Local | Chatterbox, Chatterbox Turbo | `~/.holding-local/models/chatterbox/`, `.../chatterbox-turbo/` | The folder, partial downloads, and the lines it recorded (`~/.holding-local/voice-cache/<id>/`) |
+| Holding Local | Mac voices | `~/.cache/huggingface/hub/models--<org>--<name>/` | Its folders, helpers no other voice needs, its recorded lines, and the engine once no Mac voice is left |
+| Browser | Kokoro, Chatterbox, Chatterbox Turbo | The browser's site storage (Cache Storage `transformers-cache`), not a folder you can browse | Every cached file from that model's repository |
+
+The Kokoro reference clips used for voice copying (`~/.holding-local/voice-cache/references/`) are a few hundred KB each and stay.
 
 ## Browser
 
