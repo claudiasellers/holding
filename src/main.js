@@ -5,6 +5,8 @@ import './ai/openai-local.js';
 import './ai/holding-rag.js';
 import './voice/webspeech.js';
 import './voice/kokoro.js';
+import './voice/chatterbox.js';
+import './voice/chatterbox-turbo.js';
 import './voice/openai-speech.js';
 import { unlockSpeech } from './voice/webspeech.js';
 import { unlockAudio } from './voice/kokoro.js';
@@ -18,6 +20,7 @@ import { renderSession } from './ui/session.js';
 import { renderMemory } from './ui/memory.js';
 import { renderSettings } from './ui/settings.js';
 import { renderWidget, isWidget, toNative, sizeFor } from './ui/widget.js';
+import { connectHoldingLocal } from './ai/brain.js';
 
 // Optional mobile layer (PWA, install, pairing, prerecorded voice). Present when built from the full repo.
 const mobile = import.meta.glob('./mobile/register.js');
@@ -56,6 +59,11 @@ document.addEventListener('pointerdown', () => { if (unlocked && window.HoldingM
 if (store.data.archetype) store.setData({ archetype: normalizeArchetype(store.data.archetype) });
 
 const q = new URLSearchParams(location.search);
+// Opened from the Holding Local Mac app (?local=1): use this computer's AI, voice and
+// listening right away instead of the scripted lines, so nobody has to find Settings.
+if (q.get('local') === '1' && store.settings.ai?.provider !== 'openai-local') {
+  connectHoldingLocal(`${location.origin}/v1`).catch(() => {});
+}
 const wanted = q.get('mode');
 if (wanted === 'hold' || wanted === 'talk' || wanted === 'makesense') {
   // Home-screen "Hold me" shortcut: go straight in. If no figure was chosen yet, use the first preset.

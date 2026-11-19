@@ -14,21 +14,31 @@ html[data-widget] #app { min-height: 100vh; padding: 0; }
 .widget-more { display: flex; gap: 14px; }
 .linkish { background: none; border: 0; padding: 4px 2px; color: var(--ink2); font-size: .82rem; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--line); }
 
-/* session, compressed */
-html[data-widget] .session .topbar { padding: 4px 8px; min-height: 0; gap: 4px; opacity: .55; transition: opacity .3s; }
-html[data-widget] .session:hover .topbar, html[data-widget] .session .topbar:focus-within { opacity: 1; }
-html[data-widget] .session .topbar .row { gap: 4px; }
-html[data-widget] .session .pill { font-size: .74rem; min-height: 26px; padding: 0 8px; }
-html[data-widget] .session .pill.safe { opacity: 1; }
-html[data-widget] .stage .face-box { max-height: 58vh; }
-html[data-widget] .caption { font-size: clamp(.95rem, 4.6vw, 1.3rem); min-height: 3.6em; padding: 2px 12px; }
+/* session, compressed: the face gets the room; feelings are one swipeable row; suggested
+   replies and the model chip are left to the full app (the "..." menu still has everything). */
+html[data-widget] .session { grid-template-rows: auto minmax(0, 1fr) auto auto auto auto; }
+html[data-widget] .session .topbar { padding: 4px 8px 0; min-height: 0; gap: 4px; }
+html[data-widget] .session .topbar .icon-btn { width: 32px; min-width: 32px; min-height: 32px; }
+html[data-widget] .session .pill { font-size: .78rem; min-height: 30px; padding: 0 10px; gap: 4px; }
+html[data-widget] .session .pill .ico { width: 14px; height: 14px; }
+html[data-widget] .session .brain-chip { display: none; }
+html[data-widget] .stage .face-box { max-height: 100%; }
+html[data-widget] .caption { font-size: clamp(.95rem, 4.6vw, 1.3rem); min-height: 2.8em; padding: 2px 12px; }
+html[data-widget] .missed-btn { min-height: 28px; padding: 0 10px; font-size: .78rem; gap: 4px; margin: 0; }
+html[data-widget] .missed-btn .ico { width: 14px; height: 14px; }
 html[data-widget] .status { font-size: .75rem; }
-html[data-widget] .tiles { padding: 4px 8px; gap: 6px; }
-html[data-widget] .tile { min-width: 0; min-height: 32px; font-size: .8rem; padding: 0 10px; }
+html[data-widget] .tiles { display: flex; overflow-x: auto; scrollbar-width: none; padding: 4px 8px; gap: 6px; max-width: none; }
+html[data-widget] .tiles::-webkit-scrollbar { display: none; }
+html[data-widget] .tile { flex: 0 0 auto; min-width: 0; min-height: 30px; font-size: .78rem; padding: 0 10px; white-space: nowrap; }
+html[data-widget] .session > .suggests, html[data-widget] .inputbar .suggests { display: none; }
+html[data-widget] .compose-open { min-height: 34px; margin: 2px 8px 8px; width: calc(100% - 16px); font-size: .82rem; gap: 6px; }
 html[data-widget] .inputbar { padding: 4px 8px 8px; gap: 6px; }
 html[data-widget] .inputbar textarea { min-height: 36px; padding: 8px 12px; border-radius: 18px; }
 html[data-widget] .inputbar .icon-btn { min-width: 36px; min-height: 36px; padding: 0 8px; font-size: .8rem; }
-html[data-widget] .log-panel { inset: 2px 6px 4px; padding: 8px 10px; }
+html[data-widget] .session.log-open .stage { grid-template-rows: minmax(0, 30vh) auto minmax(0, 1fr); }
+html[data-widget] .session.log-open .stage .face-box { max-height: 30vh; }
+html[data-widget] .log-panel { padding: 8px 10px; }
+html[data-widget] .end-card { margin: 4px 8px; padding: 10px; }
 html[data-widget] .sheet { padding: 14px 12px 12px; max-height: 92vh; }
 /* the "large" screens get the normal layout, just tighter */
 html[data-widget] .screen { padding: 8px 12px 24px; }

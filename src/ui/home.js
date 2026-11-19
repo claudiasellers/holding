@@ -1,6 +1,7 @@
 import { h } from './dom.js';
 import { mountFace } from './faceview.js';
 import { store } from '../store.js';
+import { isScripted, brainLabel } from '../ai/brain.js';
 
 export function renderHome(root, nav) {
   const a = store.data.archetype;
@@ -20,6 +21,9 @@ export function renderHome(root, nav) {
     h('div', { class: 'home-actions' },
       h('button', { class: 'btn primary big', onclick: () => nav('session', { mode: 'hold' }) }, 'Hold me'),
       h('p', { class: 'hold-hint' }, `${a.name} speaks first. You don't have to say or type anything.`),
+      h('p', { class: 'home-brain' }, isScripted()
+        ? [`${a.name} is using scripted lines and won't follow what you type. `, h('button', { onclick: () => nav('settings', { focus: 'ai' }) }, 'Turn on AI')]
+        : `Words: ${brainLabel()}`),
       h('button', { class: 'btn', onclick: () => nav('session', { mode: 'talk' }) }, 'Just talk'),
       recent ? h('button', { class: 'btn', onclick: () => nav('session', { mode: 'makesense' }) }, 'Make sense of a hard night') : null,
       h('button', { class: 'btn ghost', onclick: () => nav('builder') }, `Change or build a parent figure`)),

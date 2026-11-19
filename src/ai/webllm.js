@@ -87,6 +87,49 @@ export async function deleteModel(modelId) {
   await lib.deleteModelAllInfoInCache(modelId);
 }
 
+// WebLLM keeps each model's files in Cache Storage under these names, keyed by
+// the file's URL (https://huggingface.co/mlc-ai/<model id>/resolve/main/...).
+const WEBLLM_CACHES = ['webllm/model', 'webllm/config'];
+const modelIdFromUrl = (url) => (/huggingface\.co\/[^/]+\/([^/]+)\/resolve\//.exec(url) || [])[1] || null;
+
+/**
+ * Chat models stored in this browser, read straight from Cache Storage (no library
+ * download needed). [{ id, label, bytes }], biggest first; [] when there are none.
+ */
+export async function cachedBrowserModels() {
+  if (typeof caches === 'undefined') return [];
+  const found = new Map();
+  for (const name of WEBLLM_CACHES) {
+    if (!(await caches.has(name).catch(() => false))) continue;
+    const cache = await caches.open(name);
+    for (const req of await cache.keys()) {
+      const id = modelIdFromUrl(req.url);
+      if (!id) continue;
+      const m = found.get(id) || { id, bytes: 0, files: 0 };
+      const res = await cache.match(req);
+      m.bytes += Number(res?.headers.get('content-length')) || 0;
+      m.files += 1;
+      found.set(id, m);
+    }
+  }
+  return [...found.values()].map((m) => {
+    const known = WEBLLM_MODELS.find((x) => x.id === m.id || x.id === m.id.replace('q4f32_1', 'q4f16_1'));
+    // Some servers leave out content-length; fall back to the model's known size.
+    const bytes = m.bytes > 1e6 ? m.bytes : (known?.sizeMB || 0) * 1e6;
+    return { id: m.id, label: known && known.id !== 'auto' ? known.label : m.id.replace(/-q4f(16|32)_1-MLC$/, ''), bytes };
+  }).sort((a, b) => b.bytes - a.bytes);
+}
+
+/** Delete one model's files from this browser (unloading it first if it's running). */
+export async function deleteBrowserModel(modelId) {
+  if (engineModel === modelId) await webllm.dispose();
+  for (const name of WEBLLM_CACHES) {
+    if (!(await caches.has(name).catch(() => false))) continue;
+    const cache = await caches.open(name);
+    for (const req of await cache.keys()) if (modelIdFromUrl(req.url) === modelId) await cache.delete(req);
+  }
+}
+
 const webllm = {
   id: 'webllm',
   label: 'On this device (in-browser AI, WebGPU)',

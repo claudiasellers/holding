@@ -366,6 +366,7 @@ dependencies = [
     { name = "python-multipart", version = "0.0.32", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "python-multipart", version = "0.0.34", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "qrcode" },
+    { name = "tokenizers" },
     { name = "uvicorn" },
 ]
 
@@ -384,6 +385,7 @@ requires-dist = [
     { name = "psutil", specifier = ">=5.9" },
     { name = "python-multipart", specifier = ">=0.0.9" },
     { name = "qrcode", specifier = ">=7.4" },
+    { name = "tokenizers", specifier = ">=0.20" },
     { name = "uvicorn", specifier = ">=0.30" },
 ]
 provides-extras = ["stt"]

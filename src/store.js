@@ -13,6 +13,8 @@ export const DEFAULT_SETTINGS = {
   ai: { provider: 'scripted', webllm: {}, 'openai-local': {}, 'holding-rag': {} },
   tts: { provider: 'webspeech', voiceId: '', webspeech: {}, kokoro: {}, 'openai-speech': {} },
   stt: { provider: 'browser' },
+  suggestions: true,         // three tappable replies above the input
+  suggestionsAI: 'auto',     // let a local model write them: 'auto' (not the in-browser model on phones) | 'on' | 'off'
   debugTuning: false,
 };
 

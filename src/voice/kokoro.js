@@ -158,6 +158,14 @@ const kokoro = {
 
   async listVoices() { return KOKORO_VOICES.map((v) => ({ ...v })); },
 
+  /** Render text to raw audio without playing it: { audio: Float32Array, sampling_rate }. */
+  async render(text, voiceId) {
+    if (!tts) await kokoro.init(kokoro._cfg);
+    const voice = KOKORO_VOICES.some((v) => v.id === voiceId) ? voiceId : 'af_heart';
+    const out = await tts.generate(String(text), { voice, speed: 0.95 });
+    return { audio: out.audio, sampling_rate: out.sampling_rate };
+  },
+
   /**
    * @param {string} text
    * @param {{voiceId?:string, rate?:number, pitch?:number, volume?:number, onStart?:()=>void, onEnd?:()=>void, onLevel?:(l:number)=>void, signal?:AbortSignal}} opts

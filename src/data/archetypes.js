@@ -13,7 +13,7 @@ export const PRESETS = [
     face: { shape: 'round', skin: '#e9c2a0', blush: .5, age: 74, hair: { style: 'bun', color: '#d9d4cc' }, brows: { thick: .35, arch: .45, color: '#a89f94' }, eyes: { size: .45, gap: .5, lid: .6, iris: '#5f7b8a' }, nose: { width: .55, length: .5 }, mouth: { width: .55, lips: .35 }, glasses: 'half', beard: 'none', mustache: false, earrings: true },
     clothes: '#9c6b78', expressive: { gain: .95, onsetMs: 750, holdMs: 2000, tilt: 6 }, mirror: { markedness: .7, delayMs: 500, style: 'soft' },
     lexicon: { endearments: ['love', 'sweetheart'], signatures: ['I\'ve got all night. Truly.', 'Nothing you could feel would scare me off.'] },
-    persona: 'You speak like an old woman who has buried people and raised people and is not afraid of tears. Sparse, slow, a little dry humour on calm days.',
+    persona: 'You speak like an old woman who has buried people and raised people and is not afraid of grief. Sparse, slow, a little dry humour on calm days.',
   },
   {
     id: 'gentle-giant', name: 'Walt', title: 'The Gentle Giant',

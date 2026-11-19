@@ -193,6 +193,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         var comps = URLComponents(url: base, resolvingAgainstBaseURL: false)!
         var items = (comps.queryItems ?? []).filter { $0.name != "widget" }
         items.append(URLQueryItem(name: "widget", value: "1"))
+        // On Holding Local, ?local=1 makes the web app switch to this Mac's AI, voice and listening.
+        if base.host == localURL.host && base.port == localURL.port && !items.contains(where: { $0.name == "local" }) {
+            items.append(URLQueryItem(name: "local", value: "1"))
+        }
         comps.queryItems = items
         webView.load(URLRequest(url: comps.url!))
         refreshMenu()

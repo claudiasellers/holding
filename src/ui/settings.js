@@ -4,18 +4,24 @@ import { listLLMProviders, getLLMProvider } from '../ai/providers.js';
 import { listTTSProviders, getTTSProvider } from '../voice/providers.js';
 import { WEBLLM_MODELS, DEFAULT_WEBLLM_MODEL } from '../ai/webllm.js';
 import { listModels } from '../ai/openai-local.js';
-import { voiceFor } from '../voice/resolve.js';
+import { brainLabel, canUseDeviceAI, useDeviceAI, connectHoldingLocal } from '../ai/brain.js';
+import { voiceFor, chosenVoice, withVoice } from '../voice/resolve.js';
 import { PRESETS } from '../data/archetypes.js';
+import { voiceModelsPanel } from './voice-models.js';
+import { chatModelsPanel } from './chat-models.js';
+import { browserModelsPanel } from './browser-models.js';
+import { getLocalPanel } from './get-local.js';
+import { feelingFor } from '../voice/feeling.js';
 import { validateLibrary } from '../engine/scripts.js';
 
 const AI_HELP = {
-  scripted: 'No AI model. The parent uses a hand-written library of lines that follow the same rules. Works offline, instantly, on every device.',
+  scripted: 'No AI model. The face reacts to feeling words, but replies are hand-written lines picked by feeling, so the parent does not follow what you actually type. Works offline, instantly, on every device. Turn on an AI below for real replies.',
   webllm: 'Runs a small language model inside this browser on your graphics chip (WebGPU). One-time download, then fully offline. Nothing leaves this device.',
   'openai-local': 'Uses a model running on your own computer with Ollama, LM Studio, llama.cpp, or the Holding local server. Works from your phone too, over your home Wi-Fi.',
   'holding-rag': 'The Holding companion server (local-private-tuning): your own notes as private memory (RAG) and your fine-tuned parent model, all on your computer.',
 };
 
-export function renderSettings(root, nav) {
+export function renderSettings(root, nav, params = {}) {
   const body = h('div', { class: 'stack' });
   root.append(h('main', { class: 'screen' },
     h('div', { class: 'topbar' }, h('span', { class: 'title' }, 'Settings'), h('button', { class: 'icon-btn', onclick: () => nav('home') }, 'Done')),
@@ -33,6 +39,8 @@ export function renderSettings(root, nav) {
       h('label', { class: 'field' }, h('span', { class: 'lbl' }, 'Your name', h('small', {}, 'Optional. Used rarely.')), h('input', { type: 'text', value: S().userName, oninput: (e) => set({ userName: e.target.value.trim() }) })),
       slider('Warmth dose', store.warmthFor(a), (v) => set({ warmth: v }), { hint: 'If kindness ever feels like too much, turn this down. Steady and plain is a fine way to be held.' }),
       toggle('Pet names', S().endearments, (v) => set({ endearments: v })),
+      toggle('Suggested replies', S().suggestions !== false, (v) => set({ suggestions: v }), 'Three short things you could say, above the typing box. Tap one to say it.'),
+      select('Let the AI write suggestions', S().suggestionsAI || 'auto', [['auto', 'Automatic'], ['on', 'Always, when an AI is on'], ['off', 'Never (hand-written only)']], (v) => set({ suggestionsAI: v })),
       toggle('Captions', S().captions, (v) => set({ captions: v })),
       toggle('Breathing pacer', S().breathPacer, (v) => set({ breathPacer: v }), 'A slow ring that breathes. Off by default: breath focus is not calming for everyone.'),
       toggle('Reduce motion', S().reducedMotion ?? matchMedia('(prefers-reduced-motion: reduce)').matches, (v) => set({ reducedMotion: v })),
@@ -51,23 +59,43 @@ export function renderSettings(root, nav) {
         h('label', { class: 'field' }, h('span', { class: 'lbl' }, 'Server address'), h('input', { type: 'url', value: c.baseUrl || 'http://127.0.0.1:8787/v1', onchange: (e) => set({ tts: { 'openai-speech': { ...c, baseUrl: e.target.value.trim() } } }) })),
         h('label', { class: 'field' }, h('span', { class: 'lbl' }, 'Pairing token (phone only)'), h('input', { type: 'password', value: c.token || '', onchange: (e) => set({ tts: { 'openai-speech': { ...c, token: e.target.value.trim() } } }) })));
     }
+    // Which voice this parent uses on the current engine. Saved on the parent
+    // figure, so each figure keeps its own voice. Picking one plays a preview.
+    const preview = async (arch = store.data.archetype) => {
+      try {
+        const c = S().tts[ttsP.id] || {};
+        await ttsP.init?.(c, (p) => { ttsProg.style.display = p.progress >= 1 ? 'none' : ''; ttsProg.firstChild.style.width = Math.round((p.progress || 0) * 100) + '%'; ttsStatus.className = 'status'; ttsStatus.textContent = p.progress >= 1 ? '' : (p.text || ''); });
+        ttsP.stop?.();
+        await ttsP.speak(`Hello. I'm ${arch.name}. I'm here.`, { voiceId: await voiceFor(ttsP.id, arch), rate: arch.voice.rate, pitch: arch.voice.pitch, archetype: arch, feeling: feelingFor(arch) });
+      } catch (e) { ttsStatus.className = 'status bad'; ttsStatus.textContent = e.message || String(e); }
+    };
+    const voicePick = h('div', { class: 'stack' });
+    ttsP.listVoices?.(S().tts[ttsP.id] || {}).then((vs) => {
+      if (!vs?.length) return;
+      const byGender = (g) => vs.filter((v) => (v.gender || 'n') === g);
+      const groups = [['f', 'Women'], ['m', 'Men'], ['n', 'Other']].map(([g, l]) => [l, byGender(g)]).filter(([, list]) => list.length);
+      const cur = chosenVoice(ttsP.id, a);
+      const sel = h('select', { onchange: (e) => {
+        const arch = store.data.archetype;
+        const next = { ...arch, voice: withVoice(ttsP.id, arch, e.target.value) };
+        const saved = (store.data.saved || []).map((x) => (x.id === next.id ? next : x));
+        store.setData({ archetype: next, saved });
+        preview(next);
+      } },
+      h('option', { value: '', selected: !cur }, 'Automatic (best match)'),
+      groups.map(([label, list]) => h('optgroup', { label }, list.map((v) => h('option', { value: v.id, selected: v.id === cur }, v.label + (ttsP.id === 'webspeech' && v.lang ? ` · ${v.lang}` : ''))))));
+      voicePick.append(h('label', { class: 'field' }, h('span', { class: 'lbl' }, `${a.name}'s voice`, h('small', {}, 'Pick one to hear it. Each parent figure keeps its own voice.')), sel));
+    }).catch(() => {});
     body.append(card('Voice',
       toggle('Speak lines out loud', S().voiceOn, (v) => set({ voiceOn: v })),
       select('Voice engine', ttsP.id, listTTSProviders().filter((p) => p.id !== 'prerecorded').map((p) => [p.id, p.label]), (v) => { set({ tts: { provider: v } }); render(); }),
-      ttsCfg, ttsProg, ttsStatus,
+      ttsCfg,
+      voiceModelsPanel({ rerender: render, preview }),
+      voicePick,
+      ttsProg, ttsStatus,
       h('div', { class: 'row wrap' },
-        ttsP.id === 'kokoro' ? h('button', { class: 'btn', onclick: async () => {
-          ttsProg.style.display = ''; ttsStatus.textContent = 'Downloading the voice (about 90 MB, once)…';
-          try { await ttsP.init(S().tts.kokoro || {}, (p) => { ttsProg.firstChild.style.width = Math.round((p.progress || 0) * 100) + '%'; if (p.text) ttsStatus.textContent = p.text; }); ttsStatus.className = 'status ok'; ttsStatus.textContent = 'Voice ready. Works offline now.'; }
-          catch (e) { ttsStatus.className = 'status bad'; ttsStatus.textContent = e.message; }
-        } }, 'Download voice') : null,
-        h('button', { class: 'btn', onclick: async () => {
-          try {
-            const c = S().tts[ttsP.id] || {}; await ttsP.init?.(c);
-            await ttsP.speak(`Hello. I'm ${a.name}. I'm here.`, { voiceId: await voiceFor(ttsP.id, a), rate: a.voice.rate, pitch: a.voice.pitch, archetype: a });
-          } catch (e) { ttsStatus.className = 'status bad'; ttsStatus.textContent = e.message || String(e); }
-        } }, 'Test voice')),
-      h('p', { class: 'muted', style: { fontSize: '.88rem', margin: 0 } }, 'Device voices are free and built in. Kokoro is a neural voice that runs inside the browser after a one-time download. "Voice from my computer" uses the Holding local server.'),
+        h('button', { class: 'btn', onclick: () => preview() }, 'Test voice')),
+      h('p', { class: 'muted', style: { fontSize: '.88rem', margin: 0 } }, 'Device voices are free and built in. Kokoro and Chatterbox run inside this browser after a one-time download. "Voice from my computer" uses Holding Local, which can run Chatterbox for your phone too.'),
     ));
 
     // --- AI
@@ -94,6 +122,10 @@ export function renderSettings(root, nav) {
         modelSel,
         h('label', { class: 'field' }, h('span', { class: 'lbl' }, 'Pairing token', h('small', {}, 'Only needed when connecting from another device on your Wi-Fi.')), h('input', { type: 'password', value: cfg.token || '', onchange: (e) => setCfg({ token: e.target.value.trim() }) })),
         aiId === 'holding-rag' ? toggle('Use my private notes (RAG)', cfg.useRag ?? true, (v) => setCfg({ useRag: v })) : null);
+      // Holding Local can also list, switch and delete the chat models it keeps.
+      if (aiId === 'openai-local' && /:8787(\/|$)/.test(cfg.baseUrl || '')) {
+        cfgBox.append(chatModelsPanel({ cfg: () => S().ai['openai-local'] || {}, setModel: (name) => setCfg({ model: name }), rerender: render }));
+      }
       if (aiId === 'openai-local') listModels({ ...cfg, baseUrl: cfg.baseUrl || defUrl }).then((ms) => { if (ms?.length) modelSel.append(select('Models found on the server', cfg.model || '', [['', 'Pick one…'], ...ms.map((m) => [m.id || m, m.id || m])], (v) => { if (v) { setCfg({ model: v }); render(); } })); }).catch(() => {});
     }
     // --- one-tap companion setup
@@ -102,20 +134,16 @@ export function renderSettings(root, nav) {
     const compTok = h('input', { type: 'password', placeholder: 'Pairing code (only from a phone)', value: S().ai['openai-local']?.token || '' });
     body.append(card('Use my computer (Holding Local)',
       h('p', { class: 'muted', style: { margin: 0 } }, 'If Holding Local is running on your computer, this points the parent\'s words, voice and listening at it in one step. Free, private, no accounts.'),
+      getLocalPanel(),
       h('label', { class: 'field' }, h('span', { class: 'lbl' }, 'Address'), compUrl),
       h('label', { class: 'field' }, h('span', { class: 'lbl' }, 'Pairing code'), compTok),
       h('div', { class: 'row wrap' }, h('button', { class: 'btn primary', onclick: async () => {
-        const baseUrl = compUrl.value.trim().replace(/\/$/, ''); const token = compTok.value.trim();
         comp.className = 'status'; comp.textContent = 'Connecting…';
         try {
-          const r = await fetch(baseUrl.replace(/\/v1$/, '') + '/health', { signal: AbortSignal.timeout(3000), headers: token ? { Authorization: `Bearer ${token}`, 'X-Pair-Token': token } : {} });
-          if (!r.ok) throw new Error(`answered ${r.status}`);
-          set({ ai: { provider: 'openai-local', 'openai-local': { ...(S().ai['openai-local'] || {}), baseUrl, apiKey: token, token, model: S().ai['openai-local']?.model && !/^llama3\.2/.test(S().ai['openai-local'].model) ? S().ai['openai-local'].model : 'gemma4:e4b' } },
-            tts: { provider: 'openai-speech', 'openai-speech': { baseUrl, token, model: 'kokoro' } },
-            stt: { provider: 'server', baseUrl, token } });
+          await connectHoldingLocal(compUrl.value || 'http://127.0.0.1:8787/v1', compTok.value);
           comp.className = 'status ok'; comp.textContent = 'Connected. Words, voice and listening now run on your computer.';
           setTimeout(render, 1200);
-        } catch (e) { comp.className = 'status bad'; comp.textContent = `Couldn't reach Holding Local at ${baseUrl} (${e.message}). Is it running? From a phone, use the address and code it shows.`; }
+        } catch (e) { comp.className = 'status bad'; comp.textContent = e.message; if (!comp.nextSibling?.classList?.contains('get-local')) comp.after(getLocalPanel({ always: true })); }
       } }, 'Connect')),
       comp,
       (() => { const panel = h('div'); try { window.HoldingMobile?.renderPairingPanel?.(panel); } catch {} return panel.childNodes.length ? h('details', { open: /iPhone|iPad|Android/i.test(navigator.userAgent) }, h('summary', {}, 'Pair this phone with a code or QR'), panel) : null; })()));
@@ -125,10 +153,16 @@ export function renderSettings(root, nav) {
       select('Dictation', S().stt.provider || 'browser', [['browser', 'Browser dictation'], ['server', 'Holding Local (private, on my computer)'], ['off', 'Off']], (v) => { set({ stt: { provider: v } }); render(); }),
       h('p', { class: 'muted', style: { margin: 0, fontSize: '.88rem' } }, S().stt.provider === 'browser' ? 'Heads up: in Chrome and some other browsers, dictation audio is sent to the browser maker\'s servers. Safari on Apple devices can do it on-device. For fully private listening, use Holding Local.' : S().stt.provider === 'server' ? `Audio goes only to ${S().stt.baseUrl || 'your computer'}.` : 'The microphone button is hidden.')));
 
-    body.append(card('AI (all on your own devices)',
+    const quick = aiId === 'scripted' ? h('div', { class: 'row wrap' },
+      canUseDeviceAI() ? h('button', { class: 'btn primary', onclick: () => { useDeviceAI(); render(); setTimeout(() => document.getElementById('ai-card')?.scrollIntoView({ block: 'start' }), 50); } }, 'Use the AI on this device') : null,
+      h('button', { class: 'btn', onclick: async (e) => { e.target.disabled = true; try { await connectHoldingLocal(); render(); } catch (err) { aiStatus.className = 'status bad'; aiStatus.textContent = err.message; if (!aiStatus.nextSibling?.classList?.contains('get-local')) aiStatus.after(getLocalPanel({ always: true })); } finally { e.target.disabled = false; } } }, 'Use Holding Local on my computer')) : null;
+    const aiCard = card('AI: what writes the parent\'s words',
+      h('p', { class: 'status ' + (aiId === 'scripted' ? 'bad' : 'ok'), style: { margin: 0 } }, aiId === 'scripted' ? 'Right now: scripted lines. The parent is not reading what you type.' : `Right now: ${brainLabel(aiId)}.`),
+      quick,
       select('What writes the parent\'s words', aiId, listLLMProviders().map((p) => [p.id, p.label]), (v) => { set({ ai: { provider: v } }); render(); }),
       h('p', { class: 'muted', style: { margin: 0, fontSize: '.92rem' } }, AI_HELP[aiId] || ''),
       cfgBox, aiProg, aiStatus,
+      browserModelsPanel({ provider: aiId, model: S().ai.webllm?.model }),
       aiId !== 'scripted' ? h('div', { class: 'row wrap' },
         h('button', { class: 'btn', onclick: async () => {
           aiStatus.className = 'status'; aiStatus.textContent = 'Checking…';
@@ -144,7 +178,10 @@ export function renderSettings(root, nav) {
           } catch (e) { aiStatus.className = 'status bad'; aiStatus.textContent = e.message || String(e); }
         } }, aiId === 'webllm' ? 'Download and test' : 'Test')) : null,
       h('p', { class: 'muted', style: { margin: 0, fontSize: '.88rem' } }, 'Whatever model you choose, every reply still goes through the same rules (length, no questions at peak distress, nothing hostile or helpless), and the scripted lines take over instantly if a reply breaks them or the model is slow. No Claude API or paid service is used.'),
-    ));
+    );
+    aiCard.id = 'ai-card';
+    // While nothing reads the user's words, put this first so it is hard to miss.
+    if (aiId === 'scripted' || params.focus === 'ai') body.insertBefore(aiCard, body.firstChild); else body.append(aiCard);
 
     // --- safety
     const sc = S().safetyContact || {};
