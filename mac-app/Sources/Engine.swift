@@ -138,6 +138,9 @@ final class Engine: ObservableObject {
             finishStep("engine")
 
             begin("ollama")
+            if await ollamaReachable() || SetupPlan.existingOllama() != nil || Paths.fm.isExecutableFile(atPath: Paths.ollama.path) {
+                retitle("ollama", "Ollama · already on this Mac")
+            }
             try await ensureOllama { [weak self] done, total in
                 self?.progress("ollama", done: done, total: total, verb: "Downloading")
             }
@@ -157,11 +160,19 @@ final class Engine: ObservableObject {
                     planned = obj["model"] as? String
                     if let m = planned {
                         let size = (obj["download"] as? String).map { ", about \($0)" } ?? ""
-                        self.retitle("model", "Chat model: \(m)\(size)")
+                        self.retitle("model", (obj["have"] as? Bool) == true
+                                     ? "Chat model: \(m) · already on this Mac" : "Chat model: \(m)\(size)")
                     }
                 case "step":
                     let map = ["voice": "voice", "model": "model", "embed": "memory", "listening": "finish", "warm": "finish"]
-                    if let id = map[obj["id"] as? String ?? ""] { self.begin(id) }
+                    if let id = map[obj["id"] as? String ?? ""] {
+                        self.begin(id)
+                        // Already downloaded by an earlier install or by Ollama: say so instead of downloading.
+                        if (obj["have"] as? Bool) == true, let t = self.steps.first(where: { $0.id == id })?.title,
+                           !t.hasSuffix("already on this Mac") {
+                            self.retitle(id, "\(t) · already on this Mac")
+                        }
+                    }
                 case "progress":
                     let done = (obj["done"] as? NSNumber)?.int64Value ?? 0
                     let total = (obj["total"] as? NSNumber)?.int64Value ?? 0
@@ -416,13 +427,15 @@ final class Engine: ObservableObject {
         if await ollamaReachable() { return }
         if ollamaProc?.running == true { try await waitForOllama(); return }
         let apps = ["/Applications/Ollama.app", Paths.home.appendingPathComponent("Applications/Ollama.app").path]
-        if ProcessInfo.processInfo.environment["HOLDING_OWN_OLLAMA"] == nil,
-           let app = apps.first(where: { Paths.fm.fileExists(atPath: $0) }) {
+        let ownOnly = ProcessInfo.processInfo.environment["HOLDING_OWN_OLLAMA"] != nil
+        if !ownOnly, let app = apps.first(where: { Paths.fm.fileExists(atPath: $0) }) {
             log.line("Starting the Ollama app at \(app)")
             NSWorkspace.shared.open(URL(fileURLWithPath: app))
             if (try? await waitForOllama(seconds: 30)) != nil { return }
         }
-        if !Paths.fm.isExecutableFile(atPath: Paths.ollama.path) {
+        // An ollama command from Homebrew or the install script: run it rather than download another.
+        let cli = ownOnly ? nil : SetupPlan.ollamaCLI()
+        if cli == nil, !Paths.fm.isExecutableFile(atPath: Paths.ollama.path) {
             let tgz = Paths.support.appendingPathComponent("downloads/ollama-darwin.tgz")
             log.line("Downloading Ollama \(Pins.ollamaVersion)")
             _ = try await Downloader.fetch(Pins.ollamaURL, to: tgz) { @Sendable done, total in
@@ -444,8 +457,9 @@ final class Engine: ObservableObject {
             try Paths.fm.moveItem(at: tmp, to: Paths.ollamaDir)
             try? Paths.fm.removeItem(at: tgz)
         }
-        log.line("Starting ollama serve")
-        ollamaProc = try ChildProcess(Paths.ollama, ["serve"], cwd: Paths.ollamaDir, log: LogFile(name: "ollama.log"))
+        let bin = cli.map { URL(fileURLWithPath: $0) } ?? Paths.ollama
+        log.line("Starting \(bin.path) serve")
+        ollamaProc = try ChildProcess(bin, ["serve"], cwd: cli == nil ? Paths.ollamaDir : Paths.home, log: LogFile(name: "ollama.log"))
         if let p = ollamaProc { Task { for await _ in p.lines {} } }  // drain; it's in ollama.log
         try await waitForOllama()
     }
@@ -507,12 +521,130 @@ final class Engine: ObservableObject {
     }
 }
 
-/// Rough size of the first download for this Mac, matching the engine's model tiers
-/// (holding_local/catalog.py). Only used for the welcome text.
-func setupEstimate() -> (model: String, gb: String) {
-    let ram = Double(ProcessInfo.processInfo.physicalMemory) / Double(1 << 30)
-    if ram >= 46 { return ("gemma4:26b", "17-20 GB") }
-    if ram >= 30 { return ("gemma4:12b", "9 GB") }
-    if ram >= 15 { return ("gemma4:e4b", "8-11 GB") }
-    return ("qwen3.5:4b", "5 GB")
+/// What first-run setup will download on this Mac, after looking for what's already here:
+/// chat models in ~/.ollama (from Ollama, the terminal install or another app), the
+/// engine's settings and voice in ~/.holding-local, and an Ollama to run them with.
+/// It mirrors the engine's own choices (holding_local/setup.py and catalog.py), so the
+/// welcome screen says what setup will really do. Reads files only; no network.
+struct SetupPlan {
+    struct Found: Hashable { let what: String; let bytes: Int64 }
+
+    var model = ""                 // the chat model setup will use
+    var modelReason = ""           // why that one
+    var haveModel = false          // already downloaded
+    var found: [Found] = []        // things setup reuses
+    var downloadLow: Double = 0    // GB still to download
+    var downloadHigh: Double = 0
+
+    var nothingFound: Bool { found.isEmpty }
+    var downloadText: String {
+        let lo = downloadLow, hi = downloadHigh
+        if hi < 0.95 { return "about \(max(1, Int((hi * 1000 / 50).rounded()) * 50)) MB" }
+        let r = { (x: Double) in String(format: "%.0f", max(1, x.rounded())) }
+        return r(lo) == r(hi) ? "about \(r(hi)) GB" : "about \(r(lo))-\(r(hi)) GB"
+    }
+
+    /// The engine's chat model tiers (catalog.LLM_TIERS): tag, memory needed, download in GB.
+    static let tiers: [(tag: String, minGB: Double, low: Double, high: Double)] = [
+        ("qwen3.5:4b", 0, 3.3, 4.0), ("gemma4:e4b", 15, 6.6, 9.5), ("gemma4:12b", 30, 7.7, 8.0), ("gemma4:26b", 46, 16, 19),
+    ]
+    static let embedTag = "nomic-embed-text"
+
+    static func same(_ a: String, _ b: String) -> Bool {
+        let n = { (x: String) in x.contains(":") ? x : x + ":latest" }
+        return n(a) == n(b)
+    }
+
+    static var ollamaModelsDir: URL {
+        if let o = Paths.env["OLLAMA_MODELS"], !o.isEmpty { return URL(fileURLWithPath: o, isDirectory: true) }
+        return Paths.home.appendingPathComponent(".ollama/models", isDirectory: true)
+    }
+
+    /// Models Ollama has on disk, read from its manifests (works while Ollama is stopped).
+    static func ollamaModelsOnDisk() -> [String: Int64] {
+        let root = ollamaModelsDir.appendingPathComponent("manifests", isDirectory: true)
+        var out: [String: Int64] = [:]
+        guard let walk = Paths.fm.enumerator(at: root, includingPropertiesForKeys: [.isRegularFileKey]) else { return out }
+        for case let f as URL in walk {
+            // manifests/<host>/<namespace>/<name>/<tag>
+            let parts = Array(f.pathComponents.suffix(4))
+            guard walk.level == 4, parts.count == 4, (try? f.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile) == true,
+                  let d = try? Data(contentsOf: f),
+                  let obj = (try? JSONSerialization.jsonObject(with: d)) as? [String: Any] else { continue }
+            let layers = (obj["layers"] as? [[String: Any]] ?? []) + [obj["config"] as? [String: Any] ?? [:]]
+            let bytes = layers.reduce(Int64(0)) { $0 + ((($1["size"]) as? NSNumber)?.int64Value ?? 0) }
+            let base = parts[1] == "library" ? parts[2] : "\(parts[1])/\(parts[2])"
+            let name = parts[0] == "registry.ollama.ai" ? base : "\(parts[0])/\(base)"
+            out["\(name):\(parts[3])"] = bytes
+        }
+        return out
+    }
+
+    static func existingOllama() -> String? {
+        let apps = ["/Applications/Ollama.app", Paths.home.appendingPathComponent("Applications/Ollama.app").path]
+        if let a = apps.first(where: { Paths.fm.fileExists(atPath: $0) }) { return a }
+        return ollamaCLI()
+    }
+
+    /// An `ollama` command installed some other way (Homebrew, the install script).
+    static func ollamaCLI() -> String? {
+        ["/opt/homebrew/bin/ollama", "/usr/local/bin/ollama"].first { Paths.fm.isExecutableFile(atPath: $0) }
+    }
+
+    static func scan(ramGB: Double = Double(ProcessInfo.processInfo.physicalMemory) / Double(1 << 30)) -> SetupPlan {
+        var p = SetupPlan()
+        let models = ollamaModelsOnDisk()
+        let size = { (tag: String) in models.first { same($0.key, tag) }?.value }
+        let cfg = (try? Data(contentsOf: Paths.engineHome.appendingPathComponent("config.json")))
+            .flatMap { (try? JSONSerialization.jsonObject(with: $0)) as? [String: Any] } ?? [:]
+        let tier = tiers.last { ramGB >= $0.minGB } ?? tiers[0]
+        let fitting = tiers.filter { ramGB >= $0.minGB }
+
+        if let m = cfg["llm_model"] as? String, !m.isEmpty {
+            p.model = m; p.modelReason = "the one your earlier setup chose"
+        } else if let t = fitting.last(where: { size($0.tag) != nil }) {
+            p.model = t.tag; p.modelReason = "already on this Mac"
+        } else {
+            p.model = tier.tag; p.modelReason = "picked for this Mac's memory"
+        }
+        var lo = 0.0, hi = 0.0
+        if let b = size(p.model) {
+            p.haveModel = true
+            p.found.append(Found(what: "the chat model \(p.model)", bytes: b))
+        } else if let t = tiers.first(where: { same($0.tag, p.model) }) {
+            lo += t.low; hi += t.high
+        } else {
+            lo += 4; hi += 10  // a model we don't know the size of
+        }
+        if let b = size(embedTag) { p.found.append(Found(what: "the memory model", bytes: b)) } else { lo += 0.27; hi += 0.27 }
+
+        let voiceDir = Paths.engineHome.appendingPathComponent("models", isDirectory: true)
+        let voiceFiles = ["kokoro-v1.0.int8.onnx", "kokoro-v1.0.onnx"].map { voiceDir.appendingPathComponent($0) }
+        if let v = voiceFiles.first(where: { Paths.fm.fileExists(atPath: $0.path) }),
+           Paths.fm.fileExists(atPath: voiceDir.appendingPathComponent("voices-v1.0.bin").path) {
+            let b = ((try? Paths.fm.attributesOfItem(atPath: v.path))?[.size] as? NSNumber)?.int64Value ?? 0
+            p.found.append(Found(what: "the parent's voice", bytes: b + 28_000_000))
+        } else { lo += 0.12; hi += 0.12 }
+
+        if existingOllama() != nil || Paths.fm.isExecutableFile(atPath: Paths.ollama.path) {
+            p.found.append(Found(what: "Ollama", bytes: 0))
+        } else { lo += 0.1; hi += 0.1 }
+
+        if !Paths.fm.isExecutableFile(atPath: Paths.holdingLocal.path) { lo += 0.45; hi += 0.45 }
+        p.downloadLow = lo; p.downloadHigh = hi
+        return p
+    }
+
+    /// One plain sentence for the welcome screen.
+    var summary: String {
+        if nothingFound {
+            return "Setting up downloads \(downloadText) once, mostly the chat model (\(model), \(modelReason)). On slow Wi-Fi that can take a while; you can keep using your Mac."
+        }
+        let names = found.map { $0.bytes > 50_000_000 ? "\($0.what) (\(formatBytes($0.bytes)))" : $0.what }
+        let list = names.count > 1 ? names.dropLast().joined(separator: ", ") + " and " + names.last! : names[0]
+        let rest = haveModel
+            ? "Setup reuses them and only downloads \(downloadText) more."
+            : "Setup reuses them. It still downloads \(downloadText), mostly the chat model (\(model), \(modelReason))."
+        return "Found on this Mac from an earlier install: \(list). \(rest)"
+    }
 }
