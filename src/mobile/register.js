@@ -3,7 +3,7 @@
 import './mobile.css';
 import { probeDevice, requestPersistentStorage, describeProbe, platformInfo } from './device.js';
 import { initInstallListeners, showInstallSheet, showInstallChip, shouldOfferInstall, APK_URL } from './install.js';
-import { consumePairingFromUrl, renderPairingPanel, detectSameOriginServer, getHomeServer, saveHomeServer, testHomeServer } from './pairing.js';
+import { consumePairingFromUrl, renderPairingPanel, detectSameOriginServer, getHomeServer, saveHomeServer, testHomeServer, forgetHomeServer } from './pairing.js';
 import * as webllmMobile from './webllm-mobile.js';
 import { prerecorded, unlockAudio, createPrerecordedTTS } from './prerecorded-tts.js';
 
@@ -80,6 +80,7 @@ export const HoldingMobile = {
   renderPairingPanel,
   getHomeServer,
   saveHomeServer,
+  forgetHomeServer,
   testHomeServer,
   cacheAudio,
   requestPersistentStorage,

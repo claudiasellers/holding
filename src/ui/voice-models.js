@@ -10,8 +10,11 @@ import { listServerModels, downloadServerModel, deleteServerModel, selectServerM
 import { scriptedTexts } from '../voice/scripted-texts.js';
 import { voiceFor } from '../voice/resolve.js';
 import { feelingFor, FEELING_MIN, FEELING_MAX } from '../voice/feeling.js';
+import { friendlyError } from './errors.js';
 
 const S = () => store.settings;
+// In Settings, deleting lives in one place (What's downloaded); this list picks and downloads.
+let NO_DELETE = false;
 const set = (patch) => store.setSettings(patch);
 
 // Two taps to delete, like "Delete everything": no blocking dialog.
@@ -35,16 +38,17 @@ function row(m, { inUse, status, note, buttons, prog }) {
 /**
  * @param {{ rerender: () => void, preview: (arch?: object) => void }} hooks
  */
-export function voiceModelsPanel({ rerender, preview }) {
+export function voiceModelsPanel({ rerender, preview, onLocal, noDelete = false }) {
   const ttsId = S().tts.provider;
   const wrap = h('div', { class: 'stack vm' },
-    h('div', { class: 'lbl', style: { fontWeight: 600 } }, 'Voice models',
-      h('small', { style: { display: 'block', fontWeight: 400 } }, 'Download a voice once, then it works offline. Delete one any time to get the space back.')));
+    h('div', { class: 'lbl' }, 'Voices',
+      h('small', {}, 'Download one once and it works offline. Delete it any time to get the space back.')));
   const list = h('div', { class: 'stack' });
   const foot = h('p', { class: 'muted', style: { margin: 0, fontSize: '.85rem' } }, '');
   wrap.append(list, foot);
+  NO_DELETE = noDelete;
   if (ttsId === 'openai-speech') serverPanel(list, foot, rerender);
-  else browserPanel(list, foot, ttsId, rerender);
+  else browserPanel(list, foot, ttsId, rerender, onLocal);
   const dial = feelingDial(preview);
   if (dial) wrap.append(dial);
   return wrap;
@@ -64,15 +68,23 @@ function feelingDial(preview) {
 }
 
 // ---------- this browser ----------
-function browserPanel(list, foot, ttsId, rerender) {
+function browserPanel(outer, foot, ttsId, rerender, onLocal) {
+  const moreBody = h('div', { class: 'stack' });
+  const more = h('details', { class: 'sub' }, h('summary', {}, 'Other voices'), moreBody);
+  const list = { append: (n) => outer.append(n) };
+  const place = (inUse) => (inUse ? outer : moreBody);
   // Built-in device voices: nothing to download or delete.
-  list.append(row({ name: 'Device voices', blurb: 'The voices built into this phone or computer.' }, {
+  place(ttsId === 'webspeech').append(row({ name: 'Device voices', blurb: 'The voices built into this phone or computer.' }, {
     inUse: ttsId === 'webspeech', status: 'Built in · no download',
     buttons: ttsId === 'webspeech' ? [] : [h('button', { class: 'btn', onclick: () => { set({ tts: { provider: 'webspeech' } }); rerender(); } }, 'Use')],
   }));
+  if (onLocal) moreBody.append(row({ name: 'From your computer', blurb: 'Holding Local speaks for the parent, with the bigger voices it keeps.' }, {
+    inUse: false, status: 'On your computer',
+    buttons: [h('button', { class: 'btn', onclick: () => { set({ tts: { provider: 'openai-speech' } }); rerender(); } }, 'Use')],
+  }));
   let total = 0;
   const pending = VOICE_MODELS.map(async (m) => {
-    const slot = h('div'); list.append(slot);
+    const slot = h('div'); place(ttsId === m.provider).append(slot);
     const [{ bytes }, can] = await Promise.all([cachedSize(m), canRun(m)]);
     total += bytes;
     const have = bytes > m.sizeMB * 1e6 * 0.5; // most of the files are here
@@ -102,7 +114,7 @@ function browserPanel(list, foot, ttsId, rerender) {
     const buttons = [];
     if (!have) buttons.push(h('button', { class: 'btn primary', disabled: !can.ok, onclick: download }, partial(bytes) ? 'Finish download' : 'Download and use'));
     else if (!inUse) buttons.push(h('button', { class: 'btn', disabled: !can.ok, onclick: download }, 'Use'));
-    if (bytes) buttons.push(h('button', { class: 'btn ghost', style: { color: 'var(--danger)' }, onclick: remove }, 'Delete'));
+    if (bytes && !NO_DELETE) buttons.push(h('button', { class: 'btn ghost', style: { color: 'var(--danger)' }, onclick: remove }, 'Delete'));
     slot.replaceWith(row(m, {
       inUse,
       status: have ? `On this device · ${formatBytes(bytes)}` : partial(bytes) ? `Partly downloaded · ${formatBytes(bytes)} of ${m.sizeNote}` : `Not downloaded · ${m.sizeNote}`,
@@ -110,6 +122,7 @@ function browserPanel(list, foot, ttsId, rerender) {
       buttons, prog: h('div', { class: 'stack' }, prog, msg),
     }));
   });
+  outer.append(more);
   Promise.all(pending).then(async () => {
     const est = await storageEstimate();
     const free = est?.quota && est?.usage != null ? est.quota - est.usage : null;
@@ -163,7 +176,7 @@ function serverPanel(list, foot, rerender) {
       if (!m.downloaded && !m.downloading) buttons.push(h('button', { class: 'btn primary', onclick: async (e) => { e.target.disabled = true; try { await downloadServerModel(cfg(), m.id); } catch (err) { toast(err.message); } refresh(); } }, m.bytes ? 'Finish download' : 'Download'));
       if (m.downloaded && !inUse) buttons.push(h('button', { class: 'btn', onclick: async () => { try { await selectServerModel(cfg(), m.id); set({ tts: { 'openai-speech': { ...cfg(), model: m.id } } }); toast(`${m.name} is now the voice.`); if (m.id !== 'kokoro') await prerenderFor(cfg(), m.id).catch(() => {}); } catch (err) { toast(err.message); } rerender(); } }, 'Use'));
     }
-    if (m.bytes && m.deletable && !m.downloading) buttons.push(h('button', { class: 'btn ghost', style: { color: 'var(--danger)' }, onclick: async () => {
+    if (!NO_DELETE && m.bytes && m.deletable && !m.downloading) buttons.push(h('button', { class: 'btn ghost', style: { color: 'var(--danger)' }, onclick: async () => {
       if (!confirmTap('srv-' + m.id, m.name)) return;
       try {
         const r = await deleteServerModel(cfg(), m.id);
@@ -185,7 +198,7 @@ function serverPanel(list, foot, rerender) {
     });
   };
   const refresh = () => listServerModels(cfg()).then(draw).catch((err) => {
-    clear(list); list.append(h('p', { class: 'status bad', style: { margin: 0 } }, err.message || String(err)));
+    clear(list); list.append(h('p', { class: 'status bad', style: { margin: 0 } }, friendlyError(err, 'list')));
   });
   refresh();
 }
@@ -224,7 +237,7 @@ function prerenderBlock(cfg, model) {
     clearTimeout(timer);
     if (j.running && document.body.contains(box)) timer = setTimeout(refresh, 2000);
   };
-  const refresh = () => prerenderStatus(cfg()).then(draw).catch((err) => { status.className = 'status bad vm-status'; status.textContent = err.message; });
+  const refresh = () => prerenderStatus(cfg()).then(draw).catch((err) => { status.className = 'status bad vm-status'; status.textContent = friendlyError(err, 'list'); });
   refresh();
   return box;
 }

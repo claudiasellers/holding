@@ -32,20 +32,20 @@ export async function localRunning(base = 'http://127.0.0.1:8787') {
  * The download block. Renders nothing when Holding Local is already running here.
  * @param {{ always?: boolean }} opts  always: show it even if Holding Local answers (e.g. after a failed connect)
  */
-export function getLocalPanel({ always = false } = {}) {
+export function getLocalPanel({ always = false, connect } = {}) {
   const box = h('div', { class: 'get-local', hidden: true });
   const p = platform();
   const draw = () => {
     box.hidden = false;
     if (p === 'mac') {
       box.append(
-        h('b', {}, 'Don\'t have Holding Local yet?'),
-        h('p', { class: 'muted' }, 'It\'s a free Mac app that runs the parent\'s AI, voice and listening on your computer, privately. Open it, press Set up, and it does the rest. The first setup downloads about 8 to 11 GB.'),
-        h('div', { class: 'row wrap' },
-          h('a', { class: 'btn primary', href: MAC_DMG_URL, download: '' }, 'Download Holding Local for Mac')),
-        h('p', { class: 'muted small' }, 'Then drag it to Applications and open it. A heart appears in the menu bar. Already installed? Open Holding Local from Applications, then connect here.'),
-        // Until the app is notarized with an Apple Developer ID, macOS stops the first open.
-        h('p', { class: 'muted small' }, 'If your Mac says it can\'t check the app, open System Settings → Privacy & Security, scroll down and choose Open Anyway.'));
+        h('ol', { class: 'steps' },
+          h('li', {}, h('a', { class: 'btn primary', href: MAC_DMG_URL }, 'Download for Mac')),
+          h('li', {}, 'Drag it to Applications, open it, and press ', h('b', {}, 'Set up'), '. The first setup downloads the AI and voices, about 8 to 11 GB.'),
+          h('li', {}, 'Click the heart in your menu bar and choose ', h('b', {}, 'Open Holding'), '. It opens here already connected.')),
+        connect ? h('div', { class: 'row wrap' }, h('button', { class: 'btn ghost sm', onclick: connect }, 'It\'s already running: connect')) : null,
+        h('details', { class: 'sub' }, h('summary', {}, 'If your Mac won\'t open it'),
+          h('p', { class: 'muted small' }, 'Until the app is signed by Apple, macOS asks once. Open System Settings → Privacy & Security, scroll down and choose Open Anyway.')));
     } else if (p === 'windows' || p === 'linux') {
       box.append(
         h('b', {}, 'Don\'t have Holding Local yet?'),
