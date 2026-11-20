@@ -198,6 +198,22 @@ struct SetupView: View {
 
 // MARK: phone
 
+/// What Tailscale said when phone access started. When it needs a one-time approval
+/// (Tailscale Serve and HTTPS turned on for the tailnet), it gives a link: show it as a button.
+struct TailscaleNote: View {
+    let note: String
+    var link: URL? {
+        guard let r = note.range(of: #"https://login\.tailscale\.com/\S+"#, options: .regularExpression) else { return nil }
+        return URL(string: String(note[r]).trimmingCharacters(in: CharacterSet(charactersIn: ".,)")))
+    }
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(note).font(.caption).foregroundColor(.secondary).fixedSize(horizontal: false, vertical: true)
+            if let link { Link("Approve in Tailscale", destination: link).font(.callout) }
+        }
+    }
+}
+
 func qrImage(_ text: String, size: CGFloat = 220) -> NSImage? {
     let f = CIFilter.qrCodeGenerator()
     f.message = Data(text.utf8)
@@ -253,7 +269,7 @@ struct PhoneView: View {
             } else {
                 if loading { ProgressView() } else {
                     Text(info?.message ?? "Phone access is starting…").foregroundColor(.secondary)
-                    if let note = engine.tailscaleNote { Text(note).font(.caption).foregroundColor(.secondary).fixedSize(horizontal: false, vertical: true) }
+                    if let note = engine.tailscaleNote { TailscaleNote(note: note) }
                     Button("Check again") { reload() }
                 }
             }
@@ -273,7 +289,7 @@ struct PhoneView: View {
                 Link("Get Tailscale", destination: URL(string: "https://tailscale.com/download")!)
                 Link("Tailscale DNS settings", destination: URL(string: "https://login.tailscale.com/admin/dns")!)
             }.font(.callout)
-            if let note = engine.tailscaleNote { Text(note).font(.caption).foregroundColor(.secondary).fixedSize(horizontal: false, vertical: true) }
+            if let note = engine.tailscaleNote { TailscaleNote(note: note) }
         }
     }
 

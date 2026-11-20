@@ -47,17 +47,23 @@ def cmd_start(a):
     urls = []
     if remote:
         state.ensure_token(cfg, rotate=getattr(a, "new_token", False))
-        if a.tailscale:
-            https, msg = net.tailscale_https(port)
-            print(msg)
-            if https:
-                urls.append(https)
         if a.lan:
             ip = net.lan_ip()
             if ip:
                 urls.append(f"http://{ip}:{port}")
     app = create_app(cfg)
     app.state.public_urls = urls
+    if a.tailscale:
+        # Tailscale can take a while, or wait on an approval link; never hold up (or crash)
+        # the start for it. The https address joins the phone links once it's ready.
+        def tailscale():
+            https, msg = net.tailscale_https(port)
+            print(msg, flush=True)
+            if https:
+                app.state.public_urls = [https, *app.state.public_urls]
+                link = net.pair_url(https, cfg["token"])
+                print(f"\nPhone link (HTTPS, private to your devices):\n\n{net.qr_ascii(link)}\n  {link}\n", flush=True)
+        threading.Thread(target=tailscale, daemon=True).start()
     host = "0.0.0.0" if a.lan else "127.0.0.1"  # tailscale serve proxies to loopback
 
     local = f"http://127.0.0.1:{port}"
