@@ -19,6 +19,7 @@ import { renderBuilder } from './ui/builder.js';
 import { renderSession } from './ui/session.js';
 import { renderMemory } from './ui/memory.js';
 import { renderSettings } from './ui/settings.js';
+import { renderWidget, isWidget, toNative, sizeFor } from './ui/widget.js';
 import { connectHoldingLocal } from './ai/brain.js';
 import { warmUp } from './ai/webllm.js';
 
@@ -31,19 +32,24 @@ for (const load of Object.values(extras)) load().catch(() => {});
 
 const app = document.getElementById('app');
 let teardown = null;
-const SCREENS = { home: renderHome, builder: renderBuilder, session: renderSession, memory: renderMemory, settings: renderSettings };
+const SCREENS = { home: renderHome, builder: renderBuilder, session: renderSession, memory: renderMemory, settings: renderSettings, widget: renderWidget };
+if (isWidget) document.documentElement.dataset.widget = '1';
 
 function nav(name, params = {}) {
   teardown?.();
   teardown = null;
   clear(app);
+  // In the widget, "home" is the small resting face; elsewhere the widget screen is never used.
+  if (name === 'home' && isWidget) name = 'widget';
+  if (name === 'widget' && !isWidget) name = 'home';
   if (!store.data.archetype && name !== 'builder' && name !== 'settings') name = 'builder';
+  if (isWidget) toNative({ type: 'size', size: sizeFor(name) });
   document.body.dataset.screen = name;
   if (name === 'session') document.body.setAttribute('data-session-active', 'true');
   else document.body.removeAttribute('data-session-active');
   teardown = SCREENS[name](app, nav, params) || null;
   window.scrollTo(0, 0);
-  if (name !== 'session') history.replaceState(null, '', location.pathname + location.hash);
+  if (name !== 'session') history.replaceState(null, '', location.pathname + (isWidget ? '?widget=1' : '') + location.hash);
 }
 
 // iOS and most mobile browsers only allow audio after a user gesture.
@@ -77,4 +83,4 @@ function warmAI() {
 }
 (window.requestIdleCallback || ((fn) => setTimeout(fn, 1500)))(warmAI, { timeout: 3000 });
 
-window.Holding = { nav, store };
+window.Holding = { nav, store, isWidget };

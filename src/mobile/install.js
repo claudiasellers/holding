@@ -27,6 +27,7 @@ export function canPromptNatively() { return !!deferredPrompt; }
 export function shouldOfferInstall() {
   const p = platformInfo();
   if (p.isStandalone || p.isCapacitor) return false;
+  if (document.documentElement.dataset.widget) return false; // the Mac widget is already installed
   if (new URLSearchParams(location.search).get('mode') === 'hold') return false;
   let last = 0;
   try { last = Number(localStorage.getItem(DISMISS_KEY) || 0); } catch (_) {}
