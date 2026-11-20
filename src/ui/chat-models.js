@@ -9,6 +9,7 @@
 // DELETE /v1/chat-models/{name}        -> delete, returns { freed_bytes }
 import { h, clear, toast } from './dom.js';
 import { formatBytes } from '../voice/models.js';
+import { friendlyError } from './errors.js';
 
 function api(cfg = {}) {
   const base = String(cfg.baseUrl || 'http://127.0.0.1:8787/v1').replace(/\/$/, '');
@@ -41,11 +42,11 @@ function confirmTap(key, label) {
  *   cfg: the app's Holding Local connection ({ baseUrl, token, model }).
  *   setModel: point the app at a model (the app names its model on every request).
  */
-export function chatModelsPanel({ cfg, setModel, rerender }) {
+export function chatModelsPanel({ cfg, setModel, rerender, bare, noDelete = false }) {
   const list = h('div', { class: 'stack' }, h('p', { class: 'muted', style: { margin: 0 } }, 'Checking your computer…'));
   const foot = h('p', { class: 'muted', style: { margin: 0, fontSize: '.85rem' } }, '');
   const wrap = h('div', { class: 'stack vm' },
-    h('div', { class: 'lbl', style: { fontWeight: 600 } }, 'Chat models on your computer',
+    bare ? h('p', { class: 'muted small' }, 'These write the parent\'s words. Bigger ones are warmer but need more memory.') : h('div', { class: 'lbl', style: { fontWeight: 600 } }, 'Chat models on your computer',
       h('small', { style: { display: 'block', fontWeight: 400 } }, 'These write the parent\'s words. Each one takes several GB. Delete the ones you don\'t use to get the space back.')),
     list, foot);
   let timer = 0;
@@ -65,7 +66,7 @@ export function chatModelsPanel({ cfg, setModel, rerender }) {
         } }, 'Use'));
       }
       const locked = !m.deletable || inUse;
-      if (!locked) {
+      if (!locked && !noDelete) {
         buttons.push(h('button', { class: 'btn ghost', style: { color: 'var(--danger)' }, onclick: async () => {
           if (!confirmTap('chat-' + m.name, m.name)) return;
           try {
@@ -79,7 +80,7 @@ export function chatModelsPanel({ cfg, setModel, rerender }) {
         h('div', { class: 'vm-head' }, h('b', {}, m.name), inUse ? h('span', { class: 'vm-badge' }, 'In use') : null, m.kind === 'embed' ? h('span', { class: 'vm-badge soft' }, 'Memory') : null),
         h('p', { class: 'status vm-status' }, `On your computer · ${formatBytes(m.bytes)}` + (m.parameter_size ? ` · ${m.parameter_size}` : '')),
         m.note ? h('p', { class: 'muted vm-note' }, m.note) : null,
-        locked && m.keep_reason ? h('p', { class: 'muted vm-note' }, m.keep_reason) : inUse ? h('p', { class: 'muted vm-note' }, 'The parent uses this one. Pick another one first to delete it.') : null,
+        locked && m.keep_reason ? h('p', { class: 'muted vm-note' }, m.keep_reason) : inUse && !noDelete ? h('p', { class: 'muted vm-note' }, 'The parent uses this one. Pick another one first to delete it.') : null,
         buttons.length ? h('div', { class: 'row wrap' }, buttons) : null));
     }
     const pull = data.pull || {};
@@ -112,7 +113,7 @@ export function chatModelsPanel({ cfg, setModel, rerender }) {
     else if (pull.status === 'success' && !draw.announced?.has(pull.name)) { (draw.announced ||= new Set()).add(pull.name); toast(`${pull.name} is downloaded. Tap Use to switch to it.`); }
   };
   const refresh = () => listChatModels(cfg()).then(draw).catch((err) => {
-    clear(list); list.append(h('p', { class: 'status bad', style: { margin: 0 } }, err.message || String(err)));
+    clear(list); list.append(h('p', { class: 'status bad', style: { margin: 0 } }, friendlyError(err, 'list')));
   });
   refresh();
   return wrap;

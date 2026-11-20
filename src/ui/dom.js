@@ -34,8 +34,12 @@ export function select(label, value, options, onChange) {
   return h('label', { class: 'field' }, h('span', { class: 'lbl' }, label), sel);
 }
 export function toggle(label, value, onChange, hint) {
-  const inp = h('input', { type: 'checkbox', role: 'switch', checked: !!value, onchange: (e) => onChange(e.target.checked) });
-  return h('label', { class: 'field toggle' }, h('span', { class: 'lbl' }, label, hint ? h('small', {}, hint) : null), inp);
+  // The same labelled switch the session screen uses; the whole row is the target.
+  const id = 't' + Math.random().toString(36).slice(2, 7);
+  const sw = h('button', { type: 'button', id, class: 'switch' + (value ? ' on' : ''), role: 'switch', 'aria-checked': String(!!value), 'aria-labelledby': id + 'l' });
+  const row = h('div', { class: 'field toggle' }, h('span', { class: 'lbl', id: id + 'l' }, label, hint ? h('small', {}, hint) : null), sw);
+  row.addEventListener('click', () => { const v = sw.getAttribute('aria-checked') !== 'true'; sw.classList.toggle('on', v); sw.setAttribute('aria-checked', String(v)); onChange(v); });
+  return row;
 }
 export function swatches(label, value, colors, onPick) {
   const wrap = h('div', { class: 'swatches', role: 'radiogroup', 'aria-label': label });

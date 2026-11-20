@@ -62,7 +62,7 @@ for (const [label, dev] of [['iphone15', devices['iPhone 15']], ['iphoneSE', dev
   // settings
   await page.evaluate(() => window.Holding.nav('settings')); await page.waitForTimeout(800);
   const setTxt = await page.textContent('body');
-  ok(`${label} settings has pairing + install`, /Your home computer/.test(setTxt) && /home screen/.test(setTxt));
+  ok(`${label} settings has pairing + install`, /(Connected to|Can't reach) mac-mini.tail1.ts.net/.test(setTxt) && /home screen/.test(setTxt));
   ok(`${label} no h-overflow (settings)`, (await overflow(page)) <= 0, String(await overflow(page)));
   await page.screenshot({ path: `test/mobile/out/${label}-settings.png`, fullPage: true });
   await page.getByText('Put Holding on my home screen').click(); await page.waitForTimeout(600);

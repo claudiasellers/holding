@@ -154,25 +154,17 @@ export function renderPairingPanel(host) {
   const current = getHomeServer();
   host.classList.add('hm-pair');
   host.innerHTML = `
-    <h3 class="hm-h3">Your home computer</h3>
-    <p class="hm-muted">Use the bigger model on your Mac or PC. Everything stays on your own devices.</p>
     <div class="hm-status" data-status>${current ? 'Paired with ' + escapeHtml(hostOf(current.baseUrl)) : 'Not paired yet.'}</div>
-    <label class="hm-label" for="hm-pair-url">Address or pairing link</label>
+    <label class="hm-label" for="hm-pair-url">Link or address</label>
     <input id="hm-pair-url" class="hm-input" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false"
-      placeholder="mac-mini.your-tailnet.ts.net" value="${current ? escapeHtml(current.baseUrl.replace(/\/v1$/, '')) : ''}">
-    <label class="hm-label" for="hm-pair-code">Code shown on the computer</label>
+      placeholder="Like mac-mini.your-tailnet.ts.net" value="${current ? escapeHtml(current.baseUrl.replace(/\/v1$/, '')) : ''}">
+    <label class="hm-label" for="hm-pair-code">Pairing code</label>
     <input id="hm-pair-code" class="hm-input hm-code" autocomplete="one-time-code" autocapitalize="characters" spellcheck="false" placeholder="K7QM-2XPA">
     <div class="hm-row">
       <button class="hm-btn hm-primary" data-act="pair">Connect</button>
       ${current ? '<button class="hm-btn" data-act="forget">Forget</button>' : ''}
     </div>
-    <details class="hm-details"><summary>How to set up the computer</summary>
-      <ol>
-        <li>Install <b>Tailscale</b> on the computer and on this phone, signed in to the same account.</li>
-        <li>On the computer, run <code>repair-local start --tailscale</code>. It shows an https address ending in <code>.ts.net</code> and a code like K7QM-2XPA.</li>
-        <li>Type that address and the code above, then tap Connect.</li>
-      </ol>
-    </details>`;
+    <p class="hm-muted">Both are under <b>Pair a phone</b> in Holding Local's menu on your computer.</p>`;
   const status = host.querySelector('[data-status]');
   host.querySelector('[data-act="pair"]').addEventListener('click', async () => {
     const raw = host.querySelector('#hm-pair-url').value.trim();
@@ -197,7 +189,7 @@ export function renderPairingPanel(host) {
     } else if (r.needsPairing) {
       status.textContent = token ? 'That code didn\u2019t match. Check the code on the computer (like K7QM-2XPA).' : 'Found it. It needs the code shown on the computer.';
     } else {
-      status.textContent = r.error || 'Couldn’t connect.';
+      status.textContent = 'Your computer didn\u2019t answer. Is Holding Local open there, and is this phone on the same network?';
     }
   });
   const forget = host.querySelector('[data-act="forget"]');
