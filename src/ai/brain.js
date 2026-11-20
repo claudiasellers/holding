@@ -55,3 +55,60 @@ export async function connectHoldingLocal(baseUrl = '', token = '') {
 }
 
 export function providerLabel(id) { return getLLMProvider(id)?.label || id; }
+
+// ---------- live status: what is writing the parent's words right now ----------
+// Published by the session (engine/dialogue.js) and read by the session screen
+// and Settings, so both show the same truth: which brain is on, and whether the
+// last reply to something the user typed really came from it, and if not, why.
+//
+// shape: {
+//   state: 'scripted' | 'loading' | 'ready' | 'error',
+//   provider: 'scripted' | 'webllm' | 'openai-local' | 'holding-rag',
+//   label: string,            // brainLabel(provider)
+//   model: string,            // model name when known ('' otherwise)
+//   error: string,            // why it couldn't start (state 'error')
+//   last: null | {            // the last reply to something the user typed
+//     source: 'model' | 'script',
+//     reason: '' | 'scripted' | 'loading' | 'error' | 'slow' | 'failed' | 'empty' | 'rejected',
+//     detail: string,         // the error or the rules the AI reply broke
+//     text: string,           // fallbackText(reason, detail), ready to show
+//     at: number,
+//   },
+// }
+let live = { state: 'scripted', provider: 'scripted', label: 'Scripted lines', model: '', error: '', last: null };
+const listeners = new Set();
+
+export function brainStatus() { return live; }
+/** Subscribe to status changes. Returns an unsubscribe function. */
+export function onBrainStatus(fn) { listeners.add(fn); return () => listeners.delete(fn); }
+export function publishBrainStatus(patch) {
+  live = { ...live, ...patch };
+  if (patch.provider) live.label = brainLabel(patch.provider);
+  for (const fn of listeners) { try { fn(live); } catch { /* a listener's bug is not ours */ } }
+}
+
+/** The model name to show for a provider, from settings. */
+export function brainModel(providerId = store.settings.ai?.provider, settings = store.settings) {
+  const c = settings.ai?.[providerId] || {};
+  if (providerId === 'openai-local') return c.model || 'gemma4:e4b';
+  if (providerId === 'webllm') return c.model && c.model !== 'auto' ? c.model.replace(/-q4f16_1-MLC$/, '') : 'automatic size';
+  if (providerId === 'holding-rag') return c.model || '';
+  return '';
+}
+
+const REASONS = {
+  scripted: 'no AI is switched on',
+  loading: 'the AI was still loading',
+  error: 'the AI couldn\'t start',
+  slow: 'the AI took too long',
+  failed: 'the AI didn\'t answer',
+  empty: 'the AI\'s reply came back empty',
+  rejected: 'the AI\'s reply broke one of the parent\'s rules',
+};
+/** One plain sentence: why a reply was a scripted line. */
+export function fallbackText(reason, detail = '') {
+  const why = REASONS[reason];
+  if (!why) return '';
+  const d = String(detail || '').trim();
+  return `Scripted line: ${why}${d ? ` (${d.replace(/[.\s]+$/, '')})` : ''}.`;
+}

@@ -70,10 +70,35 @@ def _content(c):
     return "\n".join(text), images
 
 
-def to_ollama(body: dict, default_model: str) -> dict:
+_THINKING: dict[str, bool] = {}  # model -> does it support "think" (from /api/show)
+
+
+def resolve_model(body: dict, default_model: str) -> str:
     model = body.get("model") or default_model
-    if model in ("default", "auto", "local", ""):
-        model = default_model
+    return default_model if model in ("default", "auto", "local", "") else model
+
+
+async def supports_thinking(client: httpx.AsyncClient, ollama_url: str, model: str) -> bool:
+    """Ask Ollama whether the model can think (capabilities include "thinking").
+    Thinking models such as Gemma 4 think by default; their reasoning is not part
+    of the reply but still counts against max_tokens, so a short budget comes back
+    empty. Cached per model; falls back to the name list if Ollama can't say."""
+    if model in _THINKING:
+        return _THINKING[model]
+    try:
+        r = await client.post(f"{ollama_url}/api/show", json={"model": model}, timeout=5)
+        caps = r.json().get("capabilities") if r.status_code == 200 else None
+    except Exception:
+        caps = None
+    if not isinstance(caps, list):
+        return catalog.needs_think_off(model)  # don't cache a guess
+    _THINKING[model] = "thinking" in caps
+    return _THINKING[model]
+
+
+def to_ollama(body: dict, default_model: str, thinking: bool | None = None) -> dict:
+    """thinking: whether the model supports "think" (None = go by its name)."""
+    model = resolve_model(body, default_model)
     msgs = []
     for m in body.get("messages", []):
         text, images = _content(m.get("content"))
@@ -97,8 +122,11 @@ def to_ollama(body: dict, default_model: str) -> dict:
     think = body.get("think")
     if think is None:
         think = body.get("reasoning_effort") not in (None, "none") if "reasoning_effort" in body else False
-    # Only send "think" to models that understand it; others reject the field.
-    if catalog.needs_think_off(model) or think:
+    # Thinking is off unless asked for: the parent answers at once, and the hidden
+    # reasoning can't eat the reply's token budget. Only send "think" to models
+    # that understand it; others reject the field.
+    can_think = catalog.needs_think_off(model) if thinking is None else (thinking or catalog.needs_think_off(model))
+    if can_think or think:
         out["think"] = bool(think)
     return out
 

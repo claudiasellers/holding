@@ -77,6 +77,31 @@ const p = openaiLocal.generate({ ...req, signal: ac.signal });
 ac.abort();
 await assert.rejects(p, /Cancelled/);
 
+// --- openai-local: a model that thinks no matter what (older Holding Local, Gemma 4)
+// spends a short budget on thinking and returns nothing: ask again with room, and remember.
+reset();
+const thinkCfg = { baseUrl: 'http://127.0.0.1:8787/v1', model: 'gemma4:e4b' };
+next.push(json({ choices: [{ message: { content: '' }, finish_reason: 'length' }] }));
+next.push(json({ choices: [{ message: { content: 'That sounds like a long day.' }, finish_reason: 'stop' }] }));
+out = await openaiLocal.generate({ ...req, maxTokens: 60 }, thinkCfg);
+assert.equal(out, 'That sounds like a long day.');
+assert.equal(calls.length, 2);
+assert.equal(JSON.parse(calls[0].init.body).max_tokens, 60);
+assert.equal(JSON.parse(calls[0].init.body).think, false, 'asks the server to skip thinking');
+assert.equal(JSON.parse(calls[1].init.body).max_tokens, 1024);
+// remembered: the next turn goes straight to the roomy budget
+next.push(json({ choices: [{ message: { content: 'I am here.' }, finish_reason: 'stop' }] }));
+await openaiLocal.generate({ ...req, maxTokens: 60 }, thinkCfg);
+assert.equal(JSON.parse(calls[2].init.body).max_tokens, 1024);
+// cut off mid-sentence: keep whole sentences; nothing whole -> an error (scripted line fills in)
+next.push(json({ choices: [{ message: { content: 'You are beautiful, inside and out. Never' }, finish_reason: 'length' }] }));
+assert.equal(await openaiLocal.generate(req, thinkCfg), 'You are beautiful, inside and out.');
+next.push(json({ choices: [{ message: { content: 'Oh honey, you' }, finish_reason: 'length' }] }));
+await assert.rejects(openaiLocal.generate(req, thinkCfg), /cut off/);
+// still empty with room: a clear error, not a silent blank
+next.push(json({ choices: [{ message: { content: '' }, finish_reason: 'length' }] }));
+await assert.rejects(openaiLocal.generate(req, thinkCfg), /thinking and said nothing/);
+
 // --- holding-rag: health
 reset();
 next.push(json({ ok: true, models: ['holding-steady-grandmother'] }));
