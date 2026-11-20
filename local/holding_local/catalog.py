@@ -71,7 +71,7 @@ def pick_tier(ram_gb: float, vram_gb: float = 0.0) -> dict:
 
 def needs_think_off(model: str) -> bool:
     m = model.lower()
-    return m.startswith(("qwen3", "deepseek-r1", "gpt-oss", "magistral")) or "think" in m
+    return m.startswith(("qwen3", "deepseek-r1", "gpt-oss", "magistral", "gemma4")) or "think" in m
 
 # Mirror used if GitHub is unreachable: the same Kokoro v1.0 weights from
 # Hugging Face, with per-voice raw float32 files assembled into voices-v1.0.bin.

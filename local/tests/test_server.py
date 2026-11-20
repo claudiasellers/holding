@@ -31,7 +31,12 @@ def test_to_ollama_think_flag():
     p = llm.to_ollama({"model": "qwen3.5:4b", "messages": [{"role": "user", "content": "hi"}]}, "gemma4:e4b")
     assert p["think"] is False
     p = llm.to_ollama({"model": "default", "messages": [], "max_tokens": 40}, "gemma4:e4b")
-    assert p["model"] == "gemma4:e4b" and "think" not in p and p["options"]["num_predict"] == 40
+    # Gemma 4 thinks by default; left on, the thinking eats a short max_tokens and the reply is empty
+    assert p["model"] == "gemma4:e4b" and p["think"] is False and p["options"]["num_predict"] == 40
+    # what Ollama says about the model wins over the name list
+    assert "think" not in llm.to_ollama({"model": "llama3.2:3b", "messages": []}, "x", thinking=False)
+    assert llm.to_ollama({"model": "my-tune:latest", "messages": []}, "x", thinking=True)["think"] is False
+    assert llm.to_ollama({"model": "my-tune", "messages": [], "think": True}, "x", thinking=True)["think"] is True
 
 
 def test_short_code():
@@ -51,11 +56,18 @@ def make_client(tmp_path, handler):
     return TestClient(app)
 
 
+SEEN = []
+
+
 def fake_ollama(request: httpx.Request):
+    if request.url.path == "/api/show":
+        name = json.loads(request.content)["model"]
+        return httpx.Response(200, json={"capabilities": ["completion", "thinking"] if "gemma4" in name else ["completion"]})
     if request.url.path == "/api/tags":
         return httpx.Response(200, json={"models": [{"name": "gemma4:e4b"}]})
     if request.url.path == "/api/chat":
         body = json.loads(request.content)
+        SEEN.append(body)
         if body["stream"]:
             lines = [{"message": {"content": "<think>x</think>There"}, "done": False},
                      {"message": {"content": " you are."}, "done": False},
@@ -93,3 +105,17 @@ def test_hidden_paths(tmp_path):
     assert c.get("/.env").status_code == 404
     assert c.get("/local/x.py").status_code == 404
     assert c.get("/.git/config").status_code == 404
+
+
+def test_chat_turns_thinking_off(tmp_path):
+    """A thinking-capable model gets think:false, one without the capability gets no field."""
+    llm._THINKING.clear()
+    c = make_client(tmp_path, fake_ollama)
+    auth = {"authorization": "Bearer ABCD-2345"}
+    SEEN.clear()
+    assert c.post("/v1/chat/completions", json={"messages": [{"role": "user", "content": "hi"}], "max_tokens": 60},
+                  headers=auth).json()["choices"][0]["message"]["content"] == "There you are."
+    assert SEEN[-1]["think"] is False
+    c.post("/v1/chat/completions", json={"model": "llama3.2:3b", "messages": []}, headers=auth)
+    assert "think" not in SEEN[-1]
+    assert c.get("/health").json()["llm"]["think_off"] is True

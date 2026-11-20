@@ -67,6 +67,9 @@ export function loadWebLLM() {
   return libPromise;
 }
 
+/** Tests only: stand in for the CDN library. */
+export function _setLibForTest(lib) { libPromise = lib ? Promise.resolve(lib) : null; }
+
 let engine = null;
 let engineModel = null;
 let loading = null;
@@ -85,6 +88,65 @@ export async function deleteModel(modelId) {
   const lib = await loadWebLLM();
   if (engineModel === modelId) await webllm.dispose();
   await lib.deleteModelAllInfoInCache(modelId);
+}
+
+// Everyone currently waiting on a load hears its progress (a session screen,
+// Settings, or nobody for the background warm-up).
+const listeners = new Set();
+function report(p) {
+  lastProgress = { text: p.text || '', progress: typeof p.progress === 'number' ? p.progress : 0 };
+  for (const fn of listeners) { try { fn({ ...lastProgress }); } catch { /* a closed screen */ } }
+}
+
+function startLoad(model) {
+  const promise = (async () => {
+    const lib = await loadWebLLM();
+    if (!lib.prebuiltAppConfig.model_list.some((m) => m.model_id === model)) {
+      throw new Error(`"${model}" is not a WebLLM ${WEBLLM_VERSION} prebuilt model.`);
+    }
+    report({ text: 'Starting…', progress: 0 });
+    if (engine) {
+      engine.setInitProgressCallback?.(report);
+      await engine.reload(model);
+    } else {
+      const m = await mobile();
+      engine = await lib.CreateMLCEngine(model, { initProgressCallback: report }, m?.mobileChatOptions?.(probe) || undefined);
+    }
+    engineModel = model;
+    report({ text: 'Ready', progress: 1 });
+  })();
+  loading = { model, promise };
+  return (async () => {
+    try { await promise; (await mobile())?.recordModelSuccess?.(model); } catch (err) {
+      (await mobile())?.recordModelFailure?.(model, String(err?.message || err));
+      const msg = String(err?.message || err);
+      if (/quota|storage/i.test(msg)) throw new Error('Not enough storage space on this device for the model. Free some space or choose a smaller model.');
+      if (/device.*lost|out of memory|OOM/i.test(msg)) throw new Error('The GPU ran out of memory loading the model. Choose a smaller model.');
+      throw err;
+    } finally { if (loading?.promise === promise) loading = null; }
+  })();
+}
+
+/**
+ * Start loading the model in the background as soon as the app opens, so it is
+ * ready (or nearly) by the time someone taps Hold me. Only when the weights are
+ * already downloaded: it never starts a 1-3 GB download on its own. Returns
+ * what it did ('loaded' | 'skipped:<why>' | 'failed').
+ */
+export async function warmUp(cfg = {}) {
+  try {
+    if (typeof navigator === 'undefined' || !navigator.gpu) return 'skipped:no-webgpu';
+    if (navigator.connection?.saveData) return 'skipped:save-data';
+    const pick = await resolveModel(cfg);
+    if (engine && engineModel === pick.id) return 'loaded';
+    const lib = await loadWebLLM();
+    if (!(await lib.hasModelInCache(pick.id))) return 'skipped:not-downloaded';
+    await webllm.init(cfg);
+    return 'loaded';
+  } catch (err) {
+    console.info('[holding] AI warm-up did not finish:', err?.message || err);
+    return 'failed';
+  }
 }
 
 // WebLLM keeps each model's files in Cache Storage under these names, keyed by
@@ -155,40 +217,45 @@ const webllm = {
     }
   },
 
-  /** Load (downloading on first use) the chosen model. Safe to call repeatedly. */
+  /**
+   * Load (downloading on first use) the chosen model. Safe to call repeatedly,
+   * and from several places at once: the engine lives at module level for the
+   * whole page, so a second session (or a session that starts while the app is
+   * still warming up in the background) joins the load already in flight and
+   * gets its progress too, instead of starting over.
+   */
   async init(cfg = {}, onProgress) {
     chosen = await resolveModel(cfg);
     const model = chosen.id;
     if (engine && engineModel === model) { onProgress?.({ text: 'Ready', progress: 1 }); return; }
-    if (loading && loading.model === model) return loading.promise;
-    const promise = (async () => {
-      const lib = await loadWebLLM();
-      if (!lib.prebuiltAppConfig.model_list.some((m) => m.model_id === model)) {
-        throw new Error(`"${model}" is not a WebLLM ${WEBLLM_VERSION} prebuilt model.`);
+    if (onProgress) listeners.add(onProgress);
+    try {
+      if (loading && loading.model === model) {
+        if (onProgress && lastProgress.text) onProgress({ ...lastProgress });
+        return await loading.promise;
       }
-      const report = (p) => {
-        lastProgress = { text: p.text || '', progress: typeof p.progress === 'number' ? p.progress : 0 };
-        onProgress?.(lastProgress);
-      };
-      report({ text: 'Starting…', progress: 0 });
-      if (engine) {
-        engine.setInitProgressCallback?.(report);
-        await engine.reload(model);
-      } else {
-        const m = await mobile();
-        engine = await lib.CreateMLCEngine(model, { initProgressCallback: report }, m?.mobileChatOptions?.(probe) || undefined);
-      }
-      engineModel = model;
-      report({ text: 'Ready', progress: 1 });
-    })();
-    loading = { model, promise };
-    try { await promise; (await mobile())?.recordModelSuccess?.(model); } catch (err) {
-      (await mobile())?.recordModelFailure?.(model, String(err?.message || err));
-      const msg = String(err?.message || err);
-      if (/quota|storage/i.test(msg)) throw new Error('Not enough storage space on this device for the model. Free some space or choose a smaller model.');
-      if (/device.*lost|out of memory|OOM/i.test(msg)) throw new Error('The GPU ran out of memory loading the model. Choose a smaller model.');
-      throw err;
-    } finally { loading = null; }
+      // A different model is wanted while another is still loading: let that
+      // one finish first, so two loads never fight over the GPU.
+      if (loading) await loading.promise.catch(() => {});
+      if (engine && engineModel === model) { onProgress?.({ text: 'Ready', progress: 1 }); return; }
+      return await startLoad(model);
+    } finally {
+      if (onProgress) listeners.delete(onProgress);
+    }
+  },
+
+  /** True when this cfg's model is already in memory (no wait at all). */
+  async isLoaded(cfg = {}) {
+    if (!engine) return false;
+    const want = await resolveModel(cfg).catch(() => null);
+    return !!want && engineModel === want.id;
+  },
+
+  /** True while the model for this cfg is loading (e.g. the background warm-up). */
+  async isLoading(cfg = {}) {
+    if (!loading) return false;
+    const want = await resolveModel(cfg).catch(() => null);
+    return !!want && loading.model === want.id;
   },
 
   /**

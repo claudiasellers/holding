@@ -8,6 +8,7 @@ import { buildSystemPrompt } from './prompt.js';
 import { pick, getPath, fill } from './scripts.js';
 import { nameMiss, repairLine, listenLine, reattuneLine, readCheckAnswer, missSignals, withoutNegated, breaksPromise } from './repair.js';
 import { getLLMProvider } from '../ai/providers.js';
+import { publishBrainStatus, brainModel, fallbackText } from '../ai/brain.js';
 import { getTTSProvider } from '../voice/providers.js';
 import { store } from '../store.js';
 import { voiceFor } from '../voice/resolve.js';
@@ -79,15 +80,25 @@ export function createSession({ archetype, presence, ui, mode = 'hold' }) {
   // brain: 'scripted' (no model chosen) | 'loading' | 'ready' | 'error'
   let providerId = 'scripted', provider = null, brain = 'scripted';
   let lastMiss = null;              // why the last model attempt fell back to a script
+  let lastMissDetail = '';          // the error, or the rules the reply broke
   function setBrain(b) {
     brain = b;
-    ui.onBrain?.({ state: b, provider: providerId, progress: modelProgress, error: modelErr?.message || '' });
+    const info = { state: b, provider: providerId, model: brainModel(providerId), progress: modelProgress, error: modelErr?.message || '' };
+    publishBrainStatus({ state: b, provider: providerId, model: info.model, error: info.error });
+    ui.onBrain?.(info);
   }
   async function prepareModel() {
     const id = providerId, p = provider;
     try {
-      const av = await p.isAvailable(s.ai[id] || {});
-      if (!av.ok) throw new Error(av.reason || 'not available');
+      // The in-browser model stays in memory between sessions (and may already
+      // be warming up from when the app opened). If it's loaded or loading, the
+      // availability check already passed once: skip it and just join.
+      const cfg = s.ai[id] || {};
+      const warm = (await p.isLoaded?.(cfg).catch(() => false)) || (await p.isLoading?.(cfg).catch(() => false));
+      if (!warm) {
+        const av = await p.isAvailable(cfg);
+        if (!av.ok) throw new Error(av.reason || 'not available');
+      }
       await p.init(s.ai[id] || {}, (pr) => {
         if (id !== providerId) return;
         modelProgress = pr.progress || 0;
@@ -109,7 +120,8 @@ export function createSession({ archetype, presence, ui, mode = 'hold' }) {
   function useProvider() {
     providerId = s.ai.provider || 'scripted';
     provider = getLLMProvider(providerId) || null;
-    modelReady = false; modelErr = null; modelProgress = 0; lastMiss = null;
+    modelReady = false; modelErr = null; modelProgress = 0; lastMiss = null; lastMissDetail = '';
+    publishBrainStatus({ last: null });
     if (!provider || providerId === 'scripted') { providerId = 'scripted'; modelPromise = null; setBrain('scripted'); return; }
     setBrain('loading');
     modelPromise = prepareModel();
@@ -117,28 +129,44 @@ export function createSession({ archetype, presence, ui, mode = 'hold' }) {
 
   // typed: the user just wrote something and is waiting on an answer to it, so
   // give the model more room than for an unprompted "still here" line.
+  // typed: the user just wrote something and is waiting on an answer to it, so
+  // give the model more room than for an unprompted "still here" line, and one
+  // second try if its first reply breaks a rule.
   async function generate(policy, { typed = false, hint = '' } = {}) {
+    lastMissDetail = '';
     if (!provider || providerId === 'scripted') { lastMiss = 'scripted'; return null; }
     if (!modelReady && typed && modelPromise) {
       await Promise.race([modelPromise, sleep(8000, ctrl.signal)]);
     }
-    if (!modelReady) { lastMiss = brain === 'error' ? 'error' : 'loading'; return null; }
-    const system = buildSystemPrompt(archetype, policy, { userName: s.userName, memory: memoryLine(), hint, crying: state.crying });
+    if (!modelReady) { lastMiss = brain === 'error' ? 'error' : 'loading'; lastMissDetail = brain === 'error' ? (modelErr?.message || '') : ''; return null; }
     const messages = state.history.slice(-12);
-    const timeout = typed ? (policy.tier === 'bewith' ? 20000 : 45000) : (policy.tier === 'bewith' ? 7000 : 25000);
-    const ac = new AbortController();
-    const timer = setTimeout(() => ac.abort(), timeout);
-    try {
-      const text = await provider.generate({ system, messages, maxTokens: policy.maxTokens, temperature: policy.temperature, archetype, signal: ac.signal });
-      const g = guard(text, policy, { crying: state.crying });
-      if (!g.ok) { console.info('[holding] model reply rejected:', g.reasons, text); lastMiss = 'rejected'; return null; }
-      lastMiss = null;
-      return g.text;
-    } catch (e) {
-      console.info('[holding] model failed, using script:', e?.message);
-      lastMiss = ac.signal.aborted ? 'slow' : 'failed';
-      return null;
-    } finally { clearTimeout(timer); }
+    const budget = typed ? (policy.tier === 'bewith' ? 20000 : 45000) : (policy.tier === 'bewith' ? 7000 : 25000);
+    const until = Date.now() + budget;
+    let redo = '';
+    for (let attempt = 0; attempt < (typed ? 2 : 1); attempt++) {
+      const left = until - Date.now();
+      if (attempt && left < 4000) break;
+      const system = buildSystemPrompt(archetype, policy, { userName: s.userName, memory: memoryLine(), hint: [hint, redo].filter(Boolean).join(' '), crying: state.crying });
+      const ac = new AbortController();
+      const timer = setTimeout(() => ac.abort(), left);
+      try {
+        const text = await provider.generate({ system, messages, maxTokens: policy.maxTokens, temperature: policy.temperature, archetype, signal: ac.signal });
+        const g = guard(text, policy, { crying: state.crying });
+        if (g.ok) { lastMiss = null; return g.text; }
+        console.info('[holding] model reply rejected:', g.reasons, text);
+        const empty = g.reasons.includes('empty');
+        lastMiss = empty ? 'empty' : 'rejected';
+        lastMissDetail = empty ? '' : g.reasons.join(', ');
+        redo = empty ? '' : `Your last draft was not usable because it ${g.reasons.join(' and ')}. Write a different reply that follows every rule.`;
+        if (ctrl.signal.aborted) break;
+      } catch (e) {
+        console.info('[holding] model failed, using script:', e?.message);
+        lastMiss = ac.signal.aborted ? 'slow' : (/empty|said nothing|cut off/i.test(e?.message || '') ? 'empty' : 'failed');
+        lastMissDetail = lastMiss === 'failed' ? String(e?.message || '').slice(0, 160) : '';
+        break;   // a server that failed or timed out won't do better on a second ask
+      } finally { clearTimeout(timer); }
+    }
+    return null;
   }
 
   function memoryLine() {
@@ -239,14 +267,19 @@ export function createSession({ archetype, presence, ui, mode = 'hold' }) {
     let text = null, source = 'script';
     if (opts.allowModel && !String(kind).startsWith('safety')) {
       text = await generate(policy, { typed: !!opts.typed, hint: [opts.hint || HINTS[kind] || '', fixHint()].filter(Boolean).join(' ') });
-      if (text && breaksPromise(text, state.fix)) { console.info('[holding] model reply broke the repair promise:', text); text = null; lastMiss = 'rejected'; }
+      if (text && breaksPromise(text, state.fix)) { console.info('[holding] model reply broke the repair promise:', text); text = null; lastMiss = 'rejected'; lastMissDetail = 'it broke the promise from the last repair'; }
       if (text) source = 'model';
       if (state.ended && !opts.final) return;
     }
     if (!text) text = scriptFor(kind, policy, opts);
     if (!REPAIR_KINDS.has(kind)) spendFix();
     const g = guard(text, policy, { crying: state.crying });
-    return say(g.text || text, { kind, tier: policy.tier, final: opts.final, source, typed: !!opts.typed, fallback: source === 'script' && opts.allowModel ? lastMiss : null });
+    const fallback = source === 'script' && opts.allowModel ? (lastMiss || 'failed') : null;
+    const fallbackDetail = fallback ? lastMissDetail : '';
+    if (opts.typed && opts.allowModel) {
+      publishBrainStatus({ last: { source, reason: fallback || '', detail: fallbackDetail, text: fallback ? fallbackText(fallback, fallbackDetail) : '', at: Date.now() } });
+    }
+    return say(g.text || text, { kind, tier: policy.tier, final: opts.final, source, typed: !!opts.typed, fallback, fallbackDetail });
   }
 
   function scriptFor(kind, policy, opts) {

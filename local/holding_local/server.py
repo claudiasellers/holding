@@ -134,7 +134,7 @@ def create_app(cfg: dict | None = None) -> FastAPI:
         return {
             "ok": up and have and tts.available(cfg["tts_quality"]),
             "version": __version__,
-            "llm": {"runtime": "ollama", "reachable": up, "model": want, "downloaded": have},
+            "llm": {"runtime": "ollama", "reachable": up, "model": want, "downloaded": have, "think_off": True},
             "tts": {"engine": "kokoro-82m-v1.0", "ready": tts.available(cfg["tts_quality"]),
                     "selected": voice_models.selected(cfg), "chatterbox": chatterbox.available(),
                     "ready": [k for k in voice_models.MODELS if k == "kokoro" or expressive.ready(k)]},
@@ -169,7 +169,8 @@ def create_app(cfg: dict | None = None) -> FastAPI:
     @app.post("/v1/chat/completions")
     async def chat(request: Request):
         body = await request.json()
-        payload = llm.to_ollama(body, llm_model())
+        model = llm.resolve_model(body, llm_model())
+        payload = llm.to_ollama(body, llm_model(), await llm.supports_thinking(app.state.http, cfg["ollama_url"], model))
         try:
             if payload["stream"]:
                 return StreamingResponse(llm.stream(app.state.http, cfg["ollama_url"], payload),

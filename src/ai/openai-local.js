@@ -146,35 +146,68 @@ const openaiLocal = {
     const messages = [];
     if (req.system) messages.push({ role: 'system', content: req.system });
     for (const m of req.messages || []) messages.push({ role: m.role === 'assistant' ? 'assistant' : 'user', content: String(m.content ?? '') });
-    const body = {
-      model: c.model,
-      messages,
-      max_tokens: req.maxTokens ?? 160,
-      temperature: req.temperature ?? 0.7,
-      stream: false,
-    };
+    const want = req.maxTokens ?? 160;
+    const key = `${c.baseUrl}|${c.model}`;
     const to = withTimeout(cfg.timeoutMs || GENERATE_TIMEOUT_MS, req.signal);
-    let res;
-    try {
-      res = await fetch(`${c.baseUrl}/chat/completions`, { method: 'POST', headers: headers(c, true), body: JSON.stringify(body), signal: to.signal });
-    } catch (err) {
-      to.done();
-      throw new Error(explainNetworkError(err, c, to.timedOut()));
-    }
-    try {
+    const ask = async (maxTokens) => {
+      const body = {
+        model: c.model,
+        messages,
+        max_tokens: maxTokens,
+        temperature: req.temperature ?? 0.7,
+        stream: false,
+        // Thinking models (Gemma 4, Qwen 3.5) otherwise reason first, and the
+        // hidden reasoning counts against max_tokens. Holding Local honours this;
+        // servers that don't know the field ignore it.
+        think: false,
+      };
+      let res;
+      try {
+        res = await fetch(`${c.baseUrl}/chat/completions`, { method: 'POST', headers: headers(c, true), body: JSON.stringify(body), signal: to.signal });
+      } catch (err) {
+        throw new Error(explainNetworkError(err, c, to.timedOut()));
+      }
       if (!res.ok) {
         const d = await readError(res);
         if (res.status === 404) throw new Error(`Model "${c.model}" was not found on ${c.baseUrl}.${isOllama(c.baseUrl) ? ` Try \`ollama pull ${c.model}\`.` : ''}${d ? ' ' + d : ''}`);
         throw new Error(`Local server error ${res.status}.${d ? ' ' + d : ''}`);
       }
       const j = await res.json();
-      return parseReply(j);
+      return { text: parseReply(j), cut: finishReason(j) === 'length' };
+    };
+    try {
+      // A server that still lets the model think spends a short budget on the
+      // thinking and returns nothing. Ask again with room for it, and remember.
+      let r = await ask(ROOMY.has(key) ? Math.max(want, ROOMY_TOKENS) : want);
+      if (!r.text && r.cut && !ROOMY.has(key)) {
+        ROOMY.add(key);
+        console.info(`[holding] ${c.model} used its whole reply budget thinking; asking again with room to think`);
+        r = await ask(Math.max(want, ROOMY_TOKENS));
+      }
+      if (!r.text) throw new Error(r.cut ? `The model on ${c.baseUrl} used its whole reply on thinking and said nothing.` : `The model on ${c.baseUrl} sent an empty reply.`);
+      const out = r.cut ? wholeSentences(r.text) : r.text;
+      if (!out) throw new Error(`The model on ${c.baseUrl} was cut off before it finished a sentence.`);
+      return out;
     } catch (err) {
       if (to.timedOut()) throw new Error(`The model on ${c.baseUrl} took too long to answer.`);
       throw err;
     } finally { to.done(); }
   },
 };
+
+// Servers whose model thinks no matter what (an older Holding Local, plain
+// Ollama /v1): ask for this much so the reply survives the thinking.
+const ROOMY_TOKENS = 1024;
+const ROOMY = new Set();
+export function _resetRoomy() { ROOMY.clear(); }
+
+function finishReason(j) { return j?.choices?.[0]?.finish_reason || (j?.done_reason === 'length' ? 'length' : ''); }
+
+/** A reply cut off by max_tokens: keep the whole sentences, drop the dangling end. */
+export function wholeSentences(t) {
+  const m = String(t).match(/^[\s\S]*[.!?…]["”')\]]*(?=\s|$)/);
+  return (m ? m[0] : '').trim();
+}
 
 /** Extract text from an OpenAI chat completion (or Ollama native) response. */
 export function parseReply(j) {
