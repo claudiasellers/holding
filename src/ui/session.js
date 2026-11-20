@@ -7,17 +7,13 @@ import { createSession } from '../engine/dialogue.js';
 import { store } from '../store.js';
 import { startCamera } from '../engine/camera.js';
 import { shouldAskOnEnd } from '../engine/endprompt.js';
-import { brainLabel, canUseDeviceAI, useDeviceAI, connectHoldingLocal } from '../ai/brain.js';
+import { brainLabel, canUseDeviceAI, useDeviceAI, connectHoldingLocal, brainStatus, fallbackText } from '../ai/brain.js';
+import { getTTSProvider } from '../voice/providers.js';
+import { chosenVoice } from '../voice/resolve.js';
 
-// Why a reply to something the user typed came from the script library even
-// though an AI is switched on.
-const FALLBACK_NOTE = {
-  loading: 'The AI is still loading, so that reply was a scripted line.',
-  slow: 'The AI took too long, so that reply was a scripted line.',
-  failed: 'The AI didn\'t answer, so that reply was a scripted line.',
-  error: 'The AI couldn\'t start, so that reply was a scripted line.',
-  rejected: 'The AI\'s reply broke one of the parent\'s rules, so a scripted line was used instead.',
-};
+// Short names for the top of the session screen (the full ones are in the sheet).
+const SHORT_BRAIN = { webllm: 'AI on this device', 'openai-local': 'AI on your computer', 'holding-rag': 'Companion server' };
+const shortBrain = (b) => (b.provider === 'openai-local' && /Holding Local/.test(brainLabel(b.provider)) ? 'Holding Local' : SHORT_BRAIN[b.provider] || 'AI');
 
 // "Just stay" first: it asks the least of someone who can't name anything yet.
 const TILES = [
@@ -51,6 +47,7 @@ export function renderSession(root, nav, { mode = 'hold' } = {}) {
   // Always-visible note on what writes the parent's words; tap to change it.
   const brainBtn = h('button', { class: 'brain-chip', type: 'button', onclick: () => openSheet(brainSheet(), 'brain') }, '');
   let brain = { state: 'scripted' };
+  let lastFallback = '';             // why the last reply to typed words was scripted ('' = it was the AI)
   const video = h('video', { class: 'hidden-video', playsinline: true, muted: true });
   // Lives in the More sheet as a labelled switch; built once so its state survives reopening.
   const leadBtn = h('button', { class: 'switch' + (mode === 'hold' ? ' on' : ''), type: 'button', role: 'switch', 'aria-checked': mode === 'hold' ? 'true' : 'false', 'aria-label': `${first} keeps talking softly` });
@@ -96,13 +93,16 @@ export function renderSession(root, nav, { mode = 'hold' } = {}) {
   });
   ring.style.display = s.breathPacer ? '' : 'none';
 
-  function logLine(who, text) {
+  // src (parent replies to what the user typed): { ai: true } or { why: 'Scripted line: …' }
+  function logLine(who, text, src = null) {
     logEmpty.remove();
     const atBottom = logPanel.scrollHeight - logPanel.scrollTop - logPanel.clientHeight < 40;
     const time = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-    logList.append(h('div', { class: 'log-line ' + who },
-      who === 'tap' ? null : h('div', { class: 'log-who' }, who === 'parent' ? first : 'You', h('time', {}, time)),
-      h('div', { class: 'log-text' }, text)));
+    logList.append(h('div', { class: 'log-line ' + who + (src?.why ? ' scripted' : '') },
+      who === 'tap' ? null : h('div', { class: 'log-who' }, who === 'parent' ? first : 'You', h('time', {}, time),
+        src ? h('span', { class: 'log-src' + (src.ai ? ' ai' : '') }, src.ai ? 'AI' : 'scripted') : null),
+      h('div', { class: 'log-text' }, text),
+      src?.why ? h('div', { class: 'log-why' }, src.why) : null));
     if (atBottom || who !== 'parent') logPanel.scrollTop = logPanel.scrollHeight;
   }
   function setLog(open, { remember = true } = {}) {
@@ -130,10 +130,13 @@ export function renderSession(root, nav, { mode = 'hold' } = {}) {
       caption.classList.remove('fade'); caption.textContent = text;
       if (meta.replay) return;
       lastLine = text; kindOf.set(text, meta.kind || '');
-      logLine('parent', text);
-      if (meta.typed && meta.source === 'script' && FALLBACK_NOTE[meta.fallback]) note(FALLBACK_NOTE[meta.fallback]);
+      // Replies to what the user typed say where they came from, in the log and the chip.
+      const why = meta.typed && meta.source === 'script' && meta.fallback && meta.fallback !== 'scripted' ? fallbackText(meta.fallback, meta.fallbackDetail) : '';
+      logLine('parent', text, meta.typed && brain.state !== 'scripted' ? (meta.source === 'model' ? { ai: true } : why ? { why } : null) : null);
+      if (meta.typed && brain.state !== 'scripted') { lastFallback = why; renderBrain(); }
+      if (why) note(why);
     },
-    onBrain(b) { brain = b; renderBrain(); },
+    onBrain(b) { brain = b; if (b.state !== 'ready') lastFallback = ''; renderBrain(); },
     onSpeakEnd() { setTimeout(() => caption.classList.add('fade'), 2500); },
     onMirror(affect) {
       el.style.background = (isDark() ? TINT_DARK : TINT)[affect] || '';
@@ -185,17 +188,23 @@ export function renderSession(root, nav, { mode = 'hold' } = {}) {
   }
   function renderBrain() {
     const b = brain;
-    brainBtn.className = 'brain-chip ' + b.state;
-    // Short at the top; the full sentence is the accessible name and is in More and the sheet.
+    const fell = b.state === 'ready' && !!lastFallback;
+    brainBtn.className = 'brain-chip ' + (fell ? 'fallback' : b.state);
+    // Short at the top: what writes the words, and the model. The full sentence is
+    // the accessible name, and the sheet says the rest (voice, last reply, why).
     const pct = b.progress > 0 && b.progress < 1 ? ` ${Math.round(b.progress * 100)}%` : '…';
+    const model = b.model ? ` · ${b.model}` : '';
     brainBtn.textContent = b.state === 'scripted' ? 'Scripted lines'
-      : b.state === 'loading' ? `AI loading${pct}`
-      : b.state === 'error' ? 'AI couldn\'t start'
-      : 'AI on';
+      : b.state === 'loading' ? `${shortBrain(b)} loading${pct}`
+      : b.state === 'error' ? 'AI couldn\'t start · scripted'
+      : fell ? `${shortBrain(b)} · last reply scripted`
+      : `${shortBrain(b)}${model}`;
+    brainBtn.title = fell ? lastFallback : '';
     brainBtn.setAttribute('aria-label', b.state === 'scripted' ? `Scripted lines: ${first} isn't reading your words. Tap to turn on AI`
       : b.state === 'loading' ? `${brainLabel(b.provider)} loading${pct}`
-      : b.state === 'error' ? 'AI couldn\'t start: using scripted lines. Tap to fix'
-      : `${brainLabel(b.provider)}: reading your words`);
+      : b.state === 'error' ? 'AI couldn\'t start: using scripted lines. Tap to see why'
+      : fell ? `${brainLabel(b.provider)} is on, but the last reply was scripted. ${lastFallback} Tap for details`
+      : `${brainLabel(b.provider)}${model}: reading your words`);
   }
   function brainSheet() {
     const msg = h('p', { class: 'status' }, '');
@@ -224,9 +233,18 @@ export function renderSession(root, nav, { mode = 'hold' } = {}) {
     const body = b.state === 'scripted' ? `${first}'s face reacts to feeling words, but the replies are pre-written lines picked by feeling. Turn on an AI and ${first} will answer what you actually say. Everything stays on your own devices.`
       : b.state === 'error' ? `${b.error || 'Unknown error.'} Until it's fixed, ${first} uses scripted lines and won't follow what you type.`
       : b.state === 'loading' ? `${brainLabel(b.provider)} is getting ready${b.progress > 0 && b.progress < 1 ? ` (${Math.round(b.progress * 100)}%)` : ''}. ${first} uses scripted lines until then. You can keep talking.`
-      : `${brainLabel(b.provider)} writes ${first}'s replies to what you type. If it is ever slow or breaks a rule, a scripted line fills in and a note says so.`;
+      : `${brainLabel(b.provider)} writes ${first}'s replies to what you type. If it is ever slow or breaks a rule, a scripted line fills in, and the log marks it with the reason.`;
+    const tts = getTTSProvider(s.tts?.provider) || getTTSProvider('webspeech');
+    const voice = s.voiceOn ? `${tts?.label || 'Device voice'}${chosenVoice(tts?.id, a) ? ` · ${chosenVoice(tts?.id, a)}` : ''}` : 'Off (captions only)';
+    const last = brainStatus().last;
+    const lastText = b.state === 'scripted' ? 'Scripted (no AI on)' : !last ? 'Nothing typed yet' : last.source === 'model' ? 'From the AI' : (last.text || 'Scripted line');
+    const nowRow = (k, v, bad) => h('div', { class: 'now-row' }, h('span', {}, k), h('b', { class: bad ? 'bad' : '' }, v));
     return h('div', { class: 'stack' },
       h('h3', {}, title),
+      h('div', { class: 'now-list', 'aria-label': 'Right now' },
+        nowRow('Words', b.state === 'scripted' ? 'Scripted lines' : `${brainLabel(b.provider)}${b.model ? ` · ${b.model}` : ''}`),
+        nowRow('Voice', voice),
+        nowRow('Last reply', lastText, last?.source === 'script' && b.state !== 'scripted')),
       h('p', { class: 'muted', style: { margin: 0 } }, body),
       b.state === 'ready' || b.state === 'loading' ? null : h('div', { class: 'row wrap' }, deviceBtn, localBtn),
       msg,

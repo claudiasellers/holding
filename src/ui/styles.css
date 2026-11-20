@@ -147,6 +147,13 @@ details summary { cursor: pointer; min-height: 40px; display: flex; align-items:
 .brain-chip.error::before { color: var(--danger); }
 .brain-chip.ready::before { color: #4b9a64; }
 .brain-chip.loading::before { color: #c9a227; }
+.brain-chip.fallback::before { color: #c49a3e; }
+/* "Right now" in the AI sheet: words, voice, last reply */
+.now-list { display: grid; gap: 6px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; }
+.now-row { display: flex; justify-content: space-between; gap: 12px; font-size: .9rem; }
+.now-row span { color: var(--ink2); flex: none; }
+.now-row b { font-weight: 600; text-align: right; overflow-wrap: anywhere; }
+.now-row b.bad { color: #b07d1e; font-weight: 500; }
 .home-brain { text-align: center; font-size: .88rem; color: var(--ink2); margin: 0; }
 .home-brain button { background: none; border: 0; padding: 0; color: inherit; text-decoration: underline; font: inherit; cursor: pointer; }
 /* running conversation log (toggled from the session top bar) */
@@ -171,6 +178,10 @@ details summary { cursor: pointer; min-height: 40px; display: flex; align-items:
 .log-who { font-size: .75rem; color: var(--ink2); font-weight: 600; display: flex; gap: 6px; align-items: baseline; }
 .log-line.you .log-who { justify-content: flex-end; }
 .log-who time { font-weight: 400; }
+.log-src { font-weight: 500; font-size: .7rem; padding: 0 6px; border-radius: 999px; border: 1px solid var(--line); color: var(--ink2); }
+.log-src.ai { color: #4b9a64; border-color: color-mix(in srgb, #4b9a64 40%, transparent); }
+.log-line.scripted .log-src { color: #b07d1e; border-color: color-mix(in srgb, #c49a3e 45%, transparent); }
+.log-why { font-size: .78rem; color: var(--ink2); line-height: 1.35; }
 /* wide screens: the log sits beside the face instead of over it, and captions stay */
 @media (min-width: 1100px) {
   .log-panel { position: absolute; inset: 4px 16px 8px auto; width: min(380px, 30vw); z-index: 5; border: 1px solid var(--line); border-radius: var(--r); box-shadow: var(--shadow); }
