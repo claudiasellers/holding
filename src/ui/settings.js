@@ -94,6 +94,8 @@ export function renderSettings(root, nav, params = {}) {
         opt('local', 'AI on your computer', 'Holding Local on your Mac or PC. The warmest replies. Set it up below.', onLocal)),
       aiId === 'webllm' ? select('Model', webllmCfg.model || DEFAULT_WEBLLM_MODEL, WEBLLM_MODELS.map((x) => [x.id, x.label]), (v) => { set({ ai: { webllm: { ...webllmCfg, model: v } } }); render(); }) : null,
       onLocal ? h('p', { class: 'muted small' }, 'Holding Local writes the words. Pick its chat model under Your computer.') : null,
+      aiId !== 'scripted' ? toggle('Rules off: show the AI exactly as written', !!S().rawAI, (v) => set({ rawAI: v }),
+        'Skips every check on the AI\'s reply (banned phrases, length, questions, tears, the repair promise) and never swaps in a hand-written line for breaking one. The log still notes what a reply would have broken. Crisis replies stay hand-written.') : null,
       aiProg, aiStatus,
       advancedServer(advanced)));
 

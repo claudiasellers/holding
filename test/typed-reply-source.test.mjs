@@ -75,3 +75,30 @@ test('a server error is named in the fallback', async () => {
   assert.equal(r.m.fallback, 'failed');
   assert.match(fallbackText(r.m.fallback, r.m.fallbackDetail), /didn't answer \(Local server error 503/);
 });
+
+test('rules off: a reply that breaks rules is shown exactly as written, first try', async () => {
+  asked.length = 0;
+  store.settings.rawAI = true;
+  try {
+    const raw = "Oh love, I love you so much! Why did she say that? At least you're here. Here are 3 things: 1. rest 2. water 3. sleep.";
+    replies = [raw];
+    const r = await talk("my sister said i was overreacting");
+    assert.equal(r.t, raw);                 // no trimming, no sentence cap, no '!' -> '.'
+    assert.equal(r.m.source, 'model');
+    assert.equal(r.m.raw, true);
+    assert.equal(asked.length, 1);          // no second try
+    assert.match(r.m.rawNote, /guilt \/ overclaiming love/);
+    assert.match(r.m.rawNote, /minimizing/);
+    assert.equal(brainStatus().last.raw, true);
+  } finally { store.settings.rawAI = false; }
+});
+
+test('rules off: an empty reply still falls back (nothing to show)', async () => {
+  store.settings.rawAI = true;
+  try {
+    replies = ['', ''];
+    const r = await talk('hello');
+    assert.equal(r.m.source, 'script');
+    assert.equal(r.m.fallback, 'empty');
+  } finally { store.settings.rawAI = false; }
+});

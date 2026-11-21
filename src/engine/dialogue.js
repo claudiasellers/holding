@@ -8,7 +8,7 @@ import { buildSystemPrompt } from './prompt.js';
 import { pick, getPath, fill } from './scripts.js';
 import { nameMiss, repairLine, listenLine, reattuneLine, readCheckAnswer, missSignals, withoutNegated, breaksPromise } from './repair.js';
 import { getLLMProvider } from '../ai/providers.js';
-import { publishBrainStatus, brainModel, fallbackText } from '../ai/brain.js';
+import { publishBrainStatus, brainModel, fallbackText, rawText } from '../ai/brain.js';
 import { getTTSProvider } from '../voice/providers.js';
 import { store } from '../store.js';
 import { voiceFor } from '../voice/resolve.js';
@@ -81,6 +81,7 @@ export function createSession({ archetype, presence, ui, mode = 'hold' }) {
   let providerId = 'scripted', provider = null, brain = 'scripted';
   let lastMiss = null;              // why the last model attempt fell back to a script
   let lastMissDetail = '';          // the error, or the rules the reply broke
+  let lastBroke = [];               // rules-off mode: the rules the shown reply would have broken
   function setBrain(b) {
     brain = b;
     const info = { state: b, provider: providerId, model: brainModel(providerId), progress: modelProgress, error: modelErr?.message || '' };
@@ -133,7 +134,7 @@ export function createSession({ archetype, presence, ui, mode = 'hold' }) {
   // give the model more room than for an unprompted "still here" line, and one
   // second try if its first reply breaks a rule.
   async function generate(policy, { typed = false, hint = '' } = {}) {
-    lastMissDetail = '';
+    lastMissDetail = ''; lastBroke = [];
     if (!provider || providerId === 'scripted') { lastMiss = 'scripted'; return null; }
     if (!modelReady && typed && modelPromise) {
       await Promise.race([modelPromise, sleep(8000, ctrl.signal)]);
@@ -152,6 +153,9 @@ export function createSession({ archetype, presence, ui, mode = 'hold' }) {
       try {
         const text = await provider.generate({ system, messages, maxTokens: policy.maxTokens, temperature: policy.temperature, archetype, signal: ac.signal });
         const g = guard(text, policy, { crying: state.crying });
+        // Rules off (Settings): the reply is shown exactly as the model wrote it.
+        // The guard still runs, only to report what it would have caught.
+        if (s.rawAI && String(text || '').trim()) { lastMiss = null; lastBroke = g.reasons; return String(text).trim(); }
         if (g.ok) { lastMiss = null; return g.text; }
         console.info('[holding] model reply rejected:', g.reasons, text);
         const empty = g.reasons.includes('empty');
@@ -267,19 +271,21 @@ export function createSession({ archetype, presence, ui, mode = 'hold' }) {
     let text = null, source = 'script';
     if (opts.allowModel && !String(kind).startsWith('safety')) {
       text = await generate(policy, { typed: !!opts.typed, hint: [opts.hint || HINTS[kind] || '', fixHint()].filter(Boolean).join(' ') });
-      if (text && breaksPromise(text, state.fix)) { console.info('[holding] model reply broke the repair promise:', text); text = null; lastMiss = 'rejected'; lastMissDetail = 'it broke the promise from the last repair'; }
+      if (text && !s.rawAI && breaksPromise(text, state.fix)) { console.info('[holding] model reply broke the repair promise:', text); text = null; lastMiss = 'rejected'; lastMissDetail = 'it broke the promise from the last repair'; }
       if (text) source = 'model';
       if (state.ended && !opts.final) return;
     }
     if (!text) text = scriptFor(kind, policy, opts);
     if (!REPAIR_KINDS.has(kind)) spendFix();
-    const g = guard(text, policy, { crying: state.crying });
+    const raw = source === 'model' && !!s.rawAI;
+    const g = raw ? { text } : guard(text, policy, { crying: state.crying });
     const fallback = source === 'script' && opts.allowModel ? (lastMiss || 'failed') : null;
     const fallbackDetail = fallback ? lastMissDetail : '';
+    const rawNote = raw ? rawText(lastBroke) : '';
     if (opts.typed && opts.allowModel) {
-      publishBrainStatus({ last: { source, reason: fallback || '', detail: fallbackDetail, text: fallback ? fallbackText(fallback, fallbackDetail) : '', at: Date.now() } });
+      publishBrainStatus({ last: { source, reason: fallback || '', detail: fallbackDetail || (raw ? lastBroke.join(', ') : ''), text: fallback ? fallbackText(fallback, fallbackDetail) : rawNote, raw, at: Date.now() } });
     }
-    return say(g.text || text, { kind, tier: policy.tier, final: opts.final, source, typed: !!opts.typed, fallback, fallbackDetail });
+    return say(g.text || text, { kind, tier: policy.tier, final: opts.final, source, typed: !!opts.typed, fallback, fallbackDetail, raw, rawNote });
   }
 
   function scriptFor(kind, policy, opts) {
