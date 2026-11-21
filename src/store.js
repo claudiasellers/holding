@@ -15,6 +15,7 @@ export const DEFAULT_SETTINGS = {
   stt: { provider: 'browser' },
   suggestions: true,         // three tappable replies above the input
   suggestionsAI: 'auto',     // let a local model write them: 'auto' (not the in-browser model on phones) | 'on' | 'off'
+  rawAI: false,              // show the AI's reply exactly as written: no rules, no trimming, no scripted stand-in
   debugTuning: false,
 };
 

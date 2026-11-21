@@ -70,7 +70,8 @@ export function providerLabel(id) { return getLLMProvider(id)?.label || id; }
 //   last: null | {            // the last reply to something the user typed
 //     source: 'model' | 'script',
 //     reason: '' | 'scripted' | 'loading' | 'error' | 'slow' | 'failed' | 'empty' | 'rejected',
-//     detail: string,         // the error or the rules the AI reply broke
+//     detail: string,         // the error or the rules the AI reply broke (or, rules off, would have)
+//     raw: boolean,           // rules off: the AI reply was shown exactly as written
 //     text: string,           // fallbackText(reason, detail), ready to show
 //     at: number,
 //   },
@@ -105,6 +106,11 @@ const REASONS = {
   empty: 'the AI\'s reply came back empty',
   rejected: 'the AI\'s reply broke one of the parent\'s rules',
 };
+/** Rules-off mode: the AI reply was shown as written; say what the rules would have caught. */
+export function rawText(broke = []) {
+  return broke.length ? `Rules off: shown as written. It would have been replaced for: ${broke.join(', ')}.` : 'Rules off: shown as written. It passed every rule anyway.';
+}
+
 /** One plain sentence: why a reply was a scripted line. */
 export function fallbackText(reason, detail = '') {
   const why = REASONS[reason];

@@ -102,7 +102,8 @@ export function renderSession(root, nav, { mode = 'hold' } = {}) {
       who === 'tap' ? null : h('div', { class: 'log-who' }, who === 'parent' ? first : 'You', h('time', {}, time),
         src ? h('span', { class: 'log-src' + (src.ai ? ' ai' : '') }, src.ai ? 'AI' : 'scripted') : null),
       h('div', { class: 'log-text' }, text),
-      src?.why ? h('div', { class: 'log-why' }, src.why) : null));
+      src?.why ? h('div', { class: 'log-why' }, src.why) : null,
+      src?.note ? h('div', { class: 'log-why raw' }, src.note) : null));
     if (atBottom || who !== 'parent') logPanel.scrollTop = logPanel.scrollHeight;
   }
   function setLog(open, { remember = true } = {}) {
@@ -132,7 +133,7 @@ export function renderSession(root, nav, { mode = 'hold' } = {}) {
       lastLine = text; kindOf.set(text, meta.kind || '');
       // Replies to what the user typed say where they came from, in the log and the chip.
       const why = meta.typed && meta.source === 'script' && meta.fallback && meta.fallback !== 'scripted' ? fallbackText(meta.fallback, meta.fallbackDetail) : '';
-      logLine('parent', text, meta.typed && brain.state !== 'scripted' ? (meta.source === 'model' ? { ai: true } : why ? { why } : null) : null);
+      logLine('parent', text, meta.typed && brain.state !== 'scripted' ? (meta.source === 'model' ? { ai: true, note: meta.rawNote || '' } : why ? { why } : null) : null);
       if (meta.typed && brain.state !== 'scripted') { lastFallback = why; renderBrain(); }
       if (why) note(why);
     },
@@ -233,11 +234,12 @@ export function renderSession(root, nav, { mode = 'hold' } = {}) {
     const body = b.state === 'scripted' ? `${first}'s face reacts to feeling words, but the replies are pre-written lines picked by feeling. Turn on an AI and ${first} will answer what you actually say. Everything stays on your own devices.`
       : b.state === 'error' ? `${b.error || 'Unknown error.'} Until it's fixed, ${first} uses scripted lines and won't follow what you type.`
       : b.state === 'loading' ? `${brainLabel(b.provider)} is getting ready${b.progress > 0 && b.progress < 1 ? ` (${Math.round(b.progress * 100)}%)` : ''}. ${first} uses scripted lines until then. You can keep talking.`
+      : store.settings.rawAI ? `${brainLabel(b.provider)} writes ${first}'s replies to what you type, and rules are off: every reply is shown exactly as written. The log notes any rule a reply would have broken.`
       : `${brainLabel(b.provider)} writes ${first}'s replies to what you type. If it is ever slow or breaks a rule, a scripted line fills in, and the log marks it with the reason.`;
     const tts = getTTSProvider(s.tts?.provider) || getTTSProvider('webspeech');
     const voice = s.voiceOn ? `${tts?.label || 'Device voice'}${chosenVoice(tts?.id, a) ? ` · ${chosenVoice(tts?.id, a)}` : ''}` : 'Off (captions only)';
     const last = brainStatus().last;
-    const lastText = b.state === 'scripted' ? 'Scripted (no AI on)' : !last ? 'Nothing typed yet' : last.source === 'model' ? 'From the AI' : (last.text || 'Scripted line');
+    const lastText = b.state === 'scripted' ? 'Scripted (no AI on)' : !last ? 'Nothing typed yet' : last.source === 'model' ? (last.raw ? `From the AI, rules off${last.detail ? ` (would have been replaced: ${last.detail})` : ''}` : 'From the AI') : (last.text || 'Scripted line');
     const nowRow = (k, v, bad) => h('div', { class: 'now-row' }, h('span', {}, k), h('b', { class: bad ? 'bad' : '' }, v));
     return h('div', { class: 'stack' },
       h('h3', {}, title),
